@@ -237,7 +237,11 @@ function signIn(){
   refresh().then(function(){
     var keep=$('inRemember').checked; store('url',url,true); store('pw',pw,keep); $('inPw').value='';
     enter();
-  }).catch(function(e){ $('loginErr').textContent = e.auth ? 'Wrong password.' : ('Could not connect: '+e.message); S.mode=''; })
+  }).catch(function(e){
+      if(e.auth) $('loginErr').textContent='Wrong password.';
+      else if(/failed to fetch|networkerror|load failed/i.test(e.message)) $('loginErr').innerHTML='Could not reach the web app. Open <a href="'+esc(url)+'" target="_blank" rel="noopener">the URL in a new tab</a>: it must show {"ok":true,"app":"QS CRM API"…}. A Google sign-in page means the deployment access is not "Anyone"; "Script function not found" means a new version must be deployed.';
+      else $('loginErr').textContent='Could not connect: '+e.message;
+      S.mode=''; })
     .then(function(){ $('btnLogin').disabled=false; $('btnLogin').textContent='Sign in'; });
 }
 function enter(){
