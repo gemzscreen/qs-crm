@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>QS CRM · Tender Register</title>
+<title>ARZA QS CRM SYSTEM</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -14,7 +14,8 @@
   --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%}
+html,body{margin:0;min-height:100%}
+body{display:flex;flex-direction:column;min-height:100vh}
 body{font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
 button,input,select,textarea{font:inherit;color:inherit}
 .hidden{display:none!important}
@@ -30,8 +31,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 .conn{font-size:12px;color:#c9d5ea;display:flex;align-items:center;gap:6px}
 .conn i{width:8px;height:8px;border-radius:50%;background:#7fd09f;display:inline-block}
 .conn.ro i{background:#f0c36b}
+.hello{font-size:12.5px;color:#dbe4f3;text-align:right;line-height:1.25}
+.hello b{color:#fff;font-weight:600}
+.hello span{display:block;font-size:11.5px;color:#a9badb;font-variant-numeric:tabular-nums}
+.ver{background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.22)!important;font-family:var(--mono);font-size:11.5px!important}
 .top button{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer}
-main{padding:18px 20px 40px;max-width:1500px;margin:0 auto}
+main{padding:18px 20px 30px;max-width:1500px;margin:0 auto;width:100%;flex:1}
 /* kpis */
 .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:14px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
@@ -115,37 +120,62 @@ td.dt{white-space:nowrap;font-size:13px}
 .log .t{color:var(--ink3);font-size:12px;font-family:var(--mono)}
 .log .a{font-weight:600;color:var(--navy);font-size:12px;text-transform:uppercase}
 /* login */
-.login{max-width:440px;margin:8vh auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:26px 28px}
-.login h1{margin:0 0 4px;font-size:20px;color:var(--navy)}
-.login p{margin:0 0 18px;color:var(--ink2);font-size:13px}
+.lwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 16px;background:linear-gradient(160deg,#1f3864 0%,#162a4d 46%,#f5f7f9 46.1%)}
+.login{width:100%;max-width:440px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:30px 30px 26px;box-shadow:0 18px 50px rgba(15,30,60,.22)}
+.lmark{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.lmark .badge{width:44px;height:44px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:.5px}
+.login h1{margin:0;font-size:19px;color:var(--navy);letter-spacing:.6px;line-height:1.2}
+.login h1 small{display:block;font-size:11.5px;letter-spacing:1.4px;color:var(--accent);font-weight:700;margin-bottom:2px}
+.login p{margin:0 0 20px;color:var(--ink2);font-size:13.5px;line-height:1.5}
+.lver{text-align:center;color:#8a96a6;font-size:12px;margin-top:14px;font-family:var(--mono)}
+.lver{color:var(--ink3)}
 .login .f{margin-bottom:12px}
 .login .or{display:flex;align-items:center;gap:10px;color:var(--ink3);font-size:12px;margin:18px 0 12px}
 .login .or:before,.login .or:after{content:"";flex:1;border-top:1px solid var(--line)}
 .err{color:var(--bad);font-size:13px;min-height:18px;margin:6px 0}
+.err a{color:var(--bad)}
 .chk{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink2);margin-bottom:12px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;z-index:50;box-shadow:0 4px 18px rgba(0,0,0,.2)}
 .toast.bad{background:var(--bad)}
 .spin{display:inline-block;width:14px;height:14px;border:2px solid #c9d2dc;border-top-color:var(--navy);border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px}
 @keyframes s{to{transform:rotate(360deg)}}
-@media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.res-sum{grid-template-columns:1fr}td.ttl{min-width:200px}.nav{display:none}}
+footer.foot{padding:14px 20px;text-align:center;font-size:12px;color:var(--ink3);border-top:1px solid var(--line);background:#fff}
+footer.foot a{color:var(--navy);font-weight:600;text-decoration:none}
+footer.foot a:hover{text-decoration:underline}
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(22,32,44,.35);padding:16px}
+.modal .box{background:#fff;border-radius:10px;width:min(560px,100%);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.modal .mh{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.modal .mh h3{margin:0;font-size:15px;flex:1;color:var(--navy)}
+.modal .mb{overflow:auto;padding:6px 18px 16px}
+.rel{padding:12px 0;border-bottom:1px solid var(--line2)}
+.rel:last-child{border-bottom:none}
+.rel h4{margin:0 0 6px;font-size:13.5px}
+.rel h4 code{font-family:var(--mono);color:var(--navy);margin-right:8px}
+.rel h4 span{font-weight:400;color:var(--ink3);font-size:12px}
+.rel ul{margin:0;padding-left:18px;font-size:13px;color:var(--ink2)}
+.rel li{margin:2px 0}
+@media (max-width:900px){.hello{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.res-sum{grid-template-columns:1fr}td.ttl{min-width:200px}.nav{display:none}}
 </style>
 </head>
 <body>
 
-<header class="top">
+<header class="top hidden" id="top">
   <div class="brand">QS CRM<small>ARZA SDN BHD</small></div>
   <nav class="nav" id="nav">
     <a class="on">Tenders</a><a class="off" title="v1 module 2">BQ import</a><a class="off" title="v1 module 3">As-built</a><a class="off" title="v1 module 4">Reports</a>
   </nav>
   <div class="sp"></div>
   <div class="conn hidden" id="conn"><i></i><span></span></div>
+  <div class="hello" id="hello"></div>
+  <button id="btnVer" class="ver" title="What's new">v1.1.0</button>
   <button id="btnOut" class="hidden">Sign out</button>
 </header>
 
 <!-- LOGIN -->
-<section id="vLogin" class="login hidden">
-  <h1>QS CRM</h1>
-  <p>Tender register for ARZA SDN BHD. Connect to the "QS CRM DB" Google Sheet.</p>
+<div class="lwrap hidden" id="vLogin"><div>
+<section class="login">
+  <div class="lmark"><div class="badge">QS</div><h1><small>ARZA SDN BHD</small>ARZA QS CRM SYSTEM</h1></div>
+  <p>The quantity surveying system of ARZA SDN BHD — one record of every tender, priced BQ, bid result and as-built quantity.</p>
   <div class="f"><label for="inUrl">Web app URL (Apps Script, ends with /exec)</label><input id="inUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div>
   <div class="f"><label for="inPw">Password</label><input id="inPw" type="password" autocomplete="current-password"></div>
   <label class="chk"><input type="checkbox" id="inRemember"> Keep me signed in on this device</label>
@@ -155,6 +185,8 @@ td.dt{white-space:nowrap;font-size:13px}
   <button class="btn" id="btnFile" style="width:100%">Open QS_CRM_DB.xlsx (read-only, nothing leaves this computer)</button>
   <input type="file" id="inFile" accept=".xlsx" class="hidden">
 </section>
+<div class="lver" id="lver"></div>
+</div></div>
 
 <!-- REGISTER -->
 <main id="vMain" class="hidden">
@@ -179,6 +211,13 @@ td.dt{white-space:nowrap;font-size:13px}
   </table></div>
 </main>
 
+<footer class="foot">QS CRM ARZA SDN BHD — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</footer>
+
+<div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
+  <div class="mh"><h3 id="verTitle"></h3><button class="x" id="verClose" aria-label="Close">×</button></div>
+  <div class="mb" id="verBody"></div>
+</div></div>
+
 <!-- DRAWER -->
 <div class="shade hidden" id="shade"></div>
 <aside class="drawer hidden" id="drawer" aria-label="Tender details">
@@ -194,6 +233,25 @@ td.dt{white-space:nowrap;font-size:13px}
 <script>
 (function(){
 'use strict';
+/* ---------- version & user ---------- */
+var APP = { name:'ARZA QS CRM SYSTEM', version:'1.1.0', user:'Gemz' };
+var CHANGELOG = [
+  { v:'1.1.0', date:'4 Nov 2026', items:[
+    'New sign-in page: ARZA QS CRM SYSTEM, version shown below; top bar hidden until you sign in.',
+    'Top bar: "Welcome, Gemz" with today\'s date and time.',
+    'Version button with this change log.',
+    'Footer: QS CRM ARZA SDN BHD — Powered by Darkwiz Lab 2026.',
+    'Cancel buttons beside Save changes and Save result.',
+    'Faster saving: one server call per save (was two); save + lock BQ in one call.',
+    'Clearer message when the web app cannot be reached.' ]},
+  { v:'1.0.0', date:'4 Nov 2026', items:[
+    'Tender register: T01–T10 loaded, search, filters, sort, Excel export.',
+    'Add / edit tenders, status, Lock BQ at submission (unlock needs a reason).',
+    'Bid result: winner, winning sum, % difference, source.',
+    'BQ summary per bill checked against our sum; activity log.',
+    'Read-only mode from QS_CRM_DB.xlsx.' ]}
+];
+
 /* ---------- state ---------- */
 var S = { mode:'', url:'', pw:'', tenders:[], lists:{}, log:[], sort:{k:'arza_no',dir:-1}, cur:null, tab:'det', fileDB:null };
 var DEFAULT_LISTS = { status:['Prospect','Pricing','Submitted','Won','Lost','Cancelled','No bid'], client_group:['JKR','MOE','MOH','Other'],
@@ -210,6 +268,20 @@ function fmtDate(d){ if(!d) return ''; var s=String(d); var m=s.match(/^(\d{4})-
   var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m[2]-1]; return (+m[3])+' '+mo+' '+m[1]+(m[4]?' '+m[4]:''); }
 function toast(msg,bad){ var t=document.createElement('div'); t.className='toast'+(bad?' bad':''); t.textContent=msg; document.body.appendChild(t); setTimeout(function(){t.remove();}, bad?5000:2500); }
 function ro(){ return S.mode==='file'; }
+function clock(){
+  var d=new Date(), h=$('hello'); if(!h) return;
+  var ds=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  var ts=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  h.innerHTML='Welcome, <b>'+esc(APP.user)+'</b><span>'+ds+' · '+ts+'</span>';
+}
+function showVersions(){
+  $('verTitle').textContent=APP.name+' — change log';
+  $('verBody').innerHTML=CHANGELOG.map(function(r){ return '<div class="rel"><h4><code>v'+r.v+'</code>'+(r.v===APP.version?'Current version ':'')+'<span>'+r.date+'</span></h4><ul>'+r.items.map(function(i){return '<li>'+esc(i)+'</li>';}).join('')+'</ul></div>'; }).join('');
+  $('verModal').classList.remove('hidden');
+}
+function dirty(){ return S.snap!=null && S.snap!==formSnap(); }
+function formSnap(){ var b=$('dBody'); if(!b) return ''; return Array.prototype.map.call(b.querySelectorAll('input,select,textarea'),function(e){return e.id+'='+e.value;}).join('|'); }
+function cancel(){ if(dirty() && !confirm('Discard the changes you made?')) return; closeDrawer(true); }
 
 /* ---------- API ---------- */
 function api(action, body){
@@ -224,7 +296,7 @@ function forget(){ try{ ['pw'].forEach(function(k){ sessionStorage.removeItem('q
 
 /* ---------- login ---------- */
 function showLogin(err){
-  $('vLogin').classList.remove('hidden'); $('vMain').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
+  $('vLogin').classList.remove('hidden'); $('vMain').classList.add('hidden'); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
   $('inUrl').value = load('url'); $('loginErr').textContent = err||''; closeDrawer();
   setTimeout(function(){ ($('inUrl').value? $('inPw') : $('inUrl')).focus(); }, 30);
 }
@@ -245,7 +317,7 @@ function signIn(){
     .then(function(){ $('btnLogin').disabled=false; $('btnLogin').textContent='Sign in'; });
 }
 function enter(){
-  $('vLogin').classList.add('hidden'); $('vMain').classList.remove('hidden'); $('btnOut').classList.remove('hidden');
+  $('vLogin').classList.add('hidden'); $('vMain').classList.remove('hidden'); $('top').classList.remove('hidden'); $('btnOut').classList.remove('hidden'); clock();
   var c=$('conn'); c.classList.remove('hidden'); c.classList.toggle('ro', ro());
   c.querySelector('span').textContent = ro() ? 'Read-only: '+S.fileName : 'Google Sheet: QS CRM DB';
   $('btnNew').classList.toggle('hidden', ro());
@@ -373,7 +445,7 @@ function openDrawer(no, tab){
   $('shade').classList.remove('hidden'); $('drawer').classList.remove('hidden');
   drawHead(); drawTab(); render();
 }
-function closeDrawer(){ $('shade').classList.add('hidden'); $('drawer').classList.add('hidden'); S.cur=null; if(!$('vMain').classList.contains('hidden')) render(); }
+function closeDrawer(force){ if(force!==true && S.cur && dirty() && !confirm('Discard the changes you made?')) return; S.snap=null; $('shade').classList.add('hidden'); $('drawer').classList.add('hidden'); S.cur=null; if(!$('vMain').classList.contains('hidden')) render(); }
 function drawHead(){
   var t=S.cur;
   $('dNo').textContent = t._new ? 'New' : t.arza_no;
@@ -401,11 +473,13 @@ function drawTab(){
     }).join('')+'</div>';
     var btns='';
     if(!ro()){
-      btns='<button class="btn pri" id="bSave">'+(t._new?'Create tender':'Save changes')+'</button>';
+      btns='<button class="btn" id="bCancel">Cancel</button><button class="btn pri" id="bSave">'+(t._new?'Create tender':'Save changes')+'</button>';
       if(!t._new) btns = (locked ? '<button class="btn warn" id="bUnlock">Unlock BQ…</button>' : '<button class="btn" id="bLock">Lock BQ (submitted)</button>') + btns;
     }
     f.innerHTML='<span class="msg">'+(t._new?'':'Updated '+esc(fmtDate(t.updated_at)))+'</span>'+btns;
     if($('bSave')) $('bSave').onclick=save;
+    if($('bCancel')) $('bCancel').onclick=cancel;
+    S.snap=formSnap();
     if($('bLock')) $('bLock').onclick=lock;
     if($('bUnlock')) $('bUnlock').onclick=unlock;
   }
@@ -426,10 +500,13 @@ function drawTab(){
       document.querySelectorAll('.r_lost').forEach(function(e){ e.classList.toggle('hidden', st==='Won'||st==='No bid'); });
       $('r_diff').value = (w>0&&o>0) ? pct((o-w)/w)+'  ('+(o>w?'we were higher by B$':'we were lower by B$')+money(Math.abs(o-w))+')' : ''; }
     $('r_status').onchange=upd; $('r_sum').oninput=upd; upd();
-    f.innerHTML='<span class="msg">'+(t.status==='Won'?'Winner and winning sum = ARZA and our sum.':'')+'</span>'+(ro()?'':'<button class="btn pri" id="bRes">Save result</button>');
+    f.innerHTML='<span class="msg">'+(t.status==='Won'?'Winner and winning sum = ARZA and our sum.':'')+'</span>'+(ro()?'':'<button class="btn" id="bCancel">Cancel</button><button class="btn pri" id="bRes">Save result</button>');
     if($('bRes')) $('bRes').onclick=saveResult;
+    if($('bCancel')) $('bCancel').onclick=cancel;
+    S.snap=formSnap();
   }
   else if(S.tab==='bq'){
+    S.snap=null;
     f.innerHTML='<span class="msg">Read-only. BQ import and as-built come in the next modules.</span>';
     b.innerHTML='<div style="padding:20px;color:var(--ink3)"><span class="spin"></span> Loading…</div>';
     getDetail(t.arza_no).then(function(d){
@@ -445,6 +522,7 @@ function drawTab(){
     }).catch(function(e){ b.innerHTML='<div class="note w">'+esc(e.message)+'</div>'; });
   }
   else if(S.tab==='log'){
+    S.snap=null;
     f.innerHTML='<span class="msg">Every change is logged in the Log tab of the sheet.</span>';
     var lg=S.log.filter(function(x){return x.arza_no===t.arza_no;}).slice().reverse();
     b.innerHTML = lg.length ? '<ul class="log">'+lg.map(function(x){ return '<li><span class="t">'+esc(x.timestamp)+'</span><span class="a">'+esc(x.action)+'</span><span>'+esc(x.detail)+'</span></li>'; }).join('')+'</ul>' : '<div class="empty">No activity yet.</div>';
@@ -462,13 +540,14 @@ function collect(){
     if(x[2]==='datetime-local' && v) v=v.replace('T',' '); if(x[2]==='number') v = v===''?'':Number(v); o[x[0]]=typeof v==='string'?v.trim():v; });
   return o;
 }
+/* the server returns the saved row plus the log lines it wrote, so no second call is needed */
 function afterSave(row, msg){
+  var logs=row._log||[]; delete row._log;
   var i=S.tenders.findIndex(function(x){return x.arza_no===row.arza_no;});
   var keep = i>=0 ? {_bq_lines:S.tenders[i]._bq_lines,_asbuilt_lines:S.tenders[i]._asbuilt_lines} : {_bq_lines:0,_asbuilt_lines:0};
   Object.assign(row,keep); if(i>=0) S.tenders[i]=row; else S.tenders.push(row);
-  S.cur=row; toast(msg);
-  return api('list').then(function(d){ S.tenders=d.tenders; S.lists=d.lists; S.log=d.log; S.cur=S.tenders.filter(function(x){return x.arza_no===row.arza_no;})[0]||row; }).catch(function(){})
-    .then(function(){ fillFilters(); drawHead(); drawTab(); render(); });
+  S.log=S.log.concat(logs); S.cur=row; toast(msg);
+  fillFilters(); drawHead(); drawTab(); render();
 }
 function fail(e){ if(e.auth){ forget(); showLogin('Session expired or password changed. Sign in again.'); return; } toast(e.message,true); }
 function save(){
@@ -477,9 +556,8 @@ function save(){
   if(f.status==='Submitted' && t.locked!=='Y' && !t._new && confirm('Status is Submitted. Lock the tendered BQ now as well?\n(Our sum and ID scheme will be frozen; unlocking needs a reason.)')) { f._lockAfter=1; }
   var lockAfter=f._lockAfter; delete f._lockAfter;
   var btn=$('bSave'); busy(btn,true);
-  api('save',{arza_no:t._new?'':t.arza_no, fields:f}).then(function(row){
-    if(lockAfter) return api('lock',{arza_no:row.arza_no}).then(function(r2){ return afterSave(r2,'Saved and BQ locked'); });
-    return afterSave(row, t._new ? 'Created '+row.arza_no : 'Saved');
+  api('save',{arza_no:t._new?'':t.arza_no, fields:f, lock:!!lockAfter}).then(function(row){
+    afterSave(row, lockAfter ? 'Saved and BQ locked' : (t._new ? 'Created '+row.arza_no : 'Saved'));
   }).catch(function(e){ busy(btn,false); fail(e); });
 }
 function lock(){
@@ -521,11 +599,17 @@ document.querySelectorAll('th[data-k]').forEach(function(th){ th.onclick=functio
 $('rows').onclick=function(e){ var tr=e.target.closest('tr[data-no]'); if(tr) openDrawer(tr.dataset.no); };
 $('btnNew').onclick=function(){ openDrawer(null); };
 $('btnExport').onclick=exportXlsx;
+$('btnVer').onclick=showVersions;
+$('verClose').onclick=function(){ $('verModal').classList.add('hidden'); };
+$('verModal').onclick=function(e){ if(e.target===this) this.classList.add('hidden'); };
 $('dClose').onclick=closeDrawer; $('shade').onclick=closeDrawer;
-document.addEventListener('keydown',function(e){ if(e.key==='Escape' && !$('drawer').classList.contains('hidden')) closeDrawer(); });
-$('dTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a||S.cur._new) return; S.tab=a.dataset.t; drawHead(); drawTab(); };
+document.addEventListener('keydown',function(e){ if(e.key!=='Escape') return; if(!$('verModal').classList.contains('hidden')) { $('verModal').classList.add('hidden'); return; } if(!$('drawer').classList.contains('hidden')) closeDrawer(); });
+$('dTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a||S.cur._new||a.dataset.t===S.tab) return; if(dirty() && !confirm('Discard the changes you made?')) return; S.tab=a.dataset.t; drawHead(); drawTab(); };
 
 /* ---------- start ---------- */
+$('btnVer').textContent='v'+APP.version; $('lver').textContent=APP.name+' · v'+APP.version;
+document.title=APP.name+' · v'+APP.version;
+clock(); setInterval(clock, 20000);
 S.url=load('url'); S.pw=load('pw');
 if(S.url && S.pw){ S.mode='api'; $('conn').classList.remove('hidden'); $('conn').querySelector('span').textContent='Connecting…';
   refresh().then(enter).catch(function(e){ S.mode=''; if(e.auth) forget(); showLogin(e.auth?'Password changed - sign in again.':'Could not connect: '+e.message); }); }

@@ -1,6 +1,6 @@
 /**
  * QS CRM — API on the Google Sheet "QS CRM DB" (Apps Script, bound to the sheet).
- * v1 module 1: tender register + bid results + activity log.
+ * v1.1.0 - tender register + bid results + activity log. Each save is one call (log entries returned with the row).
  *
  * Setup (once):
  *  1. Open the "QS CRM DB" Google Sheet > Extensions > Apps Script. Paste this file as Code.gs. Save.
@@ -29,8 +29,11 @@ function doGet() {
   return json_({ ok: true, app: 'QS CRM API', note: 'Use POST' });
 }
 
+var LOGS_ = [];   // log entries written during this request, returned to the app (saves a second call)
+
 function doPost(e) {
   var req;
+  LOGS_ = [];
   try { req = JSON.parse(e.postData.contents); } catch (err) { return json_({ ok: false, error: 'Bad request' }); }
   var stored = PropertiesService.getScriptProperties().getProperty('API_PASSWORD_HASH');
   if (!stored) return json_({ ok: false, error: 'Password not set - run setPassword() in Apps Script' });
@@ -41,6 +44,7 @@ function doPost(e) {
     var fn = ACTIONS[req.action];
     if (!fn) return json_({ ok: false, error: 'Unknown action ' + req.action });
     var data = fn(req);
+    if (data && typeof data === 'object' && !Array.isArray(data)) data._log = LOGS_;
     return json_({ ok: true, data: data });
   } catch (err) {
     return json_({ ok: false, error: String(err && err.message || err) });
@@ -77,36 +81,11 @@ var ACTIONS = {
     return { tender: t.row, bills: order.map(function (k) { bills[k].amount = round2_(bills[k].amount); return bills[k]; }), log: log };
   },
 
-  /* create (no arza_no or new) or update tender fields */
+  /* create (no arza_no) or update tender fields; req.lock = true also locks the BQ in the same call */
   save: function (req) {
-    var f = req.fields || {};
-    var t = read_(TABS.tenders);
-    var ts = now_();
-    if (!req.arza_no) {
-      var no = nextNo_(t.rows);
-      var row = { arza_no: no, locked: 'N', created_at: ts, updated_at: ts };
-      EDITABLE.forEach(function (k) { if (f[k] != null) row[k] = f[k]; });
-      check_(row);
-      append_(TABS.tenders, row);
-      log_('create', no, 'New tender ' + (row.tender_ref || row.title || ''));
-      return find_(no).row;
-    }
-    var cur = find_(req.arza_no);
-    var changes = [];
-    EDITABLE.forEach(function (k) {
-      if (!(k in f)) return;
-      var nv = f[k] == null ? '' : f[k], ov = cur.row[k] == null ? '' : cur.row[k];
-      if (String(nv) === String(ov)) return;
-      if (cur.row.locked === 'Y' && LOCKED_FIELDS.indexOf(k) >= 0) throw new Error(k + ' is locked (tendered BQ locked ' + cur.row.locked_at + ')');
-      cur.row[k] = nv; changes.push(k + ': ' + short_(ov) + ' -> ' + short_(nv));
-    });
-    if (!changes.length) return cur.row;
-    if (f.status === 'Submitted' && !cur.row.submitted_date) cur.row.submitted_date = ts.slice(0, 10);
-    check_(cur.row);
-    cur.row.updated_at = ts;
-    write_(TABS.tenders, cur.idx, cur.row);
-    log_('update', req.arza_no, changes.join('; '));
-    return cur.row;
+    var row = saveFields_(req);
+    if (req.lock && row.locked !== 'Y') return ACTIONS.lock({ arza_no: row.arza_no });
+    return row;
   },
 
   /* lock the tendered BQ (normally at submission) */
@@ -151,6 +130,37 @@ var ACTIONS = {
     return row;
   }
 };
+
+function saveFields_(req) {
+    var f = req.fields || {};
+    var t = read_(TABS.tenders);
+    var ts = now_();
+    if (!req.arza_no) {
+      var no = nextNo_(t.rows);
+      var row = { arza_no: no, locked: 'N', created_at: ts, updated_at: ts };
+      EDITABLE.forEach(function (k) { if (f[k] != null) row[k] = f[k]; });
+      check_(row);
+      append_(TABS.tenders, row);
+      log_('create', no, 'New tender ' + (row.tender_ref || row.title || ''));
+      return find_(no).row;
+    }
+    var cur = find_(req.arza_no);
+    var changes = [];
+    EDITABLE.forEach(function (k) {
+      if (!(k in f)) return;
+      var nv = f[k] == null ? '' : f[k], ov = cur.row[k] == null ? '' : cur.row[k];
+      if (String(nv) === String(ov)) return;
+      if (cur.row.locked === 'Y' && LOCKED_FIELDS.indexOf(k) >= 0) throw new Error(k + ' is locked (tendered BQ locked ' + cur.row.locked_at + ')');
+      cur.row[k] = nv; changes.push(k + ': ' + short_(ov) + ' -> ' + short_(nv));
+    });
+    if (!changes.length) return cur.row;
+    if (f.status === 'Submitted' && !cur.row.submitted_date) cur.row.submitted_date = ts.slice(0, 10);
+    check_(cur.row);
+    cur.row.updated_at = ts;
+    write_(TABS.tenders, cur.idx, cur.row);
+    log_('update', req.arza_no, changes.join('; '));
+    return cur.row;
+  }
 
 /* ---------- sheet helpers (columns read by header name) ---------- */
 function sheet_(name) {
@@ -200,7 +210,9 @@ function lists_() {
   return out;
 }
 function log_(action, no, detail) {
-  append_(TABS.log, { timestamp: now_(), action: action, arza_no: no, detail: detail, user: 'Gemz' });
+  var e = { timestamp: now_(), action: action, arza_no: no, detail: detail, user: 'Gemz' };
+  append_(TABS.log, e);
+  LOGS_.push(e);
 }
 function nextNo_(rows) {
   var max = 0;

@@ -1,4 +1,6 @@
-# QS CRM — v1 module 1: Tender register
+# ARZA QS CRM SYSTEM — v1.1.0 (tender register)
+
+Updating from v1.0.0: replace `index.html` on GitHub Pages **and** paste the new `Code.gs`, then *Deploy › Manage deployments › Edit › Version: New version › Deploy*. The faster saving needs both.
 
 Single-user web app for ARZA SDN BHD. Front end = `index.html` (GitHub Pages). Data = Google Sheet **QS CRM DB** with an Apps Script API (`Code.gs`). No pricing data is stored in the repo — only code.
 
