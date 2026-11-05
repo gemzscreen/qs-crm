@@ -1,8 +1,13 @@
-# ARZA QS CRM SYSTEM — v1.2.0 (tender register)
+# ARZA QS CRM SYSTEM — v1.3.0 (tender register + import + Drive)
 
-Updating from v1.1.0: replace `index.html` only (Code.gs unchanged). From v1.0.0: also paste the new `Code.gs` and deploy a New version.
+**Updating from v1.2.0 (both files change):**
+1. Replace `index.html` on GitHub Pages.
+2. Apps Script: paste the new `Code.gs` over the old one, save.
+3. Select `authorizeDrive` in the toolbar › Run › allow Google Drive access (once). It creates the Drive folder "QS CRM - Tenders".
+4. Deploy › Manage deployments › Edit › Version: New version › Deploy (same URL).
 
-Single-user web app for ARZA SDN BHD. Front end = `index.html` (GitHub Pages). Data = Google Sheet **QS CRM DB** with an Apps Script API (`Code.gs`). No pricing data is stored in the repo — only code.
+**Workbook file name (recommended):** `Priced BQ Estimate - <client ref> Tender <n> - <Mon YYYY> rev<k>.xlsx`
+e.g. `Priced BQ Estimate - JKR-DBSBM021-2026 Tender 11 - Nov 2026 rev0.xlsx`. "Tender 11" becomes T11 when that number is free; everything else is read from the workbook (Tender Info + B-sheets).
 
 ## Setup (about 10 minutes, once)
 

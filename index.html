@@ -37,7 +37,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav{display:flex;gap:2px;margin-left:8px}
 .nav a{color:#c9cdee;text-decoration:none;padding:6px 12px;border-radius:5px;font-size:13px}
 .nav a.on{background:rgba(255,255,255,.14);color:#fff}
-.nav a.off{opacity:.45;pointer-events:none}
+.nav a{cursor:pointer}
+.nav a:hover{color:#fff}
+.nav a.off{opacity:.45;cursor:not-allowed}
 .top .sp{flex:1}
 .conn{font-size:12px;color:#c9cdee;display:flex;align-items:center;gap:6px}
 .conn i{width:8px;height:8px;border-radius:50%;background:#7fd09f;display:inline-block}
@@ -48,10 +50,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .top button{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer}
 .top button:hover{background:rgba(255,255,255,.1)}
 .ver{background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.22)!important;font-family:var(--mono);font-size:11.5px!important}
-.theme{display:flex;border:1px solid rgba(255,255,255,.3);border-radius:6px;overflow:hidden}
-.top .theme button{border:none;border-radius:0;padding:4px 9px;color:#c9cdee}
-.top .theme button+button{border-left:1px solid rgba(255,255,255,.2)}
-.top .theme button.on{background:rgba(255,255,255,.2);color:#fff}
+.top .ibtn{width:32px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.ibtn svg{width:16px;height:16px;display:block}
 main{padding:18px 20px 30px;max-width:1500px;margin:0 auto;width:100%;flex:1}
 /* kpis */
 .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:14px}
@@ -108,6 +108,45 @@ td.dt{white-space:nowrap;font-size:13px}
 .dh .no{font-family:var(--mono);color:var(--bink);font-weight:700;font-size:14px}
 .dh .meta{font-size:12.5px;color:var(--ink2);margin:4px 0 10px}
 .x{background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--ink3);padding:0 4px}
+.dbtn{background:none;border:1px solid transparent;border-radius:5px;cursor:pointer;color:var(--ink3);width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
+.dbtn:hover{border-color:var(--line);color:var(--ink)}
+.dbtn svg{width:15px;height:15px}
+.drawer{transition:width .18s ease}
+.drawer.full{width:100%}
+.drawer.full .db>*,.drawer.full .dh>*{max-width:1100px;margin-left:auto;margin-right:auto}
+.drawer.full .df{padding-left:max(20px,calc((100% - 1100px)/2));padding-right:max(20px,calc((100% - 1100px)/2))}
+.fl{display:flex;gap:6px}
+.fl input{flex:1;min-width:0}
+.fl .btn{padding:6px 10px;white-space:nowrap;font-size:13px;text-decoration:none;color:inherit}
+.help{font-size:12px;color:var(--bink);cursor:pointer;margin-left:6px;font-weight:600}
+.helpbox{margin-top:6px;border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:12.5px;color:var(--ink2);background:var(--th)}
+.helpbox table{font-size:12.5px;margin:6px 0}
+.helpbox td,.helpbox th{padding:5px 6px;position:static;cursor:default;background:none;text-transform:none;letter-spacing:0;font-size:12px}
+.helpbox code{font-family:var(--mono);color:var(--bink)}
+.types{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:-2px 0 14px}
+.tcard{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.tcard:hover{border-color:var(--ink3)}
+.tcard.on{border-color:var(--brand2);box-shadow:inset 0 0 0 1px var(--brand2)}
+.tcard .h{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--ink2)}
+.tcard .h b{color:var(--bink);font-variant-numeric:tabular-nums}
+.tcard .v{font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.tcard .s{font-size:11.5px;color:var(--ink3)}
+.scope{font-size:12px;color:var(--ink3)}
+.modal .box.wide{width:min(860px,100%)}
+.modal .mf{display:flex;gap:8px;justify-content:flex-end;align-items:center;padding:12px 18px;border-top:1px solid var(--line);background:var(--th);border-radius:0 0 10px 10px}
+.modal .mf .msg{margin-right:auto;font-size:12.5px;color:var(--ink3)}
+.issues{font-size:12.5px;color:var(--warn);background:var(--warnbg);border-radius:6px;padding:8px 12px;margin:10px 0;max-height:120px;overflow:auto}
+.chkrow{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:10px 0;color:var(--ink2)}
+.rep h2{font-size:16px;margin:0 0 4px;color:var(--bink)}
+.rep .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.rep .card h3{margin:0 0 10px;font-size:14px}
+.rep .card p.n{font-size:12px;color:var(--ink3);margin:8px 0 0}
+.rep table th{position:static;cursor:default}
+.rep table td,.rep table th{padding:7px 8px}
+.rep tbody tr{cursor:default}
+.barc{display:flex;align-items:center;gap:8px}
+.barc i{display:block;height:8px;border-radius:4px;background:var(--brand2);min-width:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .tabs{display:flex;gap:2px}
 .tabs a{padding:8px 12px;font-size:13px;color:var(--ink2);text-decoration:none;border-bottom:2px solid transparent;cursor:pointer}
 .tabs a.on{color:var(--bink);border-color:var(--bink);font-weight:600}
@@ -181,7 +220,8 @@ footer.foot a:hover{text-decoration:underline}
 .rel ul{margin:0;padding-left:18px;font-size:13px;color:var(--ink2)}
 .rel li{margin:2px 0}
 @media (max-width:1100px){.conn{display:none}}
-@media (max-width:900px){.hello{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.res-sum{grid-template-columns:1fr}td.ttl{min-width:200px}.nav{display:none}.brand i,.brand span{display:none}}
+@media (max-width:1100px){.types{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}.types{grid-template-columns:repeat(2,1fr)}.hello{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.res-sum{grid-template-columns:1fr}td.ttl{min-width:200px}.nav{display:none}.brand i,.brand span{display:none}}
 </style>
 </head>
 <body>
@@ -189,14 +229,14 @@ footer.foot a:hover{text-decoration:underline}
 <header class="top hidden" id="top">
   <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPQAAABACAMAAAAaqqqvAAAAwFBMVEUAAAD///////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMq5OnAAAAQHRSTlMA+wcrj2/PUK8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAmtaE/QAAByFJREFUeNrdW9m26yYMtYUY/v+Li0YEHnLuabvawEMSO0Zma0aWj+MyAPgjjQFy6th2GGIAhcqDjveFTdAE4ZD6YXzYEzZDFqAAi8IzMzZEDYfKEx7UfkthR1QQhssb9hM2wQP/tfwR2LIZ5GPYM6SM2BrmmmDY9b3uf7VqO2TI5SyltD4KfdeAFvbRcFft/pHaWRqJWXD3X6Wgq8E2qCFghnZ2nOUMo9Bxhr1QO47+VTvEZmCLY++wS9oJdcSMHR6jbFlSUahZeNBZUQ31Dj7cMJNqZxJuyROqxHxoeGYLaenbnTho8O1SLSUTvAxrcgLIrDjRuPPlCm4I+mc7CVtLM2SBXQV1lr+OBH88/m8RWsSHjBmfLivkxrtdH+uG5IsF3WVJuo2PkkqEup1pbLF/K+n/nmOgaSacFJzxTXGpipJ+odgyeUrrQzp/y5nng8c59we3V7qgsevuWfri/r0QccTk/l7e8HjwifKPC0Mec1nQXbkTW7gN7COPw4o+cq7q4RPOI01X14XPncFZ0vmcDrWqQDM5QzJNtrSADlJkQcZlElNGv6yjogOYyestWbtN0D0HId+cnCkcvk4LyeTopoGsJXk+aaGcQsHJmhOTgelyXtNCtVQFILdWBGXQlTElyRRuiFCi31WnVJt/Q14TE7qLKHcADUIaXSdWfHS5UL+A1iUMlumNcJ1/oYqynOI3UP7VZ9CM7kegmTxtqfQiFfRhoH3Zp280VtC8wPwAWm/WjuBalEN961bGCm4IGGghJpJ+Bd3gp6ADxs5MWgfvtRw0rgrLy6tSC5c/1aXLKEO0pp+DZQKaVZ69QfU/B9XanIKClt/3oJvcu7ohvIDm9ekeIg3tJteNUg41rx60MIC2W7dhdDJwMsO62Lh4KDVOAF1MXaiiK3gZivIEWn9XI/QMukTyzUEnAl0hgpYsfNilLU9HNltSzyxaWqMba+h2GUA3fZ5AZZm0UBW9hcNBE8EXSfOYQVvsmEHP5BV0JpOGKGkQwsOVLcvDKGmTrFuCLCDwPqh3yWFn6pIOt6juROV+75L2+Xq3IP8g6Ym8+rFeEdK/zMiVBPqSJkUUTpoUzemhZyAyTRgXQFcvxeRkJaoJdDJXxjON47egS6o00J0fz8Vax+kLaLnEQJMfa1rRH8suYxUOWquFs2BFMM15oAoyqcMasqjaeA8aFXRVv/HReyO4914j2QwaxKgdtGtxissGaCbRa3BBT6M1EZmVvbuCFAK9JCc4BRoPWfegQdXpE+g6kpM/AV1W0Oan1AxuQDc31slxuxsrbsSW+Wt+WObs5hl0lv/wc5zGX0j6uIA2a1Tn2IYiWmKRjyVTqwOzW6aIPFsBTqswPWKWEc9eQKs/S7cZWck80NOkH9j0ot4YQateUjVUrTdFRayDuxfHPSRffHYZkvYNRfXU/NmRdb7ycXv13mBh7gfe+82RXZO3kTAORVL3lqYMfUpropqx3HuQaCpvM4EJNEwhK8eFPMZpi0OvcXomP4cs23Vdln1G6/P9F6usJ7+ep9S7HP0IsX0Eejjm6N9icsK5W/kEGuoE+j4jm8nfJSduvTLKkjCOLANsUW3ap5fLbJBiRQ3X8sQg6ZFoeBo6vMKbeltC/Ab6mMgb6BrSUEVSHMXF+tS9eSQ+cx3DDCcaV9YKTdEA3cVTpm0az8zLhiPH/fbVken93Dm8bDhm8ncbDnMnsGScwfpMAOloF0PQyyGmxkVc98jIVqO53VoKq1TBX0MWX/q7raXkIGnNq8Vo8Jj9rDD4Crq43kZXXjXnxDWpuIDOo4iQI3//of20BBn1ZGzUVbiQBA/MJZQU8nBX8HwFnZcNZRpFErajcWW6lotaCuWiHPkbQ+ICurDH+wnolm7LRQw6cxFt3ERP8NfYY9BRt5RlyJlY5NYTVhikuBULg2lMHS0vPCkZf+f1kKMIt9NZVHIcc3Stj+TVSFsTUXtXyaVcPJeh4fMT73l2grWqC3+rmvvnpeJAXkvAiUvAMPVHXkaVSurvBjxw4/YpyGMV/6bYD78v9jey6iYO82nQIxCr93z58zvJl6Tanx91RVKS7uWPkbl97wO85IWRbGHy3m6QH1taufO7n1CDebxWMO4Z14ebjQuFVi357l6E8VAeCtcvEVZhcxSk2Ij7tCL4U3lFXap1Wfk3aEG4HVsod2wu6qgLWtEuAtfuG8XsbNoFddMusoLVJF2lqtXQSrywRYOoeXBx0c1Kd9Qkae1zdLIGzLBLp7cE4+6xEJd9ROsnGuzWHOoNsdw9VU7pgtXiPnWGthQaYjfpAobQ+ky7GNpdSwMw9wLj6IvYB/OM2nrcpTkEa5qb3DfqcofwBscFmLedbAU5NInCtDWLb67s9wpH6JiEh+03wI5vZsFISeHu9cs938GDKcWMqi0vI24IecBOS2emF3uOzd+r3fdd4r8AzaM1wK5ex1cAAAAASUVORK5CYII=" alt="ARZA SDN BHD" width="122" height="32"><i></i><span>QS CRM</span></div>
   <nav class="nav" id="nav">
-    <a class="on">Tenders</a><a class="off" title="v1 module 2">BQ import</a><a class="off" title="v1 module 3">As-built</a><a class="off" title="v1 module 4">Reports</a>
+    <a data-v="tenders" class="on">Tenders</a><a data-v="import" title="Import a priced tender workbook">BQ import</a><a class="off" title="As-built comes in v1 module 3: it needs the site Breakdown QTY files of a won project">As-built</a><a data-v="reports">Reports</a>
   </nav>
   <div class="sp"></div>
   <div class="conn hidden" id="conn"><i></i><span></span></div>
   <div class="hello" id="hello"></div>
   <button id="btnVer" class="ver" title="What's new">v1.2.0</button>
   <button id="btnOut" class="hidden">Sign out</button>
-  <div class="theme" id="theme" role="group" aria-label="Theme"><button data-m="auto" title="Follow the device setting">Auto</button><button data-m="day" title="Day mode">Day</button><button data-m="night" title="Night mode">Night</button></div>
+  <button id="btnTheme" class="ibtn" aria-label="Theme"></button>
 </header>
 
 <!-- LOGIN -->
@@ -223,6 +263,7 @@ footer.foot a:hover{text-decoration:underline}
 <!-- REGISTER -->
 <main id="vMain" class="hidden">
   <div class="kpis" id="kpis"></div>
+  <div class="types" id="types"></div>
   <div class="bar">
     <input type="search" id="q" placeholder="Search T no., client ref, title, client, notes…">
     <select id="fStatus"><option value="">All statuses</option></select>
@@ -230,9 +271,12 @@ footer.foot a:hover{text-decoration:underline}
     <select id="fType"><option value="">All types</option></select>
     <select id="fYear"><option value="">All years</option></select>
     <button class="btn" id="btnExport">Export</button>
+    <button class="btn" id="btnImport" title="Create a tender from a priced workbook (.xlsx)">Import</button>
     <button class="btn pri" id="btnNew">+ New tender</button>
   </div>
-  <div class="bar" style="margin:-2px 0 8px"><span class="count" id="count"></span></div>
+  <input type="file" id="impFile" accept=".xlsx,.xlsm" class="hidden">
+  <input type="file" id="upFile" accept=".xlsx,.xlsm,.xls,.pdf,.docx,.zip" class="hidden">
+  <div class="bar" style="margin:-2px 0 8px"><span class="scope" id="scope"></span><span class="count" id="count"></span></div>
   <div class="tbl"><table>
     <thead><tr>
       <th data-k="arza_no">No.</th><th data-k="tender_ref">Client ref</th><th data-k="title">Title</th><th data-k="client_group">Client</th>
@@ -243,6 +287,8 @@ footer.foot a:hover{text-decoration:underline}
   </table></div>
 </main>
 
+<main id="vRep" class="hidden rep"></main>
+
 <footer class="foot"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -250,11 +296,17 @@ footer.foot a:hover{text-decoration:underline}
   <div class="mb" id="verBody"></div>
 </div></div>
 
+<div class="modal hidden" id="impModal" role="dialog" aria-label="Import"><div class="box wide">
+  <div class="mh"><h3 id="impTitle"></h3><button class="x" id="impClose" aria-label="Close">×</button></div>
+  <div class="mb" id="impBody"></div>
+  <div class="mf" id="impFoot"></div>
+</div></div>
+
 <!-- DRAWER -->
 <div class="shade hidden" id="shade"></div>
 <aside class="drawer hidden" id="drawer" aria-label="Tender details">
   <div class="dh">
-    <div class="row1"><span class="no" id="dNo"></span><h2 id="dTitle"></h2><button class="x" id="dClose" aria-label="Close">×</button></div>
+    <div class="row1"><span class="no" id="dNo"></span><h2 id="dTitle"></h2><button class="dbtn" id="dFull" title="Full screen"></button><button class="x" id="dClose" aria-label="Close">×</button></div>
     <div class="meta" id="dMeta"></div>
     <div class="tabs" id="dTabs"><a data-t="det" class="on">Details</a><a data-t="res">Bid result</a><a data-t="bq">BQ</a><a data-t="log">Log</a></div>
   </div>
@@ -263,11 +315,510 @@ footer.foot a:hover{text-decoration:underline}
 </aside>
 
 <script>
+/*
+ * QS CRM — BQ Item ID rule (v0)
+ * One canonical ID per BQ line, unique within a tender.
+ * Full DB key = arza_no (T01…) + bq_set + Item ID.
+ *
+ * Three numbering schemes are found in ARZA tenders; each tender records its scheme:
+ *   PL  (page-letter, classic SMM2)   items A, B, C… restart on every page
+ *        ID = B<bill>.<page>.<item>     e.g.  B1.1.A   (Tender 1, MOE Block D)
+ *   NUM (numbered items, JKR style)    item numbers unique in the tender (4.1.1)
+ *        ID = B<bill>.<item>            e.g.  B4.4.1.1 (Tender 8, Tender 6)
+ *   SEC (section + number, quotations) items 1, 2… restart in every section A, B, C…
+ *        ID = <section>.<item>          e.g.  C.3      (Tender 5, Tender 3)
+ * Sub-items lettered under a numbered item (a., b. = Toilet block / Admin block)
+ *        add .<letter>                  e.g.  C.1.A, B4.4.1.1.A  (not used in PL)
+ * Items added in a rationalized revision (v2): next free X-number in the bill,
+ *        e.g. B4.X1, B1.1.X1, C.X1.
+ *
+ * Works in the browser (global ItemId) and in Node (module.exports).
+ */
+(function (root) {
+  'use strict';
+
+  var SCHEMES = { PL: 'PL', NUM: 'NUM', SEC: 'SEC' };
+
+  function clean(s) {
+    return String(s == null ? '' : s)
+      .replace(/[‐-―]/g, '-')      // unicode dashes
+      .replace(/ /g, ' ')
+      .trim();
+  }
+
+  /* Bill code: "B1", "Bill No.1", "BILL 1", "B.1", 1 -> "B1"; section letter "c" -> "C" */
+  function normBill(x) {
+    var s = clean(x).toUpperCase();
+    if (!s) return '';
+    var m = s.match(/^(?:BILL\s*(?:NO\.?)?|B)?\s*[.\-]?\s*(\d+)$/);
+    if (m) return 'B' + parseInt(m[1], 10);
+    if (/^[A-Z]{1,2}$/.test(s)) return s;   // section letter (SEC scheme)
+    return s.replace(/\s+/g, '');
+  }
+
+  /* Page within the bill: "B1.1/3" -> "1", "B1.1" -> "1", "Page 1 of 8" -> "1", "1" -> "1" */
+  function normPage(x) {
+    var s = clean(x).toUpperCase();
+    if (!s) return '';
+    var m = s.match(/^PAGE\s*(\d+)/);
+    if (m) return String(parseInt(m[1], 10));
+    m = s.match(/^B\s*\d+\s*[.\-]\s*(\d+)/);           // B1.1/3, B1.1
+    if (m) return String(parseInt(m[1], 10));
+    m = s.match(/^(\d+)(?:\s*\/\s*\d+)?$/);             // 1 or 1/3
+    if (m) return String(parseInt(m[1], 10));
+    return s.replace(/\s+/g, '');                        // e.g. ST/12 kept as-is (not used in NUM IDs)
+  }
+
+  /* Item: "a" -> "A", "4.1.1." -> "4.1.1", 3 -> "3". Warns on numbers that Excel may have damaged (1.10 -> 1.1). */
+  function normItem(x, warnings) {
+    if (typeof x === 'number' && !Number.isInteger(x) && warnings) {
+      warnings.push('Item stored as a number (' + x + ') - check e.g. 1.10 read as 1.1; store items as text');
+    }
+    var s = clean(x).toUpperCase().replace(/\s+/g, '').replace(/[()]/g, '').replace(/[.\-]+$/, '').replace(/^[.\-]+/, '');
+    s = s.replace(/-/g, '.');
+    return s;
+  }
+
+  /* Build the canonical ID from separate Bill / Page / Item cells (BQ import). */
+  function makeId(o) {
+    var w = o.warnings || [];
+    var scheme = o.scheme;
+    var bill = normBill(o.bill);
+    var item = normItem(o.item, w);
+    if (!item) return '';
+    if (scheme === SCHEMES.SEC && bill && item.indexOf(bill) === 0 && /^\d/.test(item.slice(bill.length))) {
+      item = item.slice(bill.length);                     // "B1" in section B -> "1"
+    }
+    if (o.sub) item += '.' + normItem(o.sub, w);
+    if (scheme === SCHEMES.PL) {
+      var page = normPage(o.page);
+      return bill + '.' + page + '.' + item;
+    }
+    if (scheme === SCHEMES.NUM) return bill + '.' + item;
+    if (scheme === SCHEMES.SEC) return bill + '.' + item;
+    throw new Error('Unknown scheme: ' + scheme);
+  }
+
+  function letterRange(a, b) {
+    var out = [];
+    if (a.length !== 1 || b.length !== 1) return null;
+    var x = a.charCodeAt(0), y = b.charCodeAt(0);
+    if (y < x || y - x > 25) return null;
+    for (var c = x; c <= y; c++) out.push(String.fromCharCode(c));
+    return out;
+  }
+
+  /* Split a free-text cell into individual refs: "B.2.2-C & B.2.3-C", multi-line, commas, "and". */
+  function splitRefs(text) {
+    return clean(text)
+      .split(/\r?\n|&|;|,|\band\b|\+|\s+(?=B\s*\.\s*\d+\s*[.\-]\s*\d)/i)   // last: "B.2.9.A B.2.9.B" (space between two full refs)
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+  }
+
+  /*
+   * Parse ONE free-text ref (Breakdown QTY, CostX/PlanSwift exports) into candidate IDs.
+   * Returns { ids: [...], warnings: [...] } — more than one id when a letter range is given (B2.1.A-C).
+   */
+  function parseOne(ref, scheme, ctx) {
+    ctx = ctx || {};
+    var w = [];
+    var s = clean(ref).toUpperCase()
+      .replace(/^(?:BQ\s*)?(?:ITEM\s*)?(?:REF\.?\s*)?/, '')
+      .replace(/\bBILL\s*(?:NO\.?)?\s*/g, 'B')
+      .replace(/\bPAGE\s*/g, '')
+      .replace(/\bITEM\s*/g, '')
+      .replace(/\(.*?\)/g, '')
+      .trim();
+    if (!s) return { ids: [], warnings: ['Empty ref'] };
+
+    if (scheme === SCHEMES.PL) {
+      // tokens: bill, page, [of-pages], item letter(s) [ - item letter ]
+      var hasB = /^B/.test(s);
+      var body = s.replace(/^B\s*[.\-\s]?/, '');
+      var range = body.match(/([A-Z]{1,2})\s*-\s*([A-Z]{1,2})$/);
+      if (range) body = body.slice(0, range.index);
+      var toks = body.split(/[.\-\/\s]+/).filter(Boolean);
+      var nums = toks.filter(function (t) { return /^\d+$/.test(t); });
+      var lets = toks.filter(function (t) { return /^[A-Z]{1,2}$/.test(t); });
+      if (!hasB && ctx.bill && nums.length === 1) nums.unshift(String(ctx.bill).replace(/^B/i, ''));
+      if (nums.length < 2) return { ids: [], warnings: ['Cannot find bill and page in "' + ref + '"'] };
+      if (nums.length > 2) w.push('Extra number ignored in "' + ref + '" (page "of" count?)');
+      var bill = 'B' + parseInt(nums[0], 10), page = String(parseInt(nums[1], 10));
+      var items = [];
+      if (range) {
+        items = letterRange(range[1], range[2]);
+        if (!items) return { ids: [], warnings: ['Bad item range in "' + ref + '"'] };
+        w.push('Item range expanded: ' + range[1] + '-' + range[2]);
+      } else if (lets.length === 1) {
+        items = [lets[0]];
+      } else {
+        return { ids: [], warnings: ['Cannot find item letter in "' + ref + '"'] };
+      }
+      return { ids: items.map(function (i) { return bill + '.' + page + '.' + i; }), warnings: w };
+    }
+
+    if (scheme === SCHEMES.NUM) {
+      var mB = s.match(/^B\s*[.\-\s]?\s*(\d+)\s*[.\-\s]\s*(.+)$/);
+      var billN, itemS;
+      if (mB) { billN = parseInt(mB[1], 10); itemS = mB[2]; }
+      else { itemS = s; }
+      itemS = normItem(itemS, w);
+      var mI = itemS.match(/^(\d+(?:\.\d+)*)(?:\.?([A-Z]))?$/);
+      if (!mI) return { ids: [], warnings: ['Cannot read item number in "' + ref + '"'] };
+      itemS = mI[1] + (mI[2] ? '.' + mI[2] : '');
+      var first = parseInt(itemS.split('.')[0], 10);
+      var cands = [];
+      if (billN == null) {
+        billN = ctx.bill ? parseInt(String(ctx.bill).replace(/^B/i, ''), 10) : first;
+        cands.push('B' + billN + '.' + itemS);
+      } else if (first === billN) {
+        cands.push('B' + billN + '.' + itemS);                 // B4.4.1.1
+      } else {
+        cands.push('B' + billN + '.' + billN + '.' + itemS);   // B4.1.1 meaning item 4.1.1
+        cands.push('B' + billN + '.' + itemS);                 // or item 1.1 in bill 4
+        w.push('Ambiguous ref "' + ref + '" - resolved against the tender BQ');
+      }
+      return { ids: cands, warnings: w, candidates: cands.length > 1 };
+    }
+
+    if (scheme === SCHEMES.SEC) {
+      var m = s.replace(/^SEC(?:TION)?\s*/, '').match(/^([A-Z]{1,2})\s*[.\-\/\s]?\s*(\d+)(?:\s*[.\-\/\s]?\s*([A-Z]))?\.?$/);
+      if (!m) return { ids: [], warnings: ['Cannot read section/item in "' + ref + '"'] };
+      return { ids: [m[1] + '.' + m[2] + (m[3] ? '.' + m[3] : '')], warnings: w };
+    }
+    throw new Error('Unknown scheme: ' + scheme);
+  }
+
+  /*
+   * Resolve a free-text cell to IDs that exist in the tender BQ.
+   * knownIds: Set of canonical IDs from BQ_Items (optional).
+   * Returns { ids, unmatched, shared, warnings }.
+   *   shared = the cell named more than one item (one measurement covering several items) -> flag for review.
+   */
+  function resolve(text, scheme, knownIds, ctx) {
+    var parts = splitRefs(text);
+    var out = { ids: [], unmatched: [], shared: false, warnings: [] };
+    parts.forEach(function (p) {
+      var r = parseOne(p, scheme, ctx);
+      out.warnings = out.warnings.concat(r.warnings);
+      if (!r.ids.length) { out.unmatched.push(p); return; }
+      if (r.candidates) {
+        var hit = knownIds ? r.ids.filter(function (id) { return knownIds.has(id); }) : [];
+        if (hit.length === 1) out.ids.push(hit[0]);
+        else if (!knownIds) out.ids.push(r.ids[0]);
+        else out.unmatched.push(p);
+        return;
+      }
+      r.ids.forEach(function (id) {
+        if (knownIds && !knownIds.has(id)) out.unmatched.push(id);
+        else out.ids.push(id);
+      });
+    });
+    out.ids = out.ids.filter(function (v, i, a) { return a.indexOf(v) === i; });
+    out.shared = out.ids.length + out.unmatched.length > 1;
+    return out;
+  }
+
+  var api = {
+    SCHEMES: SCHEMES, normBill: normBill, normPage: normPage, normItem: normItem,
+    makeId: makeId, splitRefs: splitRefs, parseOne: parseOne, resolve: resolve
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.ItemId = api;
+})(this);
+
+</script>
+<script>
+/*
+ * QS CRM — read the tendered BQ from a tender workbook (SheetJS workbook object).
+ * Standard workbook: bill sheets named B1…Bn, header row "Page | Item | Description | Qty | Unit | Rate (B$) | Amount (B$) | Remarks".
+ * Also accepts legacy layouts: "Bill No.1" sheets, and single "BQ" / "SOQ-1" sheets (quotations).
+ * Needs ItemId (itemid.js) and XLSX (SheetJS).
+ */
+(function (root) {
+  'use strict';
+  var ItemId = (typeof require !== 'undefined') ? require('./itemid.js') : root.ItemId;
+  var S = ItemId.SCHEMES;
+
+  var UNIT_MAP = {
+    'M2': 'm2', 'M²': 'm2', 'SQ.M': 'm2', 'SQM': 'm2', 'M3': 'm3', 'M³': 'm3', 'CU.M': 'm3', 'M': 'm', 'LM': 'm', 'L.M': 'm',
+    'NO': 'No', 'NOS': 'No', "NO'S": 'No', 'NO.': 'No', 'PCS': 'No', 'NR': 'No', 'EA': 'No',
+    'L.S': 'LS', 'LS': 'LS', 'L/S': 'LS', 'LUMP SUM': 'LS', 'SUM': 'LS', 'ITEM': 'Item', 'KG': 'kg', 'T': 't', 'TONNE': 't',
+    'SET': 'Set', 'SETS': 'Set', 'PAIR': 'Pair', 'LOT': 'Lot', 'PROV': 'Prov', 'P.SUM': 'PS', 'PS': 'PS', 'PC': 'PC'
+  };
+  function normUnit(u) {
+    var s = String(u == null ? '' : u).trim();
+    if (!s) return '';
+    var k = s.toUpperCase().replace(/\s+/g, ' ');
+    return UNIT_MAP[k] || s;
+  }
+
+  function billSheets(wb) {
+    var out = [];
+    wb.SheetNames.forEach(function (n) {
+      var m = n.trim().match(/^B(\d+)$/i) || n.trim().match(/^Bill\s*No\.?\s*(\d+)$/i);
+      if (m) out.push({ sheet: n, bill: 'B' + parseInt(m[1], 10), legacy: !/^B\d+$/i.test(n.trim()) });
+    });
+    if (!out.length) {
+      wb.SheetNames.forEach(function (n) {
+        if (/^(BQ|BOQ|SOQ(-\d+)?|SOW)$/i.test(n.trim())) out.push({ sheet: n, bill: null, single: true, legacy: true });
+      });
+    }
+    if (!out.length) {
+      // one sheet per section, named A, B, C … (Tender 9 MOH quotation)
+      wb.SheetNames.forEach(function (n) {
+        if (/^[A-Z]$/i.test(n.trim())) out.push({ sheet: n, bill: n.trim().toUpperCase(), section: true, legacy: false });
+      });
+    }
+    return out;
+  }
+
+  function findHeader(rows) {
+    for (var r = 0; r < Math.min(rows.length, 40); r++) {
+      var cols = {};
+      (rows[r] || []).forEach(function (v, c) {
+        var t = String(v == null ? '' : v).trim().toLowerCase();
+        if (t === 'page') cols.page = c;
+        else if (t === 'item' || t === 'item no.' || t === 'item no' || t === 'no' || t === 'no.') cols.item = c;
+        else if (t === 'description' || t === 'descriptions') cols.desc = c;
+        else if (t === 'qty' || t === 'quantity') cols.qty = c;
+        else if (t === 'unit') cols.unit = c;
+        else if (/^rate/.test(t)) cols.rate = c;
+        else if (/^amount/.test(t)) cols.amount = c;
+        else if (t === 'remarks' || t === 'remark') cols.remarks = c;
+      });
+      if (cols.item != null && cols.desc != null && cols.qty != null) { cols.row = r; return cols; }
+    }
+    return null;
+  }
+
+  function num(v) {
+    if (typeof v === 'number') return v;
+    var s = String(v == null ? '' : v).replace(/[,\s]/g, '').replace(/^B\$/i, '');
+    if (s === '' || isNaN(Number(s))) return null;
+    return Number(s);
+  }
+
+  /* items: [{bill, item}] of measured lines. PL only when item letters restart inside a bill (A, B … A, B on the next page);
+     letters that run on without repeating (T10 Bill 2 OSH A-P) are just item codes -> NUM. */
+  function guessScheme(items) {
+    var letters = 0, dotted = 0, repeats = 0, seen = {};
+    items.forEach(function (o) {
+      var s = String(o.item).trim();
+      if (/^[A-Za-z]{1,2}$/.test(s)) {
+        letters++;
+        var k = o.bill + '|' + s.toUpperCase();
+        if (seen[k]) repeats++; seen[k] = 1;
+      } else if (INLINE_SUB.test(s) || /^\d+(\.\d+)*$/.test(s)) dotted++;
+    });
+    return (letters > dotted && repeats > 0) || (letters && !dotted && repeats > 0) ? S.PL : S.NUM;
+  }
+  var INLINE_SUB = /^(\d+(?:\.\d+)*)\.?\s*\(?([A-Za-z])\)?\.?$/;   // "3.3.1 a)" printed in one cell
+
+  /* opts: { XLSX, scheme? } -> { scheme, items:[...], bills:{B1:{total,count}}, total, issues:[...] } */
+  function readBQ(wb, opts) {
+    opts = opts || {};
+    var XLSX = opts.XLSX || root.XLSX;
+    var sheets = billSheets(wb);
+    var res = { scheme: opts.scheme || null, items: [], bills: {}, total: 0, issues: [], layout: '' };
+    if (!sheets.length) { res.issues.push('No bill sheets found (expected B1, B2 … or BQ)'); return res; }
+    res.layout = sheets[0].section ? 'one sheet per section (A, B, C)' : sheets[0].single ? 'single BQ sheet (legacy quotation)' : (sheets[0].legacy ? 'Bill No.n sheets (legacy)' : 'standard B-sheets');
+
+    var parsed = sheets.map(function (sh) {
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[sh.sheet], { header: 1, raw: true, defval: null });
+      var h = findHeader(rows);
+      if (!h) res.issues.push(sh.sheet + ': header row not found');
+      return { sh: sh, rows: rows, h: h };
+    }).filter(function (p) { return p.h; });
+
+    if (!res.scheme) {
+      var single = sheets[0].single, sample = [];
+      parsed.forEach(function (p) {
+        p.rows.slice(p.h.row + 1).forEach(function (r) {
+          if (r[p.h.item] != null && r[p.h.unit] != null && String(r[p.h.unit]).trim()) sample.push({ bill: p.sh.sheet, item: r[p.h.item] });
+        });
+      });
+      res.scheme = sheets[0].section ? S.SEC : (single && hasSectionLetters(parsed) ? S.SEC : guessScheme(sample));
+    }
+
+    var seen = {};
+    parsed.forEach(function (p) {
+      var h = p.h, page = '', heading = '', bill = p.sh.bill || (res.scheme === S.SEC ? '' : 'B1');
+      var parent = '', lastNo = 0;   // parent numbered item for lettered sub-items (a., b.)
+      function checkRestart(it) {
+        if (res.scheme !== S.SEC) return;
+        var n = parseInt(String(it).replace(/^[A-Za-z]+/, ''), 10);
+        if (isNaN(n)) return;
+        if (n < lastNo) res.issues.push(p.sh.sheet + ': item numbering restarts at ' + it + ' inside section ' + bill + ' - section letter missing in the source? Add it on the heading row (see standards).');
+        lastNo = n;
+      }
+      p.rows.slice(h.row + 1).forEach(function (r, i) {
+        var rowNo = h.row + 2 + i;
+        var pg = h.page != null ? r[h.page] : null;
+        if (pg != null && String(pg).trim()) page = String(pg).trim();
+        var item = r[h.item], desc = r[h.desc], unit = r[h.unit], qtyRaw = r[h.qty];
+        var itemS = item == null ? '' : String(item).trim();
+        var hasUnit = unit != null && String(unit).trim() !== '';
+        var hasQty = qtyRaw != null && String(qtyRaw).trim() !== '';
+        if (!itemS) { if (desc && !/^(sub-?total|collection|total|from page|carried)/i.test(String(desc).trim())) heading = String(desc).trim(); return; }
+        var isLetter = /^\(?[A-Za-z]{1,2}[.)]*$/.test(itemS);
+        if (!hasUnit && !hasQty) {
+          // heading line carrying an item code: section letter (SEC), parent of sub-items, or group heading
+          if (res.scheme === S.SEC && isLetter) { bill = itemS.replace(/[^A-Za-z]/g, '').toUpperCase(); parent = ''; lastNo = 0; }
+          else if (res.scheme !== S.PL && !isLetter) { parent = itemS; checkRestart(itemS); }
+          if (desc) heading = String(desc).trim();
+          return;
+        }
+        var sub = '', mIn = res.scheme !== S.PL && typeof item === 'string' && itemS.match(INLINE_SUB);
+        if (mIn) { item = mIn[1]; sub = mIn[2]; parent = ''; }
+        else if (res.scheme !== S.PL && isLetter && parent) { sub = itemS; item = parent; }
+        else if (res.scheme !== S.PL) { parent = ''; checkRestart(itemS); }
+        var w = [];
+        var qty = num(qtyRaw), u = normUnit(unit);
+        if (qty == null && (/lump/i.test(String(qtyRaw)) || u === 'LS')) { qty = 1; u = 'LS'; }   // lump sum with blank / "Lump" qty
+        if (res.scheme === S.SEC && !bill) res.issues.push(p.sh.sheet + ' row ' + rowNo + ': item before any section letter');
+        var id = ItemId.makeId({ scheme: res.scheme, bill: bill, page: page, item: item, sub: sub, warnings: w });
+        if (seen[id]) { res.issues.push('Duplicate ID ' + id + ' (rows ' + seen[id] + ' and ' + rowNo + ')'); id = id + '#' + rowNo; }
+        seen[id] = p.sh.sheet + '!' + rowNo;
+        var amount = num(r[h.amount]);
+        var rate = num(r[h.rate]);
+        if (qty == null) w.push('Qty not numeric: "' + qtyRaw + '"');
+        if (!u) w.push('No unit');
+        if (amount != null && rate != null && qty != null && Math.abs(qty * rate - amount) > 0.05) w.push('Qty x Rate <> Amount');
+        w.forEach(function (x) { res.issues.push(id + ': ' + x); });
+        res.items.push({
+          item_id: id, bill: bill, page: page, item: sub && !mIn ? String(item).trim() + ' ' + itemS : itemS, heading: heading,
+          description: desc == null ? '' : String(desc).trim(), qty: qty, unit: u,
+          rate: rate, amount: amount, remarks: h.remarks != null && r[h.remarks] != null ? String(r[h.remarks]) : '',
+          source: p.sh.sheet + '!' + rowNo
+        });
+        var b = res.bills[bill] || (res.bills[bill] = { total: 0, count: 0 });
+        b.total += amount || 0; b.count++;
+        res.total += amount || 0;
+      });
+    });
+    res.total = Math.round(res.total * 100) / 100;
+    Object.keys(res.bills).forEach(function (k) { res.bills[k].total = Math.round(res.bills[k].total * 100) / 100; });
+    return res;
+  }
+
+  function hasSectionLetters(parsed) {
+    return parsed.some(function (p) {
+      return p.rows.slice(p.h.row + 1).some(function (r) {
+        return /^[A-Za-z]$/.test(String(r[p.h.item] == null ? '' : r[p.h.item]).trim()) && (r[p.h.unit] == null || !String(r[p.h.unit]).trim());
+      });
+    });
+  }
+
+  var api = { readBQ: readBQ, billSheets: billSheets, normUnit: normUnit };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.BQRead = api;
+})(this);
+
+</script>
+<script>
+/*
+ * QS CRM — read tender register fields from a tender workbook (SheetJS).
+ * Standard: "Tender Info" sheet, labels in column A (value = first filled cell to the right).
+ * Legacy quotations (T03–T07): title block on "Final Summary" / "BQ" (PROJECT:, QUOTATION NO.:, CLIENT:, CLOSING DATE:).
+ * Values that start with "Not stated" / "Not printed" are left blank.
+ */
+(function (root) {
+  'use strict';
+
+  var FIELDS = [
+    ['tender_ref', /^(tender no\.?|quotation ref\.?|quotation no\.?:?)$/i],
+    ['project_no', /^project no\.?$/i],
+    ['title', /^(title \(as issued\)|project:?)$/i],
+    ['title_en', /^title \(english\)$/i],
+    ['client', /^(issuing authority|client:?)$/i],
+    ['closing_raw', /^(closing date & time.*|closing date:?|closing)$/i],
+    ['completion_period', /^(completion period offered|delivery & installation period offered)$/i],
+    ['completion_assumed', /^(contract \/ completion period|delivery \/ completion period)$/i],
+    ['location', /^(building|buildings|building owner \/ user)$/i]
+  ];
+
+  function blankIfNotStated(v) {
+    var s = String(v == null ? '' : v).trim();
+    return /^not (stated|printed)/i.test(s) ? '' : s;
+  }
+
+  var MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  /* "26/10/2026, 9.00 am" | "14 November 2026, 2.00 pm" -> "2026-10-26 09:00" */
+  function parseDate(s) {
+    s = String(s || '');
+    var d, m, y, t = '';
+    var a = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    var b = s.match(/(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/);
+    if (a) { d = +a[1]; m = +a[2]; y = +a[3]; }
+    else if (b && MONTHS[b[2].toLowerCase()]) { d = +b[1]; m = MONTHS[b[2].toLowerCase()]; y = +b[3]; }
+    else return '';
+    var tm = s.match(/(\d{1,2})[.:](\d{2})\s*(am|pm)/i);
+    if (tm) { var h = +tm[1] % 12 + (/pm/i.test(tm[3]) ? 12 : 0); t = ' ' + pad(h) + ':' + tm[2]; }
+    return y + '-' + pad(m) + '-' + pad(d) + t;
+  }
+
+  function scan(XLSX, ws, out) {
+    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+    rows.slice(0, 90).forEach(function (r) {
+      var label = String(r[0] || '').trim();
+      if (!label) return;
+      FIELDS.forEach(function (f) {
+        if (out[f[0]] || !f[1].test(label)) return;
+        for (var c = 1; c < Math.min(r.length, 5); c++) {
+          var v = String(r[c] || '').trim();
+          if (v) { out[f[0]] = blankIfNotStated(v); return; }
+        }
+      });
+    });
+  }
+
+  function clientGroup(client, ref) {
+    var s = (client || '') + ' ' + (ref || '');
+    if (/kesihatan|ministry of health|\bMOH\b/i.test(s)) return 'MOH';
+    if (/pendidikan|ministry of education|JPPE|\bMOE\b/i.test(s)) return 'MOE';
+    if (/kerja raya|\bJKR\b|public works/i.test(s)) return 'JKR';
+    return client ? 'Other' : '';
+  }
+
+  /* -> { tender_ref, project_no, title, title_en, client, client_group, closing_date, completion_period, location } */
+  function readInfo(wb, opts) {
+    var XLSX = (opts && opts.XLSX) || root.XLSX, out = {};
+    var info = wb.SheetNames.filter(function (n) { return /^tender info/i.test(n.trim()); });
+    var legacy = wb.SheetNames.filter(function (n) { return /^(final summary|bq|boq|sow|soq(-\d+)?)$/i.test(n.trim()); });
+    info.concat(legacy).forEach(function (n) { scan(XLSX, wb.Sheets[n], out); });
+    out.tender_ref = String(out.tender_ref || '').split(/\s{2,}/)[0].replace(/\s*\/\s*/g, '/').trim();
+    out.client_group = clientGroup(out.client, out.tender_ref);
+    out.closing_date = parseDate(out.closing_raw);
+    if (!out.completion_period && out.completion_assumed) out.completion_period = '';
+    delete out.closing_raw; delete out.completion_assumed;
+    Object.keys(out).forEach(function (k) { if (out[k] == null) out[k] = ''; });
+    return out;
+  }
+
+  var api = { readInfo: readInfo, parseDate: parseDate, clientGroup: clientGroup };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.TenderInfo = api;
+})(this);
+
+</script>
+<script>
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'1.2.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'1.3.0', user:'Gemz' };
 var CHANGELOG = [
+  { v:'1.3.0', date:'5 Nov 2026', items:[
+    'Import: create a tender straight from a priced workbook (.xlsx). Tender details, our sum and every BQ line are read and shown for checking before saving; the file is stored in Google Drive.',
+    'Tender details: Upload file to the tender\'s Drive folder (can also replace the tendered BQ when not locked) and Open folder.',
+    'Theme switch is now a single icon: Auto / Day / Night.',
+    'Full-screen button beside × on the tender panel; Shift+click pops the tender out in its own window.',
+    'Type cards (Tender, Quotation, Sub-contract quote, Supply quote, Internal estimate) with count, value and results; the KPI row follows the filters.',
+    'New type: Internal estimate (pricing for internal use only).',
+    'Reports page: by type, status pipeline, by client and bid results, with Excel export. The BQ import menu opens the importer.',
+    'BQ item ID scheme: plain-language help with examples; the importer sets it for you.' ]},
   { v:'1.2.0', date:'4 Nov 2026', items:[
     'ARZA favicon (browser tab and phone home screen).',
     'ARZA SDN BHD logo in the top bar and on the sign-in page, with ARZA QS CRM SYSTEM centred below it.',
@@ -294,7 +845,16 @@ var CHANGELOG = [
 /* ---------- state ---------- */
 var S = { mode:'', url:'', pw:'', tenders:[], lists:{}, log:[], sort:{k:'arza_no',dir:-1}, cur:null, tab:'det', fileDB:null };
 var DEFAULT_LISTS = { status:['Prospect','Pricing','Submitted','Won','Lost','Cancelled','No bid'], client_group:['JKR','MOE','MOH','Other'],
-  tender_type:['Tender','Quotation','Sub-contract quote','Supply quote'], id_scheme:['PL','NUM','SEC'] };
+  tender_type:['Tender','Quotation','Sub-contract quote','Supply quote','Internal estimate'], id_scheme:['PL','NUM','SEC'] };
+var SCHEME_LABEL = { PL:'PL — page + letter (e.g. B1.1.A)', NUM:'NUM — numbered items (e.g. B4.4.1.1)', SEC:'SEC — section + number (e.g. C.3)' };
+var ICONS = {
+  auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>',
+  day:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  night:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+  full:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
+  shrink:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>'
+};
+var THEME_NEXT = { auto:'day', day:'night', night:'auto' }, THEME_NAME = { auto:'Auto (follows your device)', day:'Day', night:'Night' };
 var OPEN = ['Prospect','Pricing'];
 var $ = function(id){ return document.getElementById(id); };
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -323,7 +883,7 @@ function applyTheme(m){
   m = m || themeMode();
   var dark = m==='night' || (m==='auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.setAttribute('data-theme', dark?'dark':'light');
-  document.querySelectorAll('#theme button').forEach(function(b){ b.classList.toggle('on', b.dataset.m===m); });
+  var b=$('btnTheme'); if(b){ b.innerHTML=ICONS[m]; b.title='Theme: '+THEME_NAME[m]+' — click for '+THEME_NAME[THEME_NEXT[m]].split(' (')[0]; }
 }
 function setTheme(m){ try{ localStorage.setItem('qscrm.theme',m); }catch(e){} applyTheme(m); }
 function dirty(){ return S.snap!=null && S.snap!==formSnap(); }
@@ -343,7 +903,7 @@ function forget(){ try{ ['pw'].forEach(function(k){ sessionStorage.removeItem('q
 
 /* ---------- login ---------- */
 function showLogin(err){
-  $('vLogin').classList.remove('hidden'); $('vMain').classList.add('hidden'); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
+  $('vLogin').classList.remove('hidden'); $('vMain').classList.add('hidden'); $('vRep').classList.add('hidden'); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
   $('inUrl').value = load('url'); $('loginErr').textContent = err||''; closeDrawer();
   setTimeout(function(){ ($('inUrl').value? $('inPw') : $('inUrl')).focus(); }, 30);
 }
@@ -367,8 +927,8 @@ function enter(){
   $('vLogin').classList.add('hidden'); $('vMain').classList.remove('hidden'); $('top').classList.remove('hidden'); $('btnOut').classList.remove('hidden'); clock();
   var c=$('conn'); c.classList.remove('hidden'); c.classList.toggle('ro', ro());
   c.querySelector('span').textContent = ro() ? 'Read-only: '+S.fileName : 'Google Sheet: QS CRM DB';
-  $('btnNew').classList.toggle('hidden', ro());
-  fillFilters(); render();
+  $('btnNew').classList.toggle('hidden', ro()); $('btnImport').classList.toggle('hidden', ro());
+  fillFilters(); showView('tenders'); openFromHash();
 }
 function refresh(){
   if(ro()) return Promise.resolve();
@@ -397,7 +957,9 @@ function openFile(f){
 }
 
 /* ---------- register ---------- */
-function L(k){ return (S.lists[k] && S.lists[k].length) ? S.lists[k] : (DEFAULT_LISTS[k]||[]); }
+function L(k){ var a=(S.lists[k] && S.lists[k].length) ? S.lists[k].slice() : (DEFAULT_LISTS[k]||[]).slice();
+  if(k==='tender_type') (DEFAULT_LISTS[k]||[]).forEach(function(x){ if(a.indexOf(x)<0) a.push(x); });
+  return a; }
 function fillFilters(){
   function opts(sel,arr,first){ var v=sel.value; sel.innerHTML='<option value="">'+first+'</option>'+arr.map(function(x){return '<option>'+esc(x)+'</option>';}).join(''); sel.value=v; }
   opts($('fStatus'), ['(not set)'].concat(L('status')), 'All statuses');
@@ -422,11 +984,31 @@ function filtered(){
     return (x<z?-1:x>z?1:0)*S.sort.dir;
   });
 }
+function filterNote(){ var a=[]; if($('fType').value) a.push($('fType').value); if($('fGroup').value) a.push($('fGroup').value); if($('fStatus').value) a.push($('fStatus').value); if($('fYear').value) a.push($('fYear').value); if($('q').value.trim()) a.push('"'+$('q').value.trim()+'"'); return a.join(' · '); }
+function stats(arr){
+  var o={n:arr.length,value:0,open:0,sub:0,won:0,lost:0,wonV:0,diffs:[]};
+  arr.forEach(function(t){ var v=Number(t.our_sum)||0; o.value+=v;
+    if(!t.status||OPEN.indexOf(t.status)>=0) o.open++;
+    if(['Submitted','Won','Lost'].indexOf(t.status)>=0) o.sub++;
+    if(t.status==='Won'){ o.won++; o.wonV+=v; } if(t.status==='Lost') o.lost++;
+    if(t.diff_pct!==''&&t.diff_pct!=null&&t.status==='Lost') o.diffs.push(Number(t.diff_pct)); });
+  o.rate=(o.won+o.lost)? Math.round(o.won/(o.won+o.lost)*100)+'%':'–';
+  o.avgDiff=o.diffs.length? o.diffs.reduce(function(a,b){return a+b;},0)/o.diffs.length : '';
+  return o;
+}
+function renderTypes(){
+  var cur=$('fType').value;
+  $('types').innerHTML=L('tender_type').map(function(ty){
+    var st=stats(S.tenders.filter(function(t){return t.tender_type===ty;}));
+    return '<button class="tcard'+(cur===ty?' on':'')+'" data-ty="'+esc(ty)+'" title="Show only '+esc(ty)+' records (click again to show all)"><div class="h">'+esc(ty)+'<b>'+st.n+'</b></div><div class="v">B$ '+money0(st.value)+'</div><div class="s">'+st.open+' open · '+st.sub+' submitted · '+st.won+' won · '+st.lost+' lost</div></button>';
+  }).join('');
+}
 function chip(s){ return s ? '<span class="chip st-'+esc(s)+'">'+esc(s)+'</span>' : '<span class="chip st-none">Not set</span>'; }
 function render(){
   var list=filtered();
   /* KPIs on the whole register */
-  var all=S.tenders, open=all.filter(function(t){ return !t.status || OPEN.indexOf(t.status)>=0; });
+  renderTypes();
+  var all=list, open=all.filter(function(t){ return !t.status || OPEN.indexOf(t.status)>=0; });
   var soon=all.filter(function(t){ var d=days(t.closing_date); return d!=null && d>=0 && d<=7 && (!t.status||OPEN.indexOf(t.status)>=0); });
   var sub=all.filter(function(t){ return ['Submitted','Won','Lost'].indexOf(t.status)>=0; });
   var won=all.filter(function(t){return t.status==='Won';}), lost=all.filter(function(t){return t.status==='Lost';});
@@ -434,13 +1016,15 @@ function render(){
   var wonV=won.reduce(function(s,t){ return s+(Number(t.our_sum)||0); },0);
   var noStatus=all.filter(function(t){return !t.status;}).length;
   $('kpis').innerHTML=[
-    ['Tenders', all.length, noStatus? noStatus+' without a status':'All with a status'],
+    ['Records', all.length, noStatus? noStatus+' without a status':'All with a status'],
     ['Open (prospect / pricing)', open.length, soon.length? soon.length+' closing within 7 days':'None closing within 7 days'],
     ['Value priced (B$)', money0(bid), sub.length+' submitted / decided'],
     ['Win rate', (won.length+lost.length)? Math.round(won.length/(won.length+lost.length)*100)+'%':'–', won.length+' won · '+lost.length+' lost'],
     ['Won value (B$)', money0(wonV), won.length? won.length+' contract'+(won.length>1?'s':''):'No results recorded yet']
   ].map(function(k){ return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+k[2]+'</div></div>'; }).join('');
-  $('count').textContent = list.length===all.length ? all.length+' tenders' : list.length+' of '+all.length+' tenders';
+  var tot=S.tenders.length, fl=filterNote();
+  $('scope').textContent = fl ? 'Figures above: '+fl : 'Figures above: all records';
+  $('count').textContent = list.length===tot ? tot+' records' : list.length+' of '+tot+' records';
   document.querySelectorAll('th[data-k]').forEach(function(th){ var a=th.querySelector('.ar'); if(a) a.remove(); if(th.dataset.k===S.sort.k) th.insertAdjacentHTML('beforeend','<span class="ar">'+(S.sort.dir>0?'▲':'▼')+'</span>'); });
   if(!list.length){ $('rows').innerHTML='<tr><td colspan="9" class="empty">No tenders match these filters.</td></tr>'; return; }
   $('rows').innerHTML=list.map(function(t){
@@ -462,6 +1046,13 @@ function render(){
 }
 
 /* ---------- drawer ---------- */
+var SCHEME_HELP = '<b>How are the items numbered in the client\'s BQ?</b> The system uses this to give every BQ line a unique ID, so site quantities (Breakdown QTY) can be matched to it later. '+
+  'You normally do not choose it: the importer reads the Item column and sets it. To check, look at the Item column of the BQ:'+
+  '<table><thead><tr><th>Scheme</th><th>The Item column looks like</th><th>ID given</th><th>Your tenders</th></tr></thead><tbody>'+
+  '<tr><td><b>PL</b><br>page + letter</td><td>A, B, C … starting again at A on every page</td><td><code>B1.1.A</code> = Bill 1, page 1, item A</td><td>T01, T02 (JKR DTS), MOE Block D</td></tr>'+
+  '<tr><td><b>NUM</b><br>numbered</td><td>1.1, 4.1.1, 3.3.1 a) … every number used once</td><td><code>B4.4.1.1</code> = Bill 4, item 4.1.1</td><td>T06, T07, T08, T10 (JKR DBSBM)</td></tr>'+
+  '<tr><td><b>SEC</b><br>section + number</td><td>Sections A, B, C … with items 1, 2, 3 starting again in each section</td><td><code>C.3</code> = section C, item 3</td><td>T03, T04, T05 (MOE), T09 (MOH)</td></tr>'+
+  '</tbody></table>Sub-items a), b) add a letter: <code>C.1.A</code>, <code>B3.3.3.1.A</code>.';
 var FIELDS = [
   ['sec','Tender'],
   ['tender_ref','Client tender / quotation ref','text',{hint:'As printed. Leave blank when the client gave none (e.g. T06).'}],
@@ -480,10 +1071,10 @@ var FIELDS = [
   ['sec','Our bid'],
   ['our_sum','Our tender sum (B$)','number',{lock:1,hint:'From the priced workbook Summary. Locked with the BQ.'}],
   ['completion_period','Completion period offered','text'],
-  ['id_scheme','BQ item ID scheme','select','id_scheme',{lock:1,hint:'PL = page-letter (B1.1.A) · NUM = numbered (B4.4.1.1) · SEC = section (C.3)'}],
+  ['id_scheme','BQ item ID scheme','select','id_scheme',{lock:1,hint:'Set automatically when the BQ is imported. Change it only if the detection was wrong.'}],
   ['sec','Files'],
   ['workbook_file','Priced workbook file','text',{full:1}],
-  ['folder_link','Folder link (Drive)','url',{full:1}],
+  ['folder_link','Folder link (Google Drive)','url',{full:1,hint:'Upload the priced workbook (or any tender document): it is stored in Drive › QS CRM - Tenders › this tender.'}],
   ['notes','Notes','textarea',{full:1}]
 ];
 function openDrawer(no, tab){
@@ -492,10 +1083,13 @@ function openDrawer(no, tab){
   $('shade').classList.remove('hidden'); $('drawer').classList.remove('hidden');
   drawHead(); drawTab(); render();
 }
-function closeDrawer(force){ if(force!==true && S.cur && dirty() && !confirm('Discard the changes you made?')) return; S.snap=null; $('shade').classList.add('hidden'); $('drawer').classList.add('hidden'); S.cur=null; if(!$('vMain').classList.contains('hidden')) render(); }
+function closeDrawer(force){ if(force!==true && S.cur && dirty() && !confirm('Discard the changes you made?')) return; S.snap=null; $('shade').classList.add('hidden'); $('drawer').classList.add('hidden'); $('drawer').classList.remove('full');
+  if(S.popout){ S.popout=false; try{ window.close(); }catch(e){} } S.cur=null; if(!$('vMain').classList.contains('hidden')) render(); }
 function drawHead(){
   var t=S.cur;
   $('dNo').textContent = t._new ? 'New' : t.arza_no;
+  var full=$('drawer').classList.contains('full'); $('dFull').innerHTML=full?ICONS.shrink:ICONS.full;
+  $('dFull').title=(full?'Exit full screen':'Full screen')+(t._new?'':' (Shift+click: pop out in a new window)');
   $('dTitle').textContent = t._new ? 'New tender (next T number is given on save)' : (t.title_en||t.title||'(no title)');
   $('dMeta').innerHTML = t._new ? '' : [t.tender_ref||'No client ref', t.client_group, chip(t.status), t.locked==='Y'?'🔒 BQ locked '+esc(fmtDate(t.locked_at)):'BQ not locked'].filter(Boolean).map(function(x){return x.indexOf('<')===0?x:esc(x);}).join(' · ').replace(/&lt;span/g,'<span');
   document.querySelectorAll('#dTabs a').forEach(function(a){ a.classList.toggle('on', a.dataset.t===S.tab); a.classList.toggle('hidden', !!t._new && a.dataset.t!=='det'); });
@@ -511,8 +1105,14 @@ function drawTab(){
       var dis = ro() || (opt.lock && locked);
       var hint = opt.lock&&locked ? 'Locked with the tendered BQ.' : (opt.hint||'');
       var h='<div class="f'+(opt.full?' full':'')+'"><label for="x_'+k+'">'+lab+'</label>';
+      if(k==='id_scheme') h=h.replace(lab+'</label>',lab+' <span class="help" id="schemeHelp">What is this?</span></label>');
       if(type==='select'){ var arr=L(x[3]); if(v&&arr.indexOf(v)<0) arr=arr.concat([v]);
-        h+='<select id="x_'+k+'"'+(dis?' disabled':'')+'><option value="">–</option>'+arr.map(function(o){return '<option'+(o===v?' selected':'')+'>'+esc(o)+'</option>';}).join('')+'</select>'; }
+        h+='<select id="x_'+k+'"'+(dis?' disabled':'')+'><option value="">–</option>'+arr.map(function(o){return '<option value="'+esc(o)+'"'+(o===v?' selected':'')+'>'+esc(k==='id_scheme'&&SCHEME_LABEL[o]?SCHEME_LABEL[o]:o)+'</option>';}).join('')+'</select>';
+        if(k==='id_scheme') h+='<div class="helpbox hidden" id="schemeBox">'+SCHEME_HELP+'</div>'; }
+      else if(k==='folder_link'){
+        h+='<div class="fl"><input id="x_'+k+'" type="url" value="'+esc(v)+'"'+(dis?' readonly':'')+' placeholder="Filled in when you upload a file">'+
+          (v?'<a class="btn" href="'+esc(v)+'" target="_blank" rel="noopener">Open folder</a>':'')+
+          (ro()||t._new?'':'<button class="btn" id="bUpload" type="button">Upload file…</button>')+'</div>'; }
       else if(type==='textarea') h+='<textarea id="x_'+k+'"'+(dis?' readonly':'')+'>'+esc(v)+'</textarea>';
       else { if(type==='datetime-local' && v) v=String(v).replace(' ','T').slice(0,16); if(type==='date'&&v) v=String(v).slice(0,10);
         h+='<input id="x_'+k+'" type="'+type+'" value="'+esc(v)+'"'+(type==='number'?' step="0.01"':'')+(dis?' readonly':'')+'>'; }
@@ -528,6 +1128,8 @@ function drawTab(){
     if($('bCancel')) $('bCancel').onclick=cancel;
     S.snap=formSnap();
     if($('bLock')) $('bLock').onclick=lock;
+    if($('schemeHelp')) $('schemeHelp').onclick=function(){ $('schemeBox').classList.toggle('hidden'); };
+    if($('bUpload')) $('bUpload').onclick=function(){ if(dirty()){ toast('Save or cancel your changes first.',true); return; } $('upFile').click(); };
     if($('bUnlock')) $('bUnlock').onclick=unlock;
   }
   else if(S.tab==='res'){
@@ -626,6 +1228,165 @@ function saveResult(){
     .then(function(r){ return afterSave(r,'Result saved'); }).catch(function(e){ busy(btn,false); fail(e); });
 }
 
+/* ---------- full screen / pop out ---------- */
+function toggleFull(e){
+  var t=S.cur; if(!t) return;
+  if(e && e.shiftKey && !t._new && !ro()){
+    if(dirty() && !confirm('Discard the changes you made here? The tender opens in a new window.')) return;
+    var w=window.open(location.pathname+location.search+'#open='+encodeURIComponent(t.arza_no)+'&tab='+S.tab,'qscrm_'+t.arza_no,'popup,width=980,height=900');
+    if(w){ closeDrawer(true); } else toast('The browser blocked the pop-out window. Allow pop-ups for this site.',true);
+    return;
+  }
+  $('drawer').classList.toggle('full'); drawHead();
+}
+function openFromHash(){
+  var m=location.hash.match(/open=(T\d+)(?:&tab=(\w+))?/); if(!m) return;
+  history.replaceState(null,'',location.pathname+location.search);
+  if(!S.tenders.some(function(x){return x.arza_no===m[1];})) return;
+  S.popout=!!window.opener; openDrawer(m[1], m[2]||'det'); $('drawer').classList.add('full'); drawHead();
+}
+
+/* ---------- files: read a workbook in the browser ---------- */
+function b64(buf){ var b=new Uint8Array(buf), s='', CH=0x8000; for(var i=0;i<b.length;i+=CH) s+=String.fromCharCode.apply(null,b.subarray(i,i+CH)); return btoa(s); }
+var MAX_FILE=20*1024*1024;
+function readWorkbook(file){
+  return file.arrayBuffer().then(function(buf){
+    var out={ name:file.name, type:file.type||'', size:file.size, data:b64(buf) };
+    if(/\.xls[xm]$/i.test(file.name)){
+      try{
+        var wb=XLSX.read(new Uint8Array(buf),{type:'array'});
+        out.wb=wb; out.bq=BQRead.readBQ(wb,{XLSX:XLSX}); out.info=TenderInfo.readInfo(wb,{XLSX:XLSX});
+      }catch(e){ out.err=e.message; }
+    }
+    return out;
+  });
+}
+function noFromName(name){ var m=String(name).match(/tender\s*(\d{1,3})\b/i); return m? 'T'+String(+m[1]).padStart(2,'0') : ''; }
+function guessType(info,name){ var s=(info.tender_ref||'')+' '+name;
+  if(/qtn|quotation|jppe|\bDP\//i.test(s)) return 'Quotation';
+  if(/\bJKR\b/i.test(s)) return 'Tender';
+  return ''; }
+function nextFree(){ var mx=0; S.tenders.forEach(function(t){ var m=String(t.arza_no).match(/^T(\d+)$/); if(m) mx=Math.max(mx,+m[1]); }); var n=mx+1; return 'T'+(n<10?'0':'')+n; }
+function billsTable(bq){
+  var k=Object.keys(bq.bills); if(!k.length) return '<div class="note w">No priced BQ lines found in this file.</div>';
+  return '<div class="tbl"><table class="mini"><thead><tr><th>Bill / section</th><th class="r">Lines</th><th class="r">Amount (B$)</th></tr></thead><tbody>'+
+    k.map(function(b){ return '<tr style="cursor:default"><td class="no">'+esc(b)+'</td><td class="r num">'+bq.bills[b].count+'</td><td class="r num">'+money(bq.bills[b].total)+'</td></tr>'; }).join('')+
+    '<tr style="cursor:default;font-weight:600"><td>Total</td><td class="r num">'+bq.items.length+'</td><td class="r num">'+money(bq.total)+'</td></tr></tbody></table></div>';
+}
+function issuesBox(bq){ return bq.issues.length ? '<div class="issues"><b>'+bq.issues.length+' item'+(bq.issues.length>1?'s':'')+' to check:</b><br>'+bq.issues.slice(0,12).map(esc).join('<br>')+(bq.issues.length>12?'<br>…':'')+'</div>' : ''; }
+function modal(title, body, foot){ $('impTitle').textContent=title; $('impBody').innerHTML=body; $('impFoot').innerHTML=foot; $('impModal').classList.remove('hidden'); }
+function closeModal(){ $('impModal').classList.add('hidden'); }
+function cleanItems(bq){ return bq.items.map(function(x){ return {item_id:x.item_id,bill:x.bill,page:x.page,item:x.item,heading:x.heading,description:x.description,unit:x.unit,qty:x.qty,rate:x.rate,amount:x.amount,remarks:x.remarks,source:x.source}; }); }
+
+/* ---------- import: new tender from a workbook ---------- */
+function startImport(){ if(ro()){ toast('Sign in to import (read-only mode).',true); return; } $('impFile').click(); }
+function showImport(f){
+  if(f.size>MAX_FILE){ toast('File is larger than 20 MB.',true); return; }
+  if(f.err||!f.bq){ toast('Could not read the workbook: '+(f.err||'not an Excel file'),true); return; }
+  var i=f.info, bq=f.bq, wantNo=noFromName(f.name), taken=!!wantNo && S.tenders.some(function(t){return t.arza_no===wantNo;});
+  var no = wantNo && !taken ? wantNo : nextFree();
+  var dup = i.tender_ref ? S.tenders.filter(function(t){ return t.tender_ref && String(t.tender_ref).toUpperCase()===String(i.tender_ref).toUpperCase(); }) : [];
+  var ty=guessType(i,f.name);
+  function sel(id,arr,v,lab){ return '<select id="'+id+'"><option value="">–</option>'+arr.map(function(o){return '<option value="'+esc(o)+'"'+(o===v?' selected':'')+'>'+esc(lab&&lab[o]?lab[o]:o)+'</option>';}).join('')+'</select>'; }
+  var body=
+    (dup.length?'<div class="note w">'+esc(i.tender_ref)+' is already in the register as '+dup.map(function(t){return t.arza_no;}).join(', ')+'. Import only if this is a separate submission (e.g. a re-tender). To update '+dup[0].arza_no+', open it and use Upload file instead.</div>':'')+
+    '<div class="note">Read from <b>'+esc(f.name)+'</b> ('+esc(bq.layout||'')+'). Check the details, then import. The workbook is saved to Google Drive › QS CRM - Tenders › '+esc(no)+'.</div>'+
+    '<div class="form">'+
+      '<div class="f"><label>ARZA no.</label><input id="i_no" value="'+esc(no)+'" readonly><div class="hint">'+(wantNo? (taken? wantNo+' is already used, so the next free number is given.' : 'Taken from the file name ("Tender '+(+wantNo.slice(1))+'").') : 'Next free number (the file name has no "Tender n").')+'</div></div>'+
+      '<div class="f"><label>Client tender / quotation ref</label><input id="i_ref" value="'+esc(i.tender_ref)+'"></div>'+
+      '<div class="f full"><label>Title (as issued)</label><textarea id="i_title">'+esc(i.title)+'</textarea></div>'+
+      '<div class="f full"><label>Title (English)</label><textarea id="i_title_en">'+esc(i.title_en)+'</textarea></div>'+
+      '<div class="f full"><label>Client / issuing authority</label><input id="i_client" value="'+esc(i.client)+'"></div>'+
+      '<div class="f"><label>Client group</label>'+sel('i_group',L('client_group'),i.client_group)+'</div>'+
+      '<div class="f"><label>Type</label>'+sel('i_type',L('tender_type'),ty)+'</div>'+
+      '<div class="f"><label>Status</label>'+sel('i_status',L('status'),'Pricing')+'</div>'+
+      '<div class="f"><label>Closing date & time</label><input id="i_close" type="datetime-local" value="'+esc(String(i.closing_date||'').replace(' ','T').slice(0,16))+'"></div>'+
+      '<div class="f"><label>Our tender sum (B$)</label><input id="i_sum" value="'+esc(money(bq.total))+'" readonly><div class="hint">Total of the priced BQ lines.</div></div>'+
+      '<div class="f"><label>BQ item ID scheme</label>'+sel('i_scheme',['PL','NUM','SEC'],bq.scheme,SCHEME_LABEL)+'<div class="hint">Detected from the Item column.</div></div>'+
+      '<div class="f full"><label>Completion period offered</label><input id="i_comp" value="'+esc(i.completion_period)+'"></div>'+
+    '</div><h3 style="font-size:13.5px;margin:16px 0 8px">Tendered BQ found</h3>'+billsTable(bq)+issuesBox(bq)+
+    '<label class="chkrow"><input type="checkbox" id="i_drive" checked> Save the workbook to Google Drive</label>';
+  modal('Import tender workbook', body, '<span class="msg">'+bq.items.length+' BQ lines · '+(f.size/1024).toFixed(0)+' KB</span><button class="btn" id="iCancel">Cancel</button><button class="btn pri" id="iGo">Import as '+esc(no)+'</button>');
+  $('iCancel').onclick=closeModal;
+  $('iGo').onclick=function(){
+    var fields={ tender_ref:$('i_ref').value.trim(), title:$('i_title').value.trim(), title_en:$('i_title_en').value.trim(), client:$('i_client').value.trim(),
+      client_group:$('i_group').value, tender_type:$('i_type').value, status:$('i_status').value, closing_date:$('i_close').value.replace('T',' '),
+      our_sum:bq.total, id_scheme:$('i_scheme').value, completion_period:$('i_comp').value.trim(), project_no:i.project_no||'', location:i.location||'' };
+    if(!fields.title && !fields.tender_ref){ toast('Give at least a title or the client ref.',true); return; }
+    var items = fields.id_scheme===bq.scheme ? cleanItems(bq) : cleanItems(BQRead.readBQ(f.wb,{XLSX:XLSX,scheme:fields.id_scheme}));
+    var btn=$('iGo'); busy(btn,true,'Importing…');
+    api('importTender',{ arza_no:$('i_no').value, fields:fields, items:items, file:$('i_drive').checked?{name:f.name,type:f.type,data:f.data}:null })
+      .then(function(row){ closeModal(); var n=row._bq_lines; afterSave(row,'Imported as '+row.arza_no); S.cur._bq_lines=n; openDrawer(row.arza_no); })
+      .catch(function(e){ busy(btn,false); fail(e); });
+  };
+}
+
+/* ---------- upload a file to an existing tender ---------- */
+function showUpload(f){
+  var t=S.cur; if(!t) return;
+  if(f.size>MAX_FILE){ toast('File is larger than 20 MB.',true); return; }
+  var canBQ = !!(f.bq && f.bq.items.length && t.locked!=='Y');
+  var body='<div class="note">Save <b>'+esc(f.name)+'</b> ('+(f.size/1024).toFixed(0)+' KB) to Google Drive › QS CRM - Tenders › '+esc(t.arza_no)+(t.folder_link?' (existing folder)':' (a new folder is made)')+'.</div>';
+  if(f.bq && f.bq.items.length){
+    var diff=Math.round((f.bq.total-(Number(t.our_sum)||0))*100)/100;
+    body+='<h3 style="font-size:13.5px;margin:12px 0 8px">Tendered BQ in this file</h3>'+billsTable(f.bq)+issuesBox(f.bq)+
+      (t.locked==='Y' ? '<div class="note w">The tendered BQ of '+esc(t.arza_no)+' is locked, so only the file is stored. Unlock it first to replace the BQ.</div>' :
+      '<label class="chkrow"><input type="checkbox" id="u_bq"'+(!t._bq_lines?' checked':'')+'> <span>Also replace the tendered BQ of '+esc(t.arza_no)+' ('+(t._bq_lines||0)+' lines now) with these '+f.bq.items.length+' lines and set our sum to B$'+money(f.bq.total)+
+      (Math.abs(diff)>0.01?' <b>(B$'+money(diff)+' different from the current sum)</b>':' (same as the current sum)')+'.</span></label>');
+  }
+  modal('Upload file — '+t.arza_no, body, '<button class="btn" id="uCancel">Cancel</button><button class="btn pri" id="uGo">Upload</button>');
+  $('uCancel').onclick=closeModal;
+  $('uGo').onclick=function(){
+    var rep = canBQ && $('u_bq') && $('u_bq').checked;
+    var btn=$('uGo'); busy(btn,true,'Uploading…');
+    api('uploadFile',{ arza_no:t.arza_no, file:{name:f.name,type:f.type,data:f.data}, replaceBQ:!!rep, items:rep?cleanItems(f.bq):null, our_sum:rep?f.bq.total:null, id_scheme:rep?f.bq.scheme:null })
+      .then(function(row){ closeModal(); var n=row._bq_lines; afterSave(row, rep?'File saved and BQ replaced':'File saved to Drive'); if(n!=null){ S.cur._bq_lines=n; render(); } })
+      .catch(function(e){ busy(btn,false); fail(e); });
+  };
+}
+
+/* ---------- views & reports ---------- */
+function showView(v){
+  if(v==='import'){ startImport(); return; }
+  S.view=v;
+  document.querySelectorAll('#nav a[data-v]').forEach(function(a){ a.classList.toggle('on', a.dataset.v===v); });
+  $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports');
+  if(v==='reports') renderReports(); else render();
+}
+function repRows(){
+  var by=function(key,vals){ return vals.map(function(v){ var arr=S.tenders.filter(function(t){ return key==='status'&&v==='(not set)' ? !t.status : t[key]===v; }); return {k:v, st:stats(arr)}; }).filter(function(r){return r.st.n;}); };
+  return { types:by('tender_type',L('tender_type')), groups:by('client_group',L('client_group')), statuses:by('status',['(not set)'].concat(L('status'))),
+    results:S.tenders.filter(function(t){ return ['Won','Lost','Cancelled','No bid'].indexOf(t.status)>=0; }) };
+}
+function statTable(rows, label){
+  var head='<thead><tr><th>'+label+'</th><th class="r">Records</th><th class="r">Value priced (B$)</th><th class="r">Open</th><th class="r">Submitted</th><th class="r">Won</th><th class="r">Lost</th><th class="r">Win rate</th><th class="r">Won value (B$)</th><th class="r">Avg ours vs winner (lost)</th></tr></thead>';
+  var tr=function(k,st,b){ return '<tr'+(b?' style="font-weight:600"':'')+'><td>'+esc(k)+'</td><td class="r num">'+st.n+'</td><td class="r num">'+money(st.value)+'</td><td class="r num">'+st.open+'</td><td class="r num">'+st.sub+'</td><td class="r num">'+st.won+'</td><td class="r num">'+st.lost+'</td><td class="r num">'+st.rate+'</td><td class="r num">'+money(st.wonV)+'</td><td class="r num">'+(st.avgDiff===''?'–':pct(st.avgDiff))+'</td></tr>'; };
+  return '<div class="tbl"><table>'+head+'<tbody>'+rows.map(function(r){return tr(r.k,r.st);}).join('')+tr('Total',stats(S.tenders),1)+'</tbody></table></div>';
+}
+function renderReports(){
+  var R=repRows(), maxV=Math.max.apply(null,R.statuses.map(function(r){return r.st.value;}).concat([1]));
+  $('vRep').innerHTML='<div class="bar"><div><h2>Reports</h2><div class="scope">From the register: '+S.tenders.length+' records. As-built reports (Report 1 and 2) come with module 3.</div></div><span style="flex:1"></span><button class="btn" id="repExport">Export to Excel</button></div>'+
+    '<div class="card"><h3>By type: tenders and non-tender pricing</h3>'+statTable(R.types,'Type')+'<p class="n">Quotations, sub-contract and supply quotes and internal estimates each have their own row, so the tender win rate is not mixed with internal pricing.</p></div>'+
+    '<div class="grid2"><div class="card"><h3>Status pipeline</h3><div class="tbl"><table><thead><tr><th>Status</th><th class="r">Records</th><th>Value (B$)</th></tr></thead><tbody>'+
+      R.statuses.map(function(r){ return '<tr><td>'+chip(r.k==='(not set)'?'':r.k)+'</td><td class="r num">'+r.st.n+'</td><td><div class="barc"><i style="width:'+Math.max(2,Math.round(r.st.value/maxV*140))+'px"></i><span class="num">'+money0(r.st.value)+'</span></div></td></tr>'; }).join('')+'</tbody></table></div></div>'+
+    '<div class="card"><h3>By client</h3><div class="tbl"><table><thead><tr><th>Client</th><th class="r">Records</th><th class="r">Value (B$)</th><th class="r">Won</th><th class="r">Lost</th><th class="r">Win rate</th></tr></thead><tbody>'+
+      R.groups.map(function(r){ return '<tr><td>'+esc(r.k)+'</td><td class="r num">'+r.st.n+'</td><td class="r num">'+money(r.st.value)+'</td><td class="r num">'+r.st.won+'</td><td class="r num">'+r.st.lost+'</td><td class="r num">'+r.st.rate+'</td></tr>'; }).join('')+'</tbody></table></div></div></div>'+
+    '<div class="card"><h3>Bid results</h3>'+(R.results.length? '<div class="tbl"><table><thead><tr><th>No.</th><th>Title</th><th>Type</th><th>Result</th><th class="r">Our sum (B$)</th><th>Winner</th><th class="r">Winning sum (B$)</th><th class="r">Ours vs winner</th><th>Date</th></tr></thead><tbody>'+
+      R.results.map(function(t){ return '<tr><td class="no">'+esc(t.arza_no)+'</td><td>'+esc(t.title_en||t.title)+'</td><td>'+esc(t.tender_type)+'</td><td>'+chip(t.status)+'</td><td class="r num">'+money(t.our_sum)+'</td><td>'+esc(t.winner)+'</td><td class="r num">'+money(t.winning_sum)+'</td><td class="r num">'+(pct(t.diff_pct)||'–')+'</td><td class="dt">'+esc(fmtDate(t.result_date))+'</td></tr>'; }).join('')+'</tbody></table></div>'
+      : '<div class="empty">No results recorded yet. Open a tender › Bid result to record one.</div>')+'</div>';
+  $('repExport').onclick=exportReports;
+}
+function exportReports(){
+  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  var R=repRows(), wb=XLSX.utils.book_new();
+  var row=function(k,st){ return {group:k,records:st.n,value_priced:Math.round(st.value*100)/100,open:st.open,submitted:st.sub,won:st.won,lost:st.lost,win_rate:st.rate,won_value:Math.round(st.wonV*100)/100,avg_ours_vs_winner_lost:st.avgDiff}; };
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(R.types.map(function(r){return row(r.k,r.st);})),'By type');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(R.groups.map(function(r){return row(r.k,r.st);})),'By client');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(R.statuses.map(function(r){return row(r.k,r.st);})),'By status');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(R.results.map(function(t){return {arza_no:t.arza_no,tender_ref:t.tender_ref,title:t.title_en||t.title,type:t.tender_type,result:t.status,our_sum:t.our_sum,winner:t.winner,winning_sum:t.winning_sum,ours_vs_winner:t.diff_pct,result_date:t.result_date,source:t.result_source};})),'Bid results');
+  XLSX.writeFile(wb,'QS CRM reports '+today()+'.xlsx');
+}
+
 /* ---------- export ---------- */
 function exportXlsx(){
   if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
@@ -647,12 +1408,19 @@ $('rows').onclick=function(e){ var tr=e.target.closest('tr[data-no]'); if(tr) op
 $('btnNew').onclick=function(){ openDrawer(null); };
 $('btnExport').onclick=exportXlsx;
 $('btnVer').onclick=showVersions;
-$('theme').onclick=function(e){ var b=e.target.closest('button[data-m]'); if(b) setTheme(b.dataset.m); };
+$('btnTheme').onclick=function(){ setTheme(THEME_NEXT[themeMode()]||'auto'); };
+$('btnImport').onclick=startImport;
+$('impFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showImport); };
+$('upFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showUpload); };
+$('impClose').onclick=closeModal;
+$('dFull').onclick=toggleFull;
+$('nav').onclick=function(e){ var a=e.target.closest('a'); if(!a) return; if(a.classList.contains('off')){ toast(a.title); return; } if(a.dataset.v) showView(a.dataset.v); };
+$('types').onclick=function(e){ var b=e.target.closest('.tcard'); if(!b) return; $('fType').value = $('fType').value===b.dataset.ty ? '' : b.dataset.ty; render(); };
 if(window.matchMedia){ var mq=matchMedia('(prefers-color-scheme: dark)'); var onMq=function(){ if(themeMode()==='auto') applyTheme('auto'); }; if(mq.addEventListener) mq.addEventListener('change',onMq); else if(mq.addListener) mq.addListener(onMq); }
 $('verClose').onclick=function(){ $('verModal').classList.add('hidden'); };
 $('verModal').onclick=function(e){ if(e.target===this) this.classList.add('hidden'); };
 $('dClose').onclick=closeDrawer; $('shade').onclick=closeDrawer;
-document.addEventListener('keydown',function(e){ if(e.key!=='Escape') return; if(!$('verModal').classList.contains('hidden')) { $('verModal').classList.add('hidden'); return; } if(!$('drawer').classList.contains('hidden')) closeDrawer(); });
+document.addEventListener('keydown',function(e){ if(e.key!=='Escape') return; if(!$('impModal').classList.contains('hidden')) { closeModal(); return; } if(!$('verModal').classList.contains('hidden')) { $('verModal').classList.add('hidden'); return; } if(!$('drawer').classList.contains('hidden')) closeDrawer(); });
 $('dTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a||S.cur._new||a.dataset.t===S.tab) return; if(dirty() && !confirm('Discard the changes you made?')) return; S.tab=a.dataset.t; drawHead(); drawTab(); };
 
 /* ---------- start ---------- */

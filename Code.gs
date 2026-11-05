@@ -1,11 +1,14 @@
 /**
  * QS CRM — API on the Google Sheet "QS CRM DB" (Apps Script, bound to the sheet).
- * v1.1.0 - tender register + bid results + activity log. Each save is one call (log entries returned with the row).
+ * v1.3.0 - tender register, bid results, activity log, workbook import and Google Drive file storage.
+ * Each save is one call (log entries returned with the row).
  *
  * Setup (once):
  *  1. Open the "QS CRM DB" Google Sheet > Extensions > Apps Script. Paste this file as Code.gs. Save.
  *  2. Run setPassword() once (select it in the toolbar, Run). Before running, change the text 'CHANGE-ME' below
  *     to your own password, run, then change it back to 'CHANGE-ME' and save (the password stays in Script Properties).
+ *  2b. Run authorizeDrive() once and allow Google Drive access (needed from v1.3.0: tender files are stored in
+ *      your Drive folder "QS CRM - Tenders", one sub-folder per tender).
  *  3. Deploy > New deployment > type "Web app" > Execute as: Me > Who has access: Anyone > Deploy.
  *     Copy the Web app URL (ends with /exec) into the QS CRM login screen.
  *  Every request must carry the password, so the URL alone gives no access.
@@ -88,6 +91,42 @@ var ACTIONS = {
     return row;
   },
 
+  /* new tender from a priced workbook read in the browser: tender row + tendered BQ lines + file to Drive, one call */
+  importTender: function (req) {
+    var t = read_(TABS.tenders), f = req.fields || {}, ts = now_();
+    var want = String(req.arza_no || '');
+    var taken = t.rows.some(function (r) { return r.arza_no === want; });
+    var no = (/^T\d+$/.test(want) && !taken) ? want : nextNo_(t.rows);
+    var row = { arza_no: no, locked: 'N', created_at: ts, updated_at: ts };
+    EDITABLE.forEach(function (k) { if (f[k] != null) row[k] = f[k]; });
+    check_(row);
+    if (req.file) saveFile_(row, req.file);
+    append_(TABS.tenders, row);
+    var n = writeBQ_(no, req.items || [], ts, false);
+    log_('import', no, 'Imported ' + (req.file ? req.file.name : 'workbook') + ': ' + n + ' BQ lines, B$' + fmt_(row.our_sum) +
+      (row.folder_link ? '; file saved to Drive' : '') + (want && taken ? '; ' + want + ' was taken, used ' + no : ''));
+    row._bq_lines = n;
+    return row;
+  },
+
+  /* store a file in the tender's Drive folder; optionally replace the tendered BQ (only when not locked) */
+  uploadFile: function (req) {
+    var cur = find_(req.arza_no), row = cur.row, ts = now_(), msg = [];
+    if (req.replaceBQ) {
+      if (row.locked === 'Y') throw new Error('Tendered BQ is locked - unlock first to replace it');
+      var n = writeBQ_(row.arza_no, req.items || [], ts, true);
+      if (req.our_sum != null && req.our_sum !== '') row.our_sum = Number(req.our_sum);
+      if (req.id_scheme) row.id_scheme = req.id_scheme;
+      row._bq_lines = n;
+      msg.push('tendered BQ replaced: ' + n + ' lines, B$' + fmt_(row.our_sum));
+    }
+    if (req.file) { saveFile_(row, req.file); msg.unshift(req.file.name + ' saved to Drive'); }
+    row.updated_at = ts;
+    write_(TABS.tenders, cur.idx, row);
+    log_('file', row.arza_no, msg.join('; '));
+    return row;
+  },
+
   /* lock the tendered BQ (normally at submission) */
   lock: function (req) {
     var cur = find_(req.arza_no);
@@ -161,6 +200,54 @@ function saveFields_(req) {
     log_('update', req.arza_no, changes.join('; '));
     return cur.row;
   }
+
+/* ---------- Google Drive ---------- */
+function authorizeDrive() { Logger.log('Drive OK - tender files go to: ' + rootFolder_().getUrl()); }
+function rootFolder_() {
+  var p = PropertiesService.getScriptProperties(), id = p.getProperty('DRIVE_ROOT_ID');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  var f = DriveApp.createFolder('QS CRM - Tenders');
+  p.setProperty('DRIVE_ROOT_ID', f.getId());
+  return f;
+}
+function tenderFolder_(row) {
+  var m = String(row.folder_link || '').match(/folders\/([\w-]+)/);
+  if (m) { try { return DriveApp.getFolderById(m[1]); } catch (e) {} }
+  var name = row.arza_no + (row.tender_ref ? ' - ' + String(row.tender_ref).replace(/[\/\\:*?"<>|]+/g, '-') : '');
+  return rootFolder_().createFolder(name);
+}
+function saveFile_(row, file) {
+  if (!file || !file.data) return null;
+  var folder = tenderFolder_(row);
+  var blob = Utilities.newBlob(Utilities.base64Decode(file.data), file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name);
+  var f = folder.createFile(blob);
+  row.folder_link = folder.getUrl();
+  row.workbook_file = file.name;
+  return f;
+}
+
+/* ---------- BQ lines ---------- */
+var TEXT_COLS = ['item_id', 'bill', 'page', 'item'];   // keep "1.10" as text, not the number 1.1
+function writeBQ_(no, items, ts, replace) {
+  var sh = sheet_(TABS.bq), head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  if (replace) {
+    var all = sh.getDataRange().getValues(), ia = head.indexOf('arza_no'), is = head.indexOf('bq_set');
+    var keep = all.slice(1).filter(function (r) { return !(r[ia] === no && r[is] === 'Tendered'); });
+    if (all.length > 1) sh.getRange(2, 1, all.length - 1, head.length).clearContent();
+    if (keep.length) sh.getRange(2, 1, keep.length, head.length).setValues(keep);
+  }
+  if (!items.length) return 0;
+  var start = Math.max(sh.getLastRow(), 1) + 1;
+  TEXT_COLS.forEach(function (c) { var i = head.indexOf(c); if (i >= 0) sh.getRange(start, i + 1, items.length, 1).setNumberFormat('@'); });
+  var rows = items.map(function (it) {
+    var o = { arza_no: no, bq_set: 'Tendered', imported_at: ts,
+      provisional: /provisional|prov\.? sum/i.test((it.heading || '') + ' ' + (it.description || '') + ' ' + (it.remarks || '')) ? 'Y' : 'N' };
+    ['item_id', 'bill', 'page', 'item', 'heading', 'description', 'unit', 'qty', 'rate', 'amount', 'remarks', 'source'].forEach(function (k) { o[k] = it[k]; });
+    return head.map(function (h) { return o[h] == null ? '' : o[h]; });
+  });
+  sh.getRange(start, 1, rows.length, head.length).setValues(rows);
+  return rows.length;
+}
 
 /* ---------- sheet helpers (columns read by header name) ---------- */
 function sheet_(name) {
