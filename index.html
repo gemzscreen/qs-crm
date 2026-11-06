@@ -16,12 +16,18 @@
   --th:#fafbfc;--hover:#f7f8fd;--sel:#eceefa;--ro:#f4f6f8;--shade:rgba(10,12,40,.3);
   --ok:#1e7a4c;--okbg:#e4f3ea;--bad:#a8322d;--badbg:#f8e5e3;--warn:#8a5a00;--warnbg:#fdf1d8;--info:#2b2d9a;--infobg:#e8e9fb;--mute:#5d6875;--mutebg:#eceff2;
   --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;color-scheme:light;
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#9aa3ad;
+  --good:#0ca30c;--crit:#d03b3b;--wait:#9aa3ad;
+  --exp:#1e7a4c;--expbg:#e8f5ee;--imp:#b5651d;--impbg:#fcefe2;
 }
 [data-theme=dark]{
   --brand:#3f33c9;--brand2:#5446dd;--bink:#aeb3ff;--bar:#0e0f2b;
   --ink:#e6e9ef;--ink2:#b3bccb;--ink3:#8691a3;--line:#2a3140;--line2:#222836;--bg:#0f1218;--card:#171b24;--field:#11151c;
   --th:#1b202b;--hover:#1d2230;--sel:#232848;--ro:#1a1f29;--shade:rgba(0,0,0,.55);
   --ok:#6fd39b;--okbg:#14301f;--bad:#ff9b93;--badbg:#3b1a18;--warn:#f2c36b;--warnbg:#342912;--info:#aeb3ff;--infobg:#1d2045;--mute:#a5afbd;--mutebg:#252b36;color-scheme:dark;
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#6b7480;
+  --good:#0ca30c;--crit:#d03b3b;--wait:#6b7480;
+  --exp:#6fd39b;--expbg:#14301f;--imp:#f2b46b;--impbg:#33240f;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
@@ -69,6 +75,33 @@ main{padding:18px 20px 30px;max-width:1500px;margin:0 auto;width:100%;flex:1}
 .btn.pri:hover{background:var(--brand2)}
 .btn.warn{color:var(--bad);border-color:var(--bad)}
 .btn:disabled{opacity:.5;cursor:default}
+.btn.exp{color:var(--exp);border-color:var(--exp);background:var(--expbg)}
+.btn.imp{color:var(--imp);border-color:var(--imp);background:var(--impbg)}
+.btn.exp:hover,.btn.imp:hover{filter:brightness(.97);border-width:1px}
+.btn svg{width:14px;height:14px;vertical-align:-2px;margin-right:6px}
+.donutw{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.donut{width:170px;height:170px;flex:none}
+.donut .seg{transition:stroke-width .1s}
+.donut .seg:hover{stroke-width:26}
+.dc1{font-size:15px;font-weight:700;fill:var(--ink)}
+.dc2{font-size:10.5px;fill:var(--ink3)}
+.leg{list-style:none;margin:0;padding:0;font-size:12.5px;flex:1;min-width:200px}
+.leg li{display:grid;grid-template-columns:12px 1fr auto 40px;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line2);color:var(--ink2)}
+.leg li:last-child{border-bottom:none}
+.leg i{width:12px;height:12px;border-radius:3px;display:block}
+.leg b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.leg em{font-style:normal;color:var(--ink3);text-align:right;font-variant-numeric:tabular-nums}
+.leg.row{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px}
+.leg.row li{display:flex;gap:6px;border:none;padding:0}
+.vbar,.hbar{width:100%;height:auto;display:block;max-height:260px}
+.hbar{max-height:none;width:auto;max-width:100%}
+.vbar .grid{stroke:var(--line2);stroke-width:1}
+.vbar .axis,.hbar .axis{stroke:var(--line);stroke-width:1}
+.vbar .ax{font-size:10px;fill:var(--ink3)}
+.vbar .vl,.hbar .vl{font-size:10.5px;fill:var(--ink2);font-variant-numeric:tabular-nums}
+.hbar .hl{font-size:11px;fill:var(--ink2);font-family:var(--mono)}
+.vbar g:hover path,.hbar g:hover path{filter:brightness(1.12)}
+.vtip{position:fixed;z-index:70;pointer-events:none;background:#16202c;color:#fff;font-size:12px;padding:6px 9px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.25);max-width:320px}
 .count{font-size:12.5px;color:var(--ink3);margin-left:auto}
 /* table */
 .tbl{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:auto}
@@ -229,7 +262,7 @@ footer.foot a:hover{text-decoration:underline}
 <header class="top hidden" id="top">
   <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPQAAABACAMAAAAaqqqvAAAAwFBMVEUAAAD///////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMq5OnAAAAQHRSTlMA+wcrj2/PUK8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAmtaE/QAAByFJREFUeNrdW9m26yYMtYUY/v+Li0YEHnLuabvawEMSO0Zma0aWj+MyAPgjjQFy6th2GGIAhcqDjveFTdAE4ZD6YXzYEzZDFqAAi8IzMzZEDYfKEx7UfkthR1QQhssb9hM2wQP/tfwR2LIZ5GPYM6SM2BrmmmDY9b3uf7VqO2TI5SyltD4KfdeAFvbRcFft/pHaWRqJWXD3X6Wgq8E2qCFghnZ2nOUMo9Bxhr1QO47+VTvEZmCLY++wS9oJdcSMHR6jbFlSUahZeNBZUQ31Dj7cMJNqZxJuyROqxHxoeGYLaenbnTho8O1SLSUTvAxrcgLIrDjRuPPlCm4I+mc7CVtLM2SBXQV1lr+OBH88/m8RWsSHjBmfLivkxrtdH+uG5IsF3WVJuo2PkkqEup1pbLF/K+n/nmOgaSacFJzxTXGpipJ+odgyeUrrQzp/y5nng8c59we3V7qgsevuWfri/r0QccTk/l7e8HjwifKPC0Mec1nQXbkTW7gN7COPw4o+cq7q4RPOI01X14XPncFZ0vmcDrWqQDM5QzJNtrSADlJkQcZlElNGv6yjogOYyestWbtN0D0HId+cnCkcvk4LyeTopoGsJXk+aaGcQsHJmhOTgelyXtNCtVQFILdWBGXQlTElyRRuiFCi31WnVJt/Q14TE7qLKHcADUIaXSdWfHS5UL+A1iUMlumNcJ1/oYqynOI3UP7VZ9CM7kegmTxtqfQiFfRhoH3Zp280VtC8wPwAWm/WjuBalEN961bGCm4IGGghJpJ+Bd3gp6ADxs5MWgfvtRw0rgrLy6tSC5c/1aXLKEO0pp+DZQKaVZ69QfU/B9XanIKClt/3oJvcu7ohvIDm9ekeIg3tJteNUg41rx60MIC2W7dhdDJwMsO62Lh4KDVOAF1MXaiiK3gZivIEWn9XI/QMukTyzUEnAl0hgpYsfNilLU9HNltSzyxaWqMba+h2GUA3fZ5AZZm0UBW9hcNBE8EXSfOYQVvsmEHP5BV0JpOGKGkQwsOVLcvDKGmTrFuCLCDwPqh3yWFn6pIOt6juROV+75L2+Xq3IP8g6Ym8+rFeEdK/zMiVBPqSJkUUTpoUzemhZyAyTRgXQFcvxeRkJaoJdDJXxjON47egS6o00J0fz8Vax+kLaLnEQJMfa1rRH8suYxUOWquFs2BFMM15oAoyqcMasqjaeA8aFXRVv/HReyO4914j2QwaxKgdtGtxissGaCbRa3BBT6M1EZmVvbuCFAK9JCc4BRoPWfegQdXpE+g6kpM/AV1W0Oan1AxuQDc31slxuxsrbsSW+Wt+WObs5hl0lv/wc5zGX0j6uIA2a1Tn2IYiWmKRjyVTqwOzW6aIPFsBTqswPWKWEc9eQKs/S7cZWck80NOkH9j0ot4YQateUjVUrTdFRayDuxfHPSRffHYZkvYNRfXU/NmRdb7ycXv13mBh7gfe+82RXZO3kTAORVL3lqYMfUpropqx3HuQaCpvM4EJNEwhK8eFPMZpi0OvcXomP4cs23Vdln1G6/P9F6usJ7+ep9S7HP0IsX0Eejjm6N9icsK5W/kEGuoE+j4jm8nfJSduvTLKkjCOLANsUW3ap5fLbJBiRQ3X8sQg6ZFoeBo6vMKbeltC/Ab6mMgb6BrSUEVSHMXF+tS9eSQ+cx3DDCcaV9YKTdEA3cVTpm0az8zLhiPH/fbVken93Dm8bDhm8ncbDnMnsGScwfpMAOloF0PQyyGmxkVc98jIVqO53VoKq1TBX0MWX/q7raXkIGnNq8Vo8Jj9rDD4Crq43kZXXjXnxDWpuIDOo4iQI3//of20BBn1ZGzUVbiQBA/MJZQU8nBX8HwFnZcNZRpFErajcWW6lotaCuWiHPkbQ+ICurDH+wnolm7LRQw6cxFt3ERP8NfYY9BRt5RlyJlY5NYTVhikuBULg2lMHS0vPCkZf+f1kKMIt9NZVHIcc3Stj+TVSFsTUXtXyaVcPJeh4fMT73l2grWqC3+rmvvnpeJAXkvAiUvAMPVHXkaVSurvBjxw4/YpyGMV/6bYD78v9jey6iYO82nQIxCr93z58zvJl6Tanx91RVKS7uWPkbl97wO85IWRbGHy3m6QH1taufO7n1CDebxWMO4Z14ebjQuFVi357l6E8VAeCtcvEVZhcxSk2Ij7tCL4U3lFXap1Wfk3aEG4HVsod2wu6qgLWtEuAtfuG8XsbNoFddMusoLVJF2lqtXQSrywRYOoeXBx0c1Kd9Qkae1zdLIGzLBLp7cE4+6xEJd9ROsnGuzWHOoNsdw9VU7pgtXiPnWGthQaYjfpAobQ+ky7GNpdSwMw9wLj6IvYB/OM2nrcpTkEa5qb3DfqcofwBscFmLedbAU5NInCtDWLb67s9wpH6JiEh+03wI5vZsFISeHu9cs938GDKcWMqi0vI24IecBOS2emF3uOzd+r3fdd4r8AzaM1wK5ex1cAAAAASUVORK5CYII=" alt="ARZA SDN BHD" width="122" height="32"><i></i><span>QS CRM</span></div>
   <nav class="nav" id="nav">
-    <a data-v="tenders" class="on">Tenders</a><a data-v="import" title="Import a priced tender workbook">BQ import</a><a class="off" title="As-built comes in v1 module 3: it needs the site Breakdown QTY files of a won project">As-built</a><a data-v="reports">Reports</a>
+    <a data-v="tenders" class="on">Tenders</a><a class="off" title="As-built comes in v1 module 3: it needs the site Breakdown QTY files of a won project">As-built</a><a data-v="reports">Reports</a>
   </nav>
   <div class="sp"></div>
   <div class="conn hidden" id="conn"><i></i><span></span></div>
@@ -270,8 +303,8 @@ footer.foot a:hover{text-decoration:underline}
     <select id="fGroup"><option value="">All clients</option></select>
     <select id="fType"><option value="">All types</option></select>
     <select id="fYear"><option value="">All years</option></select>
-    <button class="btn" id="btnExport">Export</button>
-    <button class="btn" id="btnImport" title="Create a tender from a priced workbook (.xlsx)">Import</button>
+    <button class="btn exp" id="btnExport" title="Download the register (as filtered) to Excel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Export</button>
+    <button class="btn imp" id="btnImport" title="Create a tender from a priced workbook (.xlsx)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>Import</button>
     <button class="btn pri" id="btnNew">+ New tender</button>
   </div>
   <input type="file" id="impFile" accept=".xlsx,.xlsm" class="hidden">
@@ -296,6 +329,7 @@ footer.foot a:hover{text-decoration:underline}
   <div class="mb" id="verBody"></div>
 </div></div>
 
+<div class="vtip hidden" id="vtip"></div>
 <div class="modal hidden" id="impModal" role="dialog" aria-label="Import"><div class="box wide">
   <div class="mh"><h3 id="impTitle"></h3><button class="x" id="impClose" aria-label="Close">×</button></div>
   <div class="mb" id="impBody"></div>
@@ -808,8 +842,13 @@ footer.foot a:hover{text-decoration:underline}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'1.3.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'1.3.1', user:'Gemz' };
 var CHANGELOG = [
+  { v:'1.3.1', date:'5 Nov 2026', items:[
+    'Google Drive: tender files can go to a folder you choose (setDriveFolder in Apps Script); clearer message when Drive is not set up.',
+    'Reports: charts with colour: value by type and records by client (donuts), status pipeline, records by closing month, largest priced records and bid outcomes by type (bars). Hover any bar or slice for the figures.',
+    'Export (green) and Import (orange) buttons with icons.',
+    'BQ import removed from the top bar (same as the Import button).' ]},
   { v:'1.3.0', date:'5 Nov 2026', items:[
     'Import: create a tender straight from a priced workbook (.xlsx). Tender details, our sum and every BQ line are read and shown for checking before saving; the file is stored in Google Drive.',
     'Tender details: Upload file to the tender\'s Drive folder (can also replace the tendered BQ when not locked) and Open folder.',
@@ -932,7 +971,7 @@ function enter(){
 }
 function refresh(){
   if(ro()) return Promise.resolve();
-  return api('list').then(function(d){ S.tenders=d.tenders||[]; S.lists=d.lists||{}; S.log=d.log||[]; });
+  return api('list').then(function(d){ S.tenders=d.tenders||[]; S.lists=d.lists||{}; S.log=d.log||[]; S.drive=d.drive||''; });
 }
 
 /* ---------- read-only file mode (SheetJS) ---------- */
@@ -1074,7 +1113,7 @@ var FIELDS = [
   ['id_scheme','BQ item ID scheme','select','id_scheme',{lock:1,hint:'Set automatically when the BQ is imported. Change it only if the detection was wrong.'}],
   ['sec','Files'],
   ['workbook_file','Priced workbook file','text',{full:1}],
-  ['folder_link','Folder link (Google Drive)','url',{full:1,hint:'Upload the priced workbook (or any tender document): it is stored in Drive › QS CRM - Tenders › this tender.'}],
+  ['folder_link','Folder link (Google Drive)','url',{full:1,hint:'Upload the priced workbook (or any tender document): it is stored in your QS CRM Drive folder, in a sub-folder for this tender.'}],
   ['notes','Notes','textarea',{full:1}]
 ];
 function openDrawer(no, tab){
@@ -1290,7 +1329,7 @@ function showImport(f){
   function sel(id,arr,v,lab){ return '<select id="'+id+'"><option value="">–</option>'+arr.map(function(o){return '<option value="'+esc(o)+'"'+(o===v?' selected':'')+'>'+esc(lab&&lab[o]?lab[o]:o)+'</option>';}).join('')+'</select>'; }
   var body=
     (dup.length?'<div class="note w">'+esc(i.tender_ref)+' is already in the register as '+dup.map(function(t){return t.arza_no;}).join(', ')+'. Import only if this is a separate submission (e.g. a re-tender). To update '+dup[0].arza_no+', open it and use Upload file instead.</div>':'')+
-    '<div class="note">Read from <b>'+esc(f.name)+'</b> ('+esc(bq.layout||'')+'). Check the details, then import. The workbook is saved to Google Drive › QS CRM - Tenders › '+esc(no)+'.</div>'+
+    '<div class="note">Read from <b>'+esc(f.name)+'</b> ('+esc(bq.layout||'')+'). Check the details, then import. The workbook is saved to your QS CRM Drive folder › '+esc(no)+'.</div>'+
     '<div class="form">'+
       '<div class="f"><label>ARZA no.</label><input id="i_no" value="'+esc(no)+'" readonly><div class="hint">'+(wantNo? (taken? wantNo+' is already used, so the next free number is given.' : 'Taken from the file name ("Tender '+(+wantNo.slice(1))+'").') : 'Next free number (the file name has no "Tender n").')+'</div></div>'+
       '<div class="f"><label>Client tender / quotation ref</label><input id="i_ref" value="'+esc(i.tender_ref)+'"></div>'+
@@ -1326,7 +1365,7 @@ function showUpload(f){
   var t=S.cur; if(!t) return;
   if(f.size>MAX_FILE){ toast('File is larger than 20 MB.',true); return; }
   var canBQ = !!(f.bq && f.bq.items.length && t.locked!=='Y');
-  var body='<div class="note">Save <b>'+esc(f.name)+'</b> ('+(f.size/1024).toFixed(0)+' KB) to Google Drive › QS CRM - Tenders › '+esc(t.arza_no)+(t.folder_link?' (existing folder)':' (a new folder is made)')+'.</div>';
+  var body='<div class="note">Save <b>'+esc(f.name)+'</b> ('+(f.size/1024).toFixed(0)+' KB) to your QS CRM Drive folder › '+esc(t.arza_no)+(t.folder_link?' (existing folder)':' (a sub-folder is made)')+'.</div>';
   if(f.bq && f.bq.items.length){
     var diff=Math.round((f.bq.total-(Number(t.our_sum)||0))*100)/100;
     body+='<h3 style="font-size:13.5px;margin:12px 0 8px">Tendered BQ in this file</h3>'+billsTable(f.bq)+issuesBox(f.bq)+
@@ -1366,16 +1405,99 @@ function statTable(rows, label){
 function renderReports(){
   var R=repRows(), maxV=Math.max.apply(null,R.statuses.map(function(r){return r.st.value;}).concat([1]));
   $('vRep').innerHTML='<div class="bar"><div><h2>Reports</h2><div class="scope">From the register: '+S.tenders.length+' records. As-built reports (Report 1 and 2) come with module 3.</div></div><span style="flex:1"></span><button class="btn" id="repExport">Export to Excel</button></div>'+
+    chartsHTML()+
     '<div class="card"><h3>By type: tenders and non-tender pricing</h3>'+statTable(R.types,'Type')+'<p class="n">Quotations, sub-contract and supply quotes and internal estimates each have their own row, so the tender win rate is not mixed with internal pricing.</p></div>'+
-    '<div class="grid2"><div class="card"><h3>Status pipeline</h3><div class="tbl"><table><thead><tr><th>Status</th><th class="r">Records</th><th>Value (B$)</th></tr></thead><tbody>'+
-      R.statuses.map(function(r){ return '<tr><td>'+chip(r.k==='(not set)'?'':r.k)+'</td><td class="r num">'+r.st.n+'</td><td><div class="barc"><i style="width:'+Math.max(2,Math.round(r.st.value/maxV*140))+'px"></i><span class="num">'+money0(r.st.value)+'</span></div></td></tr>'; }).join('')+'</tbody></table></div></div>'+
     '<div class="card"><h3>By client</h3><div class="tbl"><table><thead><tr><th>Client</th><th class="r">Records</th><th class="r">Value (B$)</th><th class="r">Won</th><th class="r">Lost</th><th class="r">Win rate</th></tr></thead><tbody>'+
-      R.groups.map(function(r){ return '<tr><td>'+esc(r.k)+'</td><td class="r num">'+r.st.n+'</td><td class="r num">'+money(r.st.value)+'</td><td class="r num">'+r.st.won+'</td><td class="r num">'+r.st.lost+'</td><td class="r num">'+r.st.rate+'</td></tr>'; }).join('')+'</tbody></table></div></div></div>'+
+      R.groups.map(function(r){ return '<tr><td>'+esc(r.k)+'</td><td class="r num">'+r.st.n+'</td><td class="r num">'+money(r.st.value)+'</td><td class="r num">'+r.st.won+'</td><td class="r num">'+r.st.lost+'</td><td class="r num">'+r.st.rate+'</td></tr>'; }).join('')+'</tbody></table></div></div>'+
     '<div class="card"><h3>Bid results</h3>'+(R.results.length? '<div class="tbl"><table><thead><tr><th>No.</th><th>Title</th><th>Type</th><th>Result</th><th class="r">Our sum (B$)</th><th>Winner</th><th class="r">Winning sum (B$)</th><th class="r">Ours vs winner</th><th>Date</th></tr></thead><tbody>'+
       R.results.map(function(t){ return '<tr><td class="no">'+esc(t.arza_no)+'</td><td>'+esc(t.title_en||t.title)+'</td><td>'+esc(t.tender_type)+'</td><td>'+chip(t.status)+'</td><td class="r num">'+money(t.our_sum)+'</td><td>'+esc(t.winner)+'</td><td class="r num">'+money(t.winning_sum)+'</td><td class="r num">'+(pct(t.diff_pct)||'–')+'</td><td class="dt">'+esc(fmtDate(t.result_date))+'</td></tr>'; }).join('')+'</tbody></table></div>'
       : '<div class="empty">No results recorded yet. Open a tender › Bid result to record one.</div>')+'</div>';
   $('repExport').onclick=exportReports;
+  bindTips($('vRep'));
+  if(S.drive) $('vRep').querySelector('.scope').insertAdjacentHTML('beforeend',' Tender files: <a href="'+esc(S.drive)+'" target="_blank" rel="noopener">Drive folder</a>.');
 }
+/* ---------- charts (inline SVG; palette validated with the dataviz checks) ---------- */
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function seriesColor(i){ return cssVar('--s'+(i+1)) || '#2a78d6'; }
+var TYPE_ORDER=null;
+function typeColor(ty){ var a=L('tender_type'), i=a.indexOf(ty); return seriesColor(i<0?7:i); }
+function groupColor(g){ var a=L('client_group'), i=a.indexOf(g); return seriesColor(i<0?7:i); }
+function tipAttr(t){ return ' data-tip="'+esc(t)+'"'; }
+function arc(cx,cy,r,a0,a1){ var x0=cx+r*Math.sin(a0), y0=cy-r*Math.cos(a0), x1=cx+r*Math.sin(a1), y1=cy-r*Math.cos(a1); return 'M'+x0.toFixed(2)+' '+y0.toFixed(2)+' A'+r+' '+r+' 0 '+((a1-a0)>Math.PI?1:0)+' 1 '+x1.toFixed(2)+' '+y1.toFixed(2); }
+/* donut: rows [{k,v,color,label}] */
+function donut(rows, centerTop, centerSub, fmtV){
+  var tot=rows.reduce(function(s,r){return s+r.v;},0), R=70, W=22, cx=90, cy=90, a=0, gap=rows.filter(function(r){return r.v>0;}).length>1?0.02:0;
+  var segs=rows.filter(function(r){return r.v>0;}).map(function(r){
+    var sw=r.v/tot*Math.PI*2, a0=a+gap/2, a1=a+sw-gap/2; a+=sw;
+    if(sw>=Math.PI*2-0.001) return '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="'+r.color+'" stroke-width="'+W+'"'+tipAttr(r.k+': '+fmtV(r.v)+' (100%)')+'/>';
+    return '<path d="'+arc(cx,cy,R,a0,Math.max(a0+0.001,a1))+'" fill="none" stroke="'+r.color+'" stroke-width="'+W+'" class="seg"'+tipAttr(r.k+': '+fmtV(r.v)+' ('+(r.v/tot*100).toFixed(1)+'%)')+'/>';
+  }).join('');
+  var svg='<svg viewBox="0 0 180 180" class="donut" role="img" aria-label="'+esc(centerSub)+'">'+(tot?segs:'<circle cx="90" cy="90" r="70" fill="none" stroke="var(--line)" stroke-width="22"/>')+
+    '<text x="90" y="88" text-anchor="middle" class="dc1">'+esc(centerTop)+'</text><text x="90" y="106" text-anchor="middle" class="dc2">'+esc(centerSub)+'</text></svg>';
+  var leg='<ul class="leg">'+rows.map(function(r){ return '<li'+tipAttr(r.k+': '+fmtV(r.v))+'><i style="background:'+r.color+'"></i><span>'+esc(r.k)+'</span><b>'+fmtV(r.v)+'</b><em>'+(tot?(r.v/tot*100).toFixed(0)+'%':'–')+'</em></li>'; }).join('')+'</ul>';
+  return '<div class="donutw">'+svg+leg+'</div>';
+}
+/* vertical bars: rows [{k,v,color,label}] */
+function vbars(rows, fmtV, unit){
+  var max=Math.max.apply(null,rows.map(function(r){return r.v;}).concat([1])), H=140, bw=Math.max(18,Math.min(46,Math.floor(420/Math.max(rows.length,1))-14));
+  var W=rows.length*(bw+14)+50, base=H+30, ticks=[0,0.5,1];
+  var g=ticks.map(function(t){ var y=base-t*H; return '<line x1="44" x2="'+W+'" y1="'+y+'" y2="'+y+'" class="grid"/>'+(t<1?'<text x="40" y="'+(y+4)+'" text-anchor="end" class="ax">'+fmtV(max*t)+'</text>':''); }).join('');
+  var b=rows.map(function(r,i){ var h=Math.max(r.v?3:0,r.v/max*H), x=52+i*(bw+14), y=base-h;
+    var rr=Math.min(4,h/2,bw/2);
+    var path='M'+x+' '+base+' V'+(y+rr)+' Q'+x+' '+y+' '+(x+rr)+' '+y+' H'+(x+bw-rr)+' Q'+(x+bw)+' '+y+' '+(x+bw)+' '+(y+rr)+' V'+base+' Z';
+    return '<g'+tipAttr(r.k+': '+fmtV(r.v)+(r.extra?' · '+r.extra:''))+'><rect x="'+(x-6)+'" y="10" width="'+(bw+12)+'" height="'+(base-10)+'" fill="transparent"/>'+(h?'<path d="'+path+'" fill="'+r.color+'"/>':'')+
+      '<text x="'+(x+bw/2)+'" y="'+(y-5)+'" text-anchor="middle" class="vl">'+(r.label!=null?r.label:fmtV(r.v))+'</text>'+
+      '<text x="'+(x+bw/2)+'" y="'+(base+14)+'" text-anchor="middle" class="ax">'+esc(r.short||r.k)+'</text></g>'; }).join('');
+  return '<svg viewBox="0 0 '+W+' '+(base+22)+'" class="vbar" role="img" aria-label="bar chart">'+g+'<line x1="44" x2="'+W+'" y1="'+base+'" y2="'+base+'" class="axis"/>'+b+'</svg>';
+}
+/* horizontal bars: rows [{k,v,color,sub}] */
+function hbars(rows, fmtV){
+  var max=Math.max.apply(null,rows.map(function(r){return r.v;}).concat([1])), rowH=24, L0=58, W=900, BW=W-L0-110;
+  var b=rows.map(function(r,i){ var w=Math.max(r.v?3:0,r.v/max*BW), y=6+i*rowH, rr=Math.min(4,w/2);
+    var path='M'+L0+' '+y+' H'+(L0+w-rr)+' Q'+(L0+w)+' '+y+' '+(L0+w)+' '+(y+rr)+' V'+(y+14-rr)+' Q'+(L0+w)+' '+(y+14)+' '+(L0+w-rr)+' '+(y+14)+' H'+L0+' Z';
+    return '<g'+tipAttr(r.k+(r.sub?' — '+r.sub:'')+': '+fmtV(r.v))+'><rect x="0" y="'+(y-4)+'" width="'+W+'" height="'+rowH+'" fill="transparent"/><text x="'+(L0-8)+'" y="'+(y+11)+'" text-anchor="end" class="hl">'+esc(r.k)+'</text>'+(w?'<path d="'+path+'" fill="'+r.color+'"/>':'')+
+      '<text x="'+(L0+w+6)+'" y="'+(y+11)+'" class="vl">'+fmtV(r.v)+'</text></g>'; }).join('');
+  return '<svg width="'+W+'" height="'+(rows.length*rowH+8)+'" viewBox="0 0 '+W+' '+(rows.length*rowH+8)+'" class="hbar" role="img" aria-label="bar chart">'+'<line x1="'+L0+'" x2="'+L0+'" y1="2" y2="'+(rows.length*rowH+4)+'" class="axis"/>'+b+'</svg>';
+}
+function legend(items){ return '<ul class="leg row">'+items.map(function(x){ return '<li><i style="background:'+x.color+'"></i><span>'+esc(x.k)+'</span></li>'; }).join('')+'</ul>'; }
+function monthKey(d){ var m=String(d||'').match(/^(\d{4})-(\d{2})/); return m? m[1]+'-'+m[2] : ''; }
+function chartsHTML(){
+  var T=S.tenders, money0f=function(v){return 'B$ '+money0(v);}, cnt=function(v){return String(Math.round(v));};
+  var types=L('tender_type').map(function(ty){ var a=T.filter(function(t){return t.tender_type===ty;}); return {k:ty, n:a.length, v:a.reduce(function(s,t){return s+(Number(t.our_sum)||0);},0), color:typeColor(ty)}; }).filter(function(r){return r.n;});
+  var other=T.filter(function(t){return L('tender_type').indexOf(t.tender_type)<0;}); if(other.length) types.push({k:'Not set',n:other.length,v:other.reduce(function(s,t){return s+(Number(t.our_sum)||0);},0),color:cssVar('--s8')});
+  var groups=L('client_group').map(function(g){ var a=T.filter(function(t){return t.client_group===g;}); return {k:g, v:a.length, val:a.reduce(function(s,t){return s+(Number(t.our_sum)||0);},0), color:groupColor(g)}; }).filter(function(r){return r.v;});
+  var og=T.filter(function(t){return L('client_group').indexOf(t.client_group)<0;}); if(og.length) groups.push({k:'Not set',v:og.length,color:cssVar('--s8')});
+  var stAll=['(not set)'].concat(L('status')).map(function(st){ var a=T.filter(function(t){ return st==='(not set)'? !t.status : t.status===st; }); return {k:st==='(not set)'?'Not set':st, short:st==='(not set)'?'Not set':st, v:a.reduce(function(s,t){return s+(Number(t.our_sum)||0);},0), n:a.length}; }).filter(function(r){return r.n;});
+  stAll.forEach(function(r){ r.color=cssVar('--brand2'); r.label=r.n+' · '+money0(r.v); r.extra=r.n+' record'+(r.n>1?'s':''); });
+  var top=T.slice().sort(function(a,b){return (Number(b.our_sum)||0)-(Number(a.our_sum)||0);}).slice(0,12).map(function(t){ return {k:t.arza_no, sub:(t.title_en||t.title||'').slice(0,60)+' · '+(t.tender_type||'type not set'), v:Number(t.our_sum)||0, color:typeColor(t.tender_type)}; });
+  var mon={}; T.forEach(function(t){ var k=monthKey(t.closing_date)||monthKey(t.created_at); if(k){ mon[k]=mon[k]||{n:0,v:0}; mon[k].n++; mon[k].v+=Number(t.our_sum)||0; } });
+  var mrows=Object.keys(mon).sort().slice(-12).map(function(k){ var d=new Date(k+'-01T00:00:00'); return {k:d.toLocaleDateString('en-GB',{month:'short',year:'numeric'}), short:d.toLocaleDateString('en-GB',{month:'short'})+' '+String(d.getFullYear()).slice(2), v:mon[k].n, extra:'B$ '+money0(mon[k].v), color:cssVar('--s1')}; });
+  var res=L('tender_type').map(function(ty){ var a=T.filter(function(t){return t.tender_type===ty;}); return {k:ty, won:a.filter(function(t){return t.status==='Won';}).length, lost:a.filter(function(t){return t.status==='Lost';}).length, pend:a.filter(function(t){return t.status==='Submitted';}).length}; }).filter(function(r){return r.won+r.lost+r.pend;});
+  var resHTML = res.length ? (function(){
+      var max=Math.max.apply(null,res.map(function(r){return r.won+r.lost+r.pend;})), W=760, L0=130, BW=W-L0-40, rowH=26;
+      var rows=res.map(function(r,i){ var y=6+i*rowH, x=L0, parts=[['Won',r.won,'--good'],['Lost',r.lost,'--crit'],['Submitted (waiting)',r.pend,'--wait']], out='';
+        parts.forEach(function(p){ if(!p[1]) return; var w=p[1]/max*BW; out+='<rect x="'+x+'" y="'+y+'" width="'+Math.max(2,w-2)+'" height="16" rx="3" fill="var('+p[2]+')"'+tipAttr(r.k+' — '+p[0]+': '+p[1])+'/>'; x+=w; });
+        return '<text x="'+(L0-8)+'" y="'+(y+12)+'" text-anchor="end" class="hl">'+esc(r.k)+'</text>'+out+'<text x="'+(x+4)+'" y="'+(y+12)+'" class="vl">'+r.won+' won · '+r.lost+' lost'+(r.pend?' · '+r.pend+' waiting':'')+'</text>'; }).join('');
+      return '<svg width="'+(W+140)+'" height="'+(res.length*rowH+8)+'" viewBox="0 0 '+(W+140)+' '+(res.length*rowH+8)+'" class="hbar" role="img" aria-label="results by type">'+rows+'</svg>'+legend([{k:'Won',color:'var(--good)'},{k:'Lost',color:'var(--crit)'},{k:'Submitted (waiting)',color:'var(--wait)'}]);
+    })() : '<div class="empty" style="padding:24px">No submitted, won or lost records yet. Set the status / record a bid result and this chart fills in.</div>';
+  return '<div class="grid2">'+
+    '<div class="card"><h3>Value priced by type</h3>'+donut(types.map(function(r){return {k:r.k,v:r.v,color:r.color};}),'B$ '+money0(types.reduce(function(s,r){return s+r.v;},0)),'total priced',money0f)+'</div>'+
+    '<div class="card"><h3>Records by client</h3>'+donut(groups.map(function(r){return {k:r.k,v:r.v,color:r.color};}),String(T.length),'records',cnt)+'</div>'+
+  '</div><div class="grid2">'+
+    '<div class="card"><h3>Status pipeline (value, B$)</h3>'+vbars(stAll,function(v){return money0(v);})+'<p class="n">Label = number of records · value.</p></div>'+
+    '<div class="card"><h3>Records by closing month</h3>'+(mrows.length?vbars(mrows,cnt):'<div class="empty">No closing dates yet.</div>')+'<p class="n">Closing date, or the date added when the closing date is not stated.</p></div>'+
+  '</div>'+
+  '<div class="card"><h3>Largest priced records (our sum)</h3>'+hbars(top,function(v){return money0(v);})+legend(types.map(function(r){return {k:r.k,color:r.color};}))+'</div>'+
+  '<div class="card"><h3>Bid outcomes by type</h3>'+resHTML+'</div>';
+}
+function bindTips(root){
+  var tip=$('vtip');
+  root.onmousemove=function(e){ var el=e.target.closest('[data-tip]'); if(!el){ tip.classList.add('hidden'); return; }
+    tip.textContent=el.getAttribute('data-tip'); tip.classList.remove('hidden');
+    var x=e.clientX+14, y=e.clientY+14, w=tip.offsetWidth; if(x+w>window.innerWidth-8) x=e.clientX-w-14; tip.style.left=x+'px'; tip.style.top=y+'px'; };
+  root.onmouseleave=function(){ tip.classList.add('hidden'); };
+}
+
 function exportReports(){
   if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
   var R=repRows(), wb=XLSX.utils.book_new();

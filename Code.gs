@@ -1,14 +1,18 @@
 /**
  * QS CRM — API on the Google Sheet "QS CRM DB" (Apps Script, bound to the sheet).
- * v1.3.0 - tender register, bid results, activity log, workbook import and Google Drive file storage.
+ * v1.3.1 - tender register, bid results, activity log, workbook import and Google Drive file storage.
  * Each save is one call (log entries returned with the row).
  *
  * Setup (once):
  *  1. Open the "QS CRM DB" Google Sheet > Extensions > Apps Script. Paste this file as Code.gs. Save.
  *  2. Run setPassword() once (select it in the toolbar, Run). Before running, change the text 'CHANGE-ME' below
  *     to your own password, run, then change it back to 'CHANGE-ME' and save (the password stays in Script Properties).
- *  2b. Run authorizeDrive() once and allow Google Drive access (needed from v1.3.0: tender files are stored in
- *      your Drive folder "QS CRM - Tenders", one sub-folder per tender).
+ *  2b. Google Drive (for tender files): in setDriveFolder() paste the link of YOUR Drive folder, then Run it and
+ *      allow Google Drive access. Each tender gets a sub-folder inside it (e.g. "T11 - JKR-DBSBM021-2026").
+ *      Leave the link as PASTE-FOLDER-LINK to let the script make a folder "QS CRM - Tenders" in My Drive instead.
+ *      If Run shows "An unknown error has occurred": open the sheet in an Incognito / private window signed in
+ *      ONLY to the Google account that owns the sheet, then run it again (several signed-in accounts break the
+ *      permission screen).
  *  3. Deploy > New deployment > type "Web app" > Execute as: Me > Who has access: Anyone > Deploy.
  *     Copy the Web app URL (ends with /exec) into the QS CRM login screen.
  *  Every request must carry the password, so the URL alone gives no access.
@@ -59,6 +63,14 @@ function doPost(e) {
 var ACTIONS = {
   ping: function () { return { sheet: SpreadsheetApp.getActive().getName(), time: now_() }; },
 
+  /* where tender files go (for the app's messages) */
+  driveInfo: function () {
+    var id = PropertiesService.getScriptProperties().getProperty('DRIVE_ROOT_ID');
+    if (!id) return { set: false };
+    try { var f = DriveApp.getFolderById(id); return { set: true, name: f.getName(), url: f.getUrl() }; }
+    catch (e) { return { set: false, error: 'Drive not authorised or folder not found - run setDriveFolder() in Apps Script' }; }
+  },
+
   /* everything the register screen needs in one call */
   list: function () {
     var t = read_(TABS.tenders);
@@ -67,7 +79,8 @@ var ACTIONS = {
     bq.rows.forEach(function (r) { if (r.bq_set === 'Tendered') lines[r.arza_no] = (lines[r.arza_no] || 0) + 1; });
     ab.rows.forEach(function (r) { asb[r.arza_no] = (asb[r.arza_no] || 0) + 1; });
     t.rows.forEach(function (r) { r._bq_lines = lines[r.arza_no] || 0; r._asbuilt_lines = asb[r.arza_no] || 0; });
-    return { tenders: t.rows, lists: lists_(), log: read_(TABS.log).rows.slice(-200) };
+    var dId = PropertiesService.getScriptProperties().getProperty('DRIVE_ROOT_ID');
+    return { tenders: t.rows, lists: lists_(), log: read_(TABS.log).rows.slice(-200), drive: dId ? 'https://drive.google.com/drive/folders/' + dId : '' };
   },
 
   /* one tender: record + BQ summary per bill + its log */
@@ -202,7 +215,27 @@ function saveFields_(req) {
   }
 
 /* ---------- Google Drive ---------- */
-function authorizeDrive() { Logger.log('Drive OK - tender files go to: ' + rootFolder_().getUrl()); }
+/* Run once: choose the Drive folder for tender files (this also asks for Drive permission). */
+function setDriveFolder() {
+  var link = 'PASTE-FOLDER-LINK';   // e.g. https://drive.google.com/drive/folders/1AbC...xyz
+  var p = PropertiesService.getScriptProperties();
+  Logger.log('Step 1/3: checking Drive access ...');
+  var root = DriveApp.getRootFolder();
+  Logger.log('Step 1/3 OK: My Drive = ' + root.getName());
+  if (link === 'PASTE-FOLDER-LINK' || !link) {
+    var f = rootFolder_();
+    Logger.log('Step 2/3: no link given - tender files go to "' + f.getName() + '": ' + f.getUrl());
+  } else {
+    var m = String(link).match(/folders\/([\w-]+)/) || String(link).match(/^([\w-]{20,})$/) || String(link).match(/[?&]id=([\w-]+)/);
+    if (!m) throw new Error('That is not a Drive folder link. Open the folder in Drive and copy the address bar.');
+    Logger.log('Step 2/3: opening your folder ' + m[1] + ' ...');
+    var mine = DriveApp.getFolderById(m[1]);
+    p.setProperty('DRIVE_ROOT_ID', m[1]);
+    Logger.log('Step 2/3 OK: tender files will go to "' + mine.getName() + '": ' + mine.getUrl());
+  }
+  Logger.log('Step 3/3: done. Now Deploy > Manage deployments > Edit > Version: New version > Deploy.');
+}
+function authorizeDrive() { setDriveFolder(); }
 function rootFolder_() {
   var p = PropertiesService.getScriptProperties(), id = p.getProperty('DRIVE_ROOT_ID');
   if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
@@ -218,7 +251,9 @@ function tenderFolder_(row) {
 }
 function saveFile_(row, file) {
   if (!file || !file.data) return null;
-  var folder = tenderFolder_(row);
+  var folder;
+  try { folder = tenderFolder_(row); }
+  catch (e) { throw new Error('Google Drive is not set up yet (' + e.message + '). In Apps Script run setDriveFolder(), then deploy a New version.'); }
   var blob = Utilities.newBlob(Utilities.base64Decode(file.data), file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name);
   var f = folder.createFile(blob);
   row.folder_link = folder.getUrl();

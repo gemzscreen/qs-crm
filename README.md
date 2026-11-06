@@ -1,9 +1,10 @@
-# ARZA QS CRM SYSTEM — v1.3.0 (tender register + import + Drive)
+# ARZA QS CRM SYSTEM — v1.3.1
 
-**Updating from v1.2.0 (both files change):**
+**Updating to v1.3.1 (both files change):**
 1. Replace `index.html` on GitHub Pages.
 2. Apps Script: paste the new `Code.gs` over the old one, save.
-3. Select `authorizeDrive` in the toolbar › Run › allow Google Drive access (once). It creates the Drive folder "QS CRM - Tenders".
+3. Google Drive folder: open your chosen folder in Drive, copy the address bar link, paste it into `setDriveFolder()` in place of `PASTE-FOLDER-LINK`, save, select `setDriveFolder` › Run › allow Drive access. Check View › Logs (Execution log) for "Step 2/3 OK". (Leave PASTE-FOLDER-LINK as is to use a new folder "QS CRM - Tenders" in My Drive.)
+   - "An unknown error has occurred": open the sheet in an Incognito/private window signed in ONLY to the account that owns the sheet, then Run again.
 4. Deploy › Manage deployments › Edit › Version: New version › Deploy (same URL).
 
 **Workbook file name (recommended):** `Priced BQ Estimate - <client ref> Tender <n> - <Mon YYYY> rev<k>.xlsx`
