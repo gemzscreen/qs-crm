@@ -1,4 +1,6 @@
-# ARZA QS CRM SYSTEM — v2.1.0 (Supabase)
+# ARZA QS CRM SYSTEM — v2.1.1 (Supabase)
+
+**Updating from v2.1.0:** run the new `supabase/schema.sql` once (SQL Editor › Run — keeps data and users), upload `index.html`, paste the new `Code.gs` and deploy a New version.
 
 Tender register, priced BQs, rationalized revisions, bid results and as-built reports for ARZA SDN BHD.
 **Data:** Supabase (PostgreSQL, sign-in, roles). **Files:** Google Drive (Apps Script file service). **Masterlists:** Google Sheets (pricing, inventory).

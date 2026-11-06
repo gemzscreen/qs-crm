@@ -307,7 +307,7 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
   <div class="sp"></div>
   <div class="conn hidden" id="conn"><i></i><span></span></div>
   <div class="hello" id="hello" title="My account" role="button" tabindex="0"></div>
-  <button id="btnVer" class="ver" title="What's new">v2.1.0</button>
+  <button id="btnVer" class="ver" title="What's new">v2.1.1</button>
   <button id="btnOut" class="hidden">Sign out</button>
   <button id="btnTheme" class="ibtn" aria-label="Theme"></button>
 </header>
@@ -1236,8 +1236,13 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'2.1.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'2.1.1', user:'Gemz' };
 var CHANGELOG = [
+  { v:'2.1.1', date:'6 Nov 2026', items:[
+    'Supabase new API keys: publishable key (sb_publishable_…) in config.js; secret key (sb_secret_…) in the Apps Script file service (legacy anon / service_role keys still work).',
+    'Project URL pasted with /rest/v1/ at the end is corrected automatically (app and setSupabase()).',
+    'Fixed: one-time import of the QS CRM DB sheet failed with "DELETE requires a WHERE clause" on Supabase — run the new schema.sql once.',
+    'README and config.js: current Supabase menu names (Connect, Data API, API Keys).' ]},
   { v:'2.1.0', date:'6 Nov 2026', items:[
     'Data moved to Supabase (PostgreSQL). Google Drive keeps the files; Google Sheets stays for the pricing and inventory masterlists.',
     'Own accounts: everyone signs in with email and password. Forgot password sends a reset link; change it under My account (click your name).',
