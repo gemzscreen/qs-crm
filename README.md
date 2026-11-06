@@ -1,11 +1,12 @@
-# ARZA QS CRM SYSTEM — v1.3.1
+# ARZA QS CRM SYSTEM — v1.4.0 (v1 complete)
 
-**Updating to v1.3.1 (both files change):**
-1. Replace `index.html` on GitHub Pages.
+**Updating to v1.4.0:**
+1. GitHub Pages: replace `index.html` **and add `Breakdown_QTY_Template.xlsx` next to it** (the As-built page's Template button downloads it).
 2. Apps Script: paste the new `Code.gs` over the old one, save.
-3. Google Drive folder: open your chosen folder in Drive, copy the address bar link, paste it into `setDriveFolder()` in place of `PASTE-FOLDER-LINK`, save, select `setDriveFolder` › Run › allow Drive access. Check View › Logs (Execution log) for "Step 2/3 OK". (Leave PASTE-FOLDER-LINK as is to use a new folder "QS CRM - Tenders" in My Drive.)
-   - "An unknown error has occurred": open the sheet in an Incognito/private window signed in ONLY to the account that owns the sheet, then Run again.
-4. Deploy › Manage deployments › Edit › Version: New version › Deploy (same URL).
+3. Deploy › Manage deployments › Edit › Version: New version › Deploy (same URL). No new permissions needed.
+4. Drive folder (if not done yet): `setDriveFolder()` — paste your folder link, Run. "An unknown error has occurred" = several Google accounts signed in → use an Incognito window with only the sheet owner's account.
+
+**As-built workflow:** Tenders › import the priced workbook (gives the tendered BQ) → As-built › pick the tender › Import Breakdown QTY (standard template or the old MOE layout) → check Matching check → Report 1 / Report 2 → Excel or PDF / Print.
 
 **Workbook file name (recommended):** `Priced BQ Estimate - <client ref> Tender <n> - <Mon YYYY> rev<k>.xlsx`
 e.g. `Priced BQ Estimate - JKR-DBSBM021-2026 Tender 11 - Nov 2026 rev0.xlsx`. "Tender 11" becomes T11 when that number is free; everything else is read from the workbook (Tender Info + B-sheets).

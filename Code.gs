@@ -1,6 +1,6 @@
 /**
  * QS CRM — API on the Google Sheet "QS CRM DB" (Apps Script, bound to the sheet).
- * v1.3.1 - tender register, bid results, activity log, workbook import and Google Drive file storage.
+ * v1.4.0 - tender register, as-built (Breakdown QTY) sets, bid results, activity log, workbook import and Google Drive file storage.
  * Each save is one call (log entries returned with the row).
  *
  * Setup (once):
@@ -138,6 +138,39 @@ var ACTIONS = {
     write_(TABS.tenders, cur.idx, row);
     log_('file', row.arza_no, msg.join('; '));
     return row;
+  },
+
+  /* everything the As-built screen needs for one tender: tendered BQ lines + all as-built lines */
+  asBuiltData: function (req) {
+    var no = req.arza_no;
+    return {
+      items: read_(TABS.bq).rows.filter(function (r) { return r.arza_no === no && r.bq_set === 'Tendered'; }),
+      rows: read_(TABS.asbuilt).rows.filter(function (r) { return r.arza_no === no; })
+    };
+  },
+
+  /* save one measure set (replaces a set with the same name) */
+  importAsBuilt: function (req) {
+    var cur = find_(req.arza_no), set = String(req.measure_set || '').trim(), ts = now_();
+    if (!set) throw new Error('Give the measure set a name');
+    var rows = (req.rows || []).map(function (r) {
+      var o = {}; for (var k in r) o[k] = r[k];
+      o.arza_no = req.arza_no; o.measure_set = set; o.imported_at = ts; o.source_file = req.file ? req.file.name : (r.source_file || '');
+      return o;
+    });
+    var n = replaceRows_(TABS.asbuilt, function (r) { return r.arza_no === req.arza_no && r.measure_set === set; }, rows, ['item_ref_raw', 'item_id']);
+    var msg = set + ': ' + rows.length + ' lines (' + n.removed + ' replaced)';
+    if (req.stats) msg += ' - ' + ['Matched', 'Shared', 'Unmatched', 'VO?'].map(function (k) { return (req.stats[k] || 0) + ' ' + k; }).join(', ');
+    if (req.file) { saveFile_(cur.row, req.file); cur.row.updated_at = ts; write_(TABS.tenders, cur.idx, cur.row); msg += '; file saved to Drive'; }
+    log_('asbuilt', req.arza_no, msg);
+    return { arza_no: req.arza_no, measure_set: set, lines: rows.length, folder_link: cur.row.folder_link || '' };
+  },
+
+  deleteMeasureSet: function (req) {
+    var set = String(req.measure_set || '');
+    var n = replaceRows_(TABS.asbuilt, function (r) { return r.arza_no === req.arza_no && r.measure_set === set; }, [], []);
+    log_('asbuilt', req.arza_no, 'Deleted measure set ' + set + ' (' + n.removed + ' lines)');
+    return { removed: n.removed };
   },
 
   /* lock the tendered BQ (normally at submission) */
@@ -282,6 +315,29 @@ function writeBQ_(no, items, ts, replace) {
   });
   sh.getRange(start, 1, rows.length, head.length).setValues(rows);
   return rows.length;
+}
+
+/* remove rows matching dropFn (by header name), then append new row objects; textCols are stored as text */
+function replaceRows_(tab, dropFn, newRows, textCols) {
+  var sh = sheet_(tab), head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+  var all = sh.getDataRange().getValues(), removed = 0;
+  if (all.length > 1) {
+    var keep = all.slice(1).filter(function (r) {
+      if (r.every(function (c) { return c === '' || c == null; })) return false;
+      var o = {}; head.forEach(function (h, i) { o[h] = r[i]; });
+      if (dropFn(o)) { removed++; return false; } return true;
+    });
+    if (removed) {
+      sh.getRange(2, 1, all.length - 1, head.length).clearContent();
+      if (keep.length) sh.getRange(2, 1, keep.length, head.length).setValues(keep);
+    }
+  }
+  if (newRows.length) {
+    var start = Math.max(sh.getLastRow(), 1) + 1;
+    (textCols || []).forEach(function (c) { var i = head.indexOf(c); if (i >= 0) sh.getRange(start, i + 1, newRows.length, 1).setNumberFormat('@'); });
+    sh.getRange(start, 1, newRows.length, head.length).setValues(newRows.map(function (o) { return head.map(function (h) { return o[h] == null ? '' : o[h]; }); }));
+  }
+  return { removed: removed, added: newRows.length };
 }
 
 /* ---------- sheet helpers (columns read by header name) ---------- */

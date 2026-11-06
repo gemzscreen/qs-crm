@@ -180,6 +180,24 @@ td.dt{white-space:nowrap;font-size:13px}
 .barc{display:flex;align-items:center;gap:8px}
 .barc i{display:block;height:8px;border-radius:4px;background:var(--brand2);min-width:2px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.abtabs{margin:4px 0 12px;border-bottom:1px solid var(--line)}
+#vAB .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+#vAB .card h3{margin:0 0 8px;font-size:14px}
+#vAB .n{font-size:12px;color:var(--ink3);margin:4px 0 8px}
+#vAB h2{font-size:16px;margin:0 0 4px;color:var(--bink)}
+#vAB table th{position:static;cursor:default}
+#vAB tbody tr{cursor:default}
+#vAB td.dsc{max-width:440px;font-size:12.5px}
+#vAB td.nt{font-size:12px;color:var(--ink3)}
+#vAB tr.bh td{background:var(--th);font-weight:600;color:var(--bink)}
+#vAB tr.bt td{font-weight:600;border-bottom:2px solid var(--line)}
+#vAB tr.gt td{font-weight:700;background:var(--sel)}
+#vAB td.neg{color:var(--bad)} #vAB td.pos{color:var(--ok)}
+#vAB .ok{color:var(--ok);margin:4px 0}
+#vAB ul.plain{margin:0;padding-left:18px;font-size:13px}
+#vAB code{font-family:var(--mono);color:var(--bink)}
+#vAB select{padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--field)}
+#vAB a.btn{text-decoration:none;color:inherit}
 .tabs{display:flex;gap:2px}
 .tabs a{padding:8px 12px;font-size:13px;color:var(--ink2);text-decoration:none;border-bottom:2px solid transparent;cursor:pointer}
 .tabs a.on{color:var(--bink);border-color:var(--bink);font-weight:600}
@@ -262,7 +280,7 @@ footer.foot a:hover{text-decoration:underline}
 <header class="top hidden" id="top">
   <div class="brand"><img src="data:image/png;base64,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" alt="ARZA SDN BHD" width="122" height="32"><i></i><span>QS CRM</span></div>
   <nav class="nav" id="nav">
-    <a data-v="tenders" class="on">Tenders</a><a class="off" title="As-built comes in v1 module 3: it needs the site Breakdown QTY files of a won project">As-built</a><a data-v="reports">Reports</a>
+    <a data-v="tenders" class="on">Tenders</a><a data-v="asbuilt">As-built</a><a data-v="reports">Reports</a>
   </nav>
   <div class="sp"></div>
   <div class="conn hidden" id="conn"><i></i><span></span></div>
@@ -321,6 +339,8 @@ footer.foot a:hover{text-decoration:underline}
 </main>
 
 <main id="vRep" class="hidden rep"></main>
+<main id="vAB" class="hidden"></main>
+<input type="file" id="abFile" accept=".xlsx,.xlsm" class="hidden">
 
 <footer class="foot"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</footer>
 
@@ -839,11 +859,237 @@ footer.foot a:hover{text-decoration:underline}
 
 </script>
 <script>
+/*
+ * QS CRM — read a Breakdown QTY workbook (site as-built measurement) and match it to the tendered BQ.
+ * Two layouts:
+ *  standard  ARZA template: level sheets with header "BQ Item Ref | Level | Location/Room | Description | Unit | Nos | L | W | H | Qty | Remark | Measured by | Date"
+ *  legacy    MOE Block D style: header "SL NO | LOCATION | DESCRIPTION | UNITS | NOS | Size (L, W/B, H) | TOTAL QUANTITY | REMARK";
+ *            the BQ ref sits on an item row, the measured lines follow below it with a blank ref;
+ *            "Total …" rows in the ref column are subtotals and are skipped.
+ * Qty rule: Qty = Nos × L × W × H (blank dimensions ignored). Deductions: negative Nos (standard) or a negative total (legacy).
+ * Needs ItemId (itemid.js) and XLSX (SheetJS).
+ */
+(function (root) {
+  'use strict';
+  var ItemId = (typeof require !== 'undefined') ? require('./itemid.js') : root.ItemId;
+
+  function txt(v) { return v == null ? '' : String(v).replace(/ /g, ' ').trim(); }
+  function num(v) {
+    if (typeof v === 'number') return isFinite(v) ? v : null;
+    var s = txt(v).replace(/[,\s]/g, '');
+    if (s === '' || isNaN(Number(s))) return null;
+    return Number(s);
+  }
+  function round(x, d) { var f = Math.pow(10, d == null ? 3 : d); return Math.round(x * f) / f; }
+  function isSkipSheet(n) { return /^(project|summary|readme|lists?|instructions?|legend)$/i.test(txt(n)); }
+
+  /* ---- header detection ---- */
+  function findStandard(rows) {
+    for (var r = 0; r < Math.min(rows.length, 30); r++) {
+      var c = {}, row = rows[r] || [];
+      row.forEach(function (v, i) {
+        var t = txt(v).toLowerCase().replace(/\s+/g, ' ');
+        if (/^bq item ref/.test(t)) c.ref = i;
+        else if (t === 'level') c.level = i;
+        else if (/^location/.test(t)) c.loc = i;
+        else if (t === 'description') c.desc = i;
+        else if (t === 'unit' || t === 'units') c.unit = i;
+        else if (t === 'nos' || t === 'no' || t === 'no.') c.nos = i;
+        else if (t === 'l') c.l = i;
+        else if (t === 'w' || t === 'b') c.w = i;
+        else if (t === 'h' || t === 'd') c.h = i;
+        else if (t === 'qty' || t === 'quantity') c.qty = i;
+        else if (/^remark/.test(t)) c.remark = i;
+        else if (/^measured by/.test(t)) c.by = i;
+        else if (t === 'date') c.date = i;
+      });
+      if (c.ref != null && (c.qty != null || c.nos != null)) { c.row = r; return c; }
+    }
+    return null;
+  }
+  function findLegacy(rows) {
+    for (var r = 0; r < Math.min(rows.length, 30); r++) {
+      var row = rows[r] || [];
+      var a = row.map(function (v) { return txt(v).toLowerCase().replace(/\s+/g, ' '); });
+      var iRef = a.findIndex(function (t) { return /^(sl ?no|s\/no|item ref|ref)\.?$/.test(t); });
+      if (iRef < 0 || a.indexOf('description') < 0) continue;
+      var c = { ref: iRef, desc: a.indexOf('description'), loc: a.findIndex(function (t) { return /^location/.test(t); }) };
+      var ri = a.findIndex(function (t) { return /^remark/.test(t); }); if (ri >= 0) c.remark = ri;
+      // units / nos / size / total on the next 1-2 rows
+      for (var k = r; k <= Math.min(r + 3, rows.length - 1); k++) {
+        (rows[k] || []).forEach(function (v, i) {
+          var t = txt(v).toLowerCase().replace(/\s+/g, ' ');
+          if (t === 'units' || t === 'unit') c.unit = i;
+          else if (t === 'nos' || t === 'no') c.nos = i;
+          else if (t === 'l' && k > r) c.l = i;
+          else if ((t === 'w' || t === 'b') && k > r) c.w = i;
+          else if (t === 'h' && k > r) c.h = i;
+          else if (/^total quantity|^total qty|^quantity$/.test(t)) c.qty = i;
+          else if (/^remark/.test(t) && c.remark == null) c.remark = i;
+        });
+        if (c.l != null && c.qty != null) { c.row = k; break; }
+      }
+      if (c.qty != null && c.unit != null) { if (c.row == null) c.row = r + 2; return c; }
+    }
+    return null;
+  }
+
+  /* is a ref-column value a real BQ ref (has digits), a section heading (B.2) or a label (Total …)? */
+  function refKind(s) {
+    if (!s) return 'blank';
+    if (/^total\b|^sub-?total|^grand total/i.test(s) || !/\d/.test(s)) return 'label';
+    // a ref has no ordinary words: "150mm thick light weight brickwall" is a subtotal label, "Bill 2 Page 1 Item B" is a ref
+    if (/[a-z]{3,}/i.test(s.replace(/\b(bill|page|item|and|ref|no|section|sec)\b/gi, ''))) return 'label';
+    if (/^b\s*\.?\s*\d+\.?$/i.test(s.replace(/\s+/g, ''))) return 'section';
+    return 'ref';
+  }
+
+  function measure(o) {
+    var dims = [o.nos, o.l, o.w, o.h].filter(function (x) { return x != null; });
+    return dims.length ? dims.reduce(function (a, b) { return a * b; }, 1) : null;
+  }
+
+  /* opts: { XLSX, scheme } -> { format, sheets:[names], lines:[...], labels:n, issues:[...] } */
+  function readBQTY(wb, opts) {
+    opts = opts || {};
+    var XLSX = opts.XLSX || root.XLSX;
+    var out = { format: '', sheets: [], lines: [], labels: 0, issues: [] };
+    wb.SheetNames.forEach(function (n) {
+      if (isSkipSheet(n)) return;
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: null });
+      var std = findStandard(rows), leg = std ? null : findLegacy(rows);
+      if (!std && !leg) return;
+      out.sheets.push(n);
+      out.format = out.format && out.format !== (std ? 'standard' : 'legacy') ? 'mixed' : (std ? 'standard' : 'legacy');
+      var h = std || leg, cur = null, curDesc = '', curLoc = '';
+      rows.slice(h.row + 1).forEach(function (r, i) {
+        var rowNo = h.row + 2 + i;
+        var ref = txt(r[h.ref]), kind = refKind(ref);
+        if (kind === 'section' && opts.scheme && opts.scheme !== 'PL') kind = 'ref';   // "B.2" is section B item 2 in SEC tenders
+        var unit = h.unit != null ? txt(r[h.unit]) : '';
+        var o = { nos: h.nos != null ? num(r[h.nos]) : null, l: h.l != null ? num(r[h.l]) : null, w: h.w != null ? num(r[h.w]) : null, h: h.h != null ? num(r[h.h]) : null };
+        var qtyIn = h.qty != null ? num(r[h.qty]) : null;
+        var desc = h.desc != null ? txt(r[h.desc]) : '', loc = h.loc != null ? txt(r[h.loc]) : '';
+        var remark = h.remark != null ? txt(r[h.remark]) : '';
+        var hasMeasure = qtyIn != null || o.nos != null || o.l != null;
+        if (std) {
+          if (/^example/i.test(remark)) return;   // template example row
+          if (!ref && !hasMeasure) return;
+          if (kind === 'label') { out.labels++; return; }
+          if (!hasMeasure) { out.issues.push(n + ' row ' + rowNo + ': ' + (ref || 'line') + ' has no quantity or dimensions'); return; }
+          var calc = measure(o);
+          var qty = calc != null ? calc : qtyIn;
+          if (calc != null && qtyIn != null && Math.abs(calc - qtyIn) > 0.05) out.issues.push(n + ' row ' + rowNo + ': Qty ' + qtyIn + ' differs from Nos×L×W×H ' + round(calc, 2) + ' (calculated value used)');
+          out.lines.push({ sheet: n, row: rowNo, ref_raw: kind === 'section' ? '' : ref, level: txt(r[h.level]) || n, location: loc, description: desc, unit: unit,
+            nos: o.nos, l: o.l, w: o.w, h: o.h, qty: round(qty), remark: remark,
+            measured_by: h.by != null ? txt(r[h.by]) : '', measured_date: h.date != null ? dateTxt(r[h.date]) : '' });
+          return;
+        }
+        // legacy: item rows carry the ref, measured lines below
+        if (kind === 'label') { if (ref) out.labels++; cur = null; return; }
+        if (kind === 'section') { cur = null; return; }
+        if (kind === 'ref') { cur = ref; curDesc = desc; curLoc = loc; if (!hasMeasure) return; }
+        if (!hasMeasure) return;
+        if (!cur) { out.issues.push(n + ' row ' + rowNo + ': quantity with no BQ ref above it'); }
+        var c2 = measure(o), q = qtyIn != null ? qtyIn : c2;
+        if (q == null) return;
+        if (c2 != null && o.l != null && Math.abs(Math.abs(c2) - Math.abs(q)) > 0.05) out.issues.push(n + ' row ' + rowNo + ' (' + (cur || '?') + '): total ' + q + ' ≠ Nos×L×W×H ' + round(c2, 2) + ' — check on site (typed total kept)');
+        if (!unit) out.issues.push(n + ' row ' + rowNo + ' (' + (cur || '?') + '): no unit');
+        out.lines.push({ sheet: n, row: rowNo, ref_raw: cur || '', level: n, location: desc || curLoc, description: curDesc, unit: unit,
+          nos: o.nos, l: o.l, w: o.w, h: o.h, qty: round(q), remark: remark, measured_by: '', measured_date: '' });
+      });
+    });
+    if (!out.sheets.length) out.issues.push('No Breakdown QTY sheets found (header "BQ Item Ref" or "SL NO / DESCRIPTION / TOTAL QUANTITY").');
+    return out;
+  }
+  function dateTxt(v) {
+    if (v instanceof Date) return v.toISOString().slice(0, 10);
+    if (typeof v === 'number' && v > 20000 && v < 80000) { var d = new Date(Math.round((v - 25569) * 864e5)); return d.toISOString().slice(0, 10); }
+    return txt(v);
+  }
+
+  var UNIT_EQ = { 'm2': 'm2', 'm²': 'm2', 'sq.m': 'm2', 'sqm': 'm2', 'm3': 'm3', 'm³': 'm3', 'm': 'm', 'lm': 'm', 'no': 'No', 'nos': 'No', 'nr': 'No', 'ls': 'LS', 'item': 'Item', 'kg': 'kg', 't': 't' };
+  function unitKey(u) { var k = txt(u).toLowerCase(); return UNIT_EQ[k] || k; }
+
+  /*
+   * Match lines to the tendered BQ. bqItems: [{item_id, unit, ...}]. Returns rows ready for AsBuilt_Items:
+   * one row per (line, item). A line naming several items gives one row per item with the full qty (Shared).
+   */
+  function match(lines, scheme, bqItems) {
+    var known = new Set(bqItems.map(function (b) { return b.item_id; }));
+    var unitOf = {}; bqItems.forEach(function (b) { unitOf[b.item_id] = b.unit; });
+    var rows = [], stats = { lines: lines.length, Matched: 0, Shared: 0, Unmatched: 0, 'VO?': 0, unitWarn: 0 };
+    lines.forEach(function (ln) {
+      var base = Object.assign({}, ln);
+      if (!ln.ref_raw) {
+        var vo = /\bvo\b|vo\?|variation/i.test(ln.remark);
+        rows.push(Object.assign(base, { item_ref_raw: '', item_id: '', match_status: vo ? 'VO?' : 'Unmatched', match_note: vo ? 'Not in BQ (VO?)' : 'No BQ ref' }));
+        stats[vo ? 'VO?' : 'Unmatched']++; return;
+      }
+      var r = ItemId.resolve(ln.ref_raw, scheme, known);
+      var many = r.ids.length + r.unmatched.length > 1;
+      r.ids.forEach(function (id) {
+        var note = '', uk = unitKey(unitOf[id]), ul = unitKey(ln.unit);
+        if (ul && uk && ul !== uk) { note = 'Unit ' + ln.unit + ' vs BQ ' + unitOf[id]; stats.unitWarn++; }
+        rows.push(Object.assign({}, base, { item_ref_raw: ln.ref_raw, item_id: id, match_status: many ? 'Shared' : 'Matched', match_note: note }));
+        stats[many ? 'Shared' : 'Matched']++;
+      });
+      r.unmatched.forEach(function (u) {
+        rows.push(Object.assign({}, base, { item_ref_raw: ln.ref_raw, item_id: '', match_status: 'Unmatched', match_note: 'Ref ' + u + ' not in the tendered BQ' }));
+        stats.Unmatched++;
+      });
+    });
+    return { rows: rows, stats: stats };
+  }
+
+  /*
+   * Report data: per BQ item tendered vs as-built. asb: AsBuilt rows of one measure set.
+   * -> { items:[{...bq, ab_qty, ab_amount, diff_qty, diff_pct, diff_amount, lines, flag}], bills:{}, totals, unmatched:[...] }
+   */
+  function compare(bqItems, asb) {
+    var sum = {}, cnt = {};
+    asb.forEach(function (a) { if (!a.item_id) return; sum[a.item_id] = (sum[a.item_id] || 0) + (Number(a.qty) || 0); cnt[a.item_id] = (cnt[a.item_id] || 0) + 1; });
+    var bills = {}, T = { tendered: 0, asbuilt: 0, diff: 0, measured: 0, items: 0 };
+    var items = bqItems.map(function (b) {
+      var tq = Number(b.qty) || 0, rate = Number(b.rate) || 0, measured = b.item_id in sum;
+      var aq = measured ? round(sum[b.item_id]) : null;
+      var lump = /^(LS|PS|PC|Item|Prov|Sum)$/i.test(String(b.unit || ''));
+      var tAmt = b.amount != null && b.amount !== '' ? Number(b.amount) : tq * rate;
+      var aAmt = measured ? round(aq * rate, 2) : (lump ? tAmt : null);   // unmeasured lump sums are carried at the tendered amount
+      var o = Object.assign({}, b, { ab_qty: aq, ab_amount: aAmt, lines: cnt[b.item_id] || 0,
+        diff_qty: measured ? round(aq - tq) : null, diff_pct: measured && tq ? (aq - tq) / tq : null,
+        diff_amount: aAmt != null ? round(aAmt - tAmt, 2) : null, t_amount: tAmt, lump: lump });
+      o.flag = !measured ? (lump ? 'Lump sum (carried)' : 'Not measured') : (Math.abs(o.diff_pct || 0) > 0.1 ? (o.diff_qty > 0 ? 'Over +10%' : 'Under −10%') : '');
+      var k = b.bill || '-'; var bb = bills[k] || (bills[k] = { bill: k, tendered: 0, asbuilt: 0, items: 0, measured: 0 });
+      bb.tendered += tAmt || 0; bb.asbuilt += aAmt || 0; bb.items++; if (measured) bb.measured++;
+      T.tendered += tAmt || 0; T.asbuilt += aAmt || 0; T.items++; if (measured) T.measured++;
+      return o;
+    });
+    T.diff = round(T.asbuilt - T.tendered, 2);
+    var unmatched = asb.filter(function (a) { return !a.item_id; });
+    return { items: items, bills: bills, totals: T, unmatched: unmatched };
+  }
+
+  var api = { readBQTY: readBQTY, match: match, compare: compare, refKind: refKind };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.BQTY = api;
+})(this);
+
+</script>
+<script>
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'1.3.1', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'1.4.0', user:'Gemz' };
 var CHANGELOG = [
+  { v:'1.4.0', date:'6 Nov 2026', items:[
+    'As-built module — v1 complete.',
+    'Import Breakdown QTY: standard ARZA template and the old MOE Block D layout (SL NO / DESCRIPTION / TOTAL QUANTITY; "Total …" rows skipped). File saved to the tender\'s Drive folder.',
+    'Refs matched to the tendered BQ (B.2.1.B, b2/1/b, "B.2.2-C & B.2.3-C", 4.1.1 …): Matched / Shared / Unmatched / VO?. Saved as named measure sets (As-built, Interim 1 …).',
+    'Report 1 — As-Built BQ and Report 2 — Tendered vs As-Built (qty, %, B$ difference, over/under 10% flags), by bill with totals.',
+    'Matching check: refs not in the BQ, VO? lines, BQ items not measured, shared measurements, unit differences.',
+    'Export to Excel and PDF / Print (A4, ARZA logo, prepared / checked by).',
+    'Standard Breakdown QTY template download.' ]},
   { v:'1.3.1', date:'5 Nov 2026', items:[
     'Google Drive: tender files can go to a folder you choose (setDriveFolder in Apps Script); clearer message when Drive is not set up.',
     'Reports: charts with colour: value by type and records by client (donuts), status pipeline, records by closing month, largest priced records and bid outcomes by type (bars). Hover any bar or slice for the figures.',
@@ -942,7 +1188,7 @@ function forget(){ try{ ['pw'].forEach(function(k){ sessionStorage.removeItem('q
 
 /* ---------- login ---------- */
 function showLogin(err){
-  $('vLogin').classList.remove('hidden'); $('vMain').classList.add('hidden'); $('vRep').classList.add('hidden'); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
+  $('vLogin').classList.remove('hidden'); $('vMain').classList.add('hidden'); $('vRep').classList.add('hidden'); $('vAB').classList.add('hidden'); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
   $('inUrl').value = load('url'); $('loginErr').textContent = err||''; closeDrawer();
   setTimeout(function(){ ($('inUrl').value? $('inPw') : $('inUrl')).focus(); }, 30);
 }
@@ -988,7 +1234,7 @@ function openFile(f){
       t.forEach(function(r){ r._bq_lines=lines[r.arza_no]||0; r._asbuilt_lines=asb[r.arza_no]||0; });
       var lists={}, lr=wb.Sheets.Lists ? XLSX.utils.sheet_to_json(wb.Sheets.Lists,{header:1,defval:''}) : [];
       (lr[0]||[]).forEach(function(h,c){ if(!h) return; lists[h]=[]; for(var i=1;i<lr.length;i++) if(lr[i][c]!=='' && String(lr[i][c]).length<30) lists[h].push(String(lr[i][c])); });
-      S.mode='file'; S.fileName=f.name; S.tenders=t; S.lists=lists; S.log=get('Log'); S.fileDB={bq:bq};
+      S.mode='file'; S.fileName=f.name; S.tenders=t; S.lists=lists; S.log=get('Log'); S.fileDB={bq:bq, ab:ab};
       enter();
     }catch(e){ $('loginErr').textContent='Could not read that file: '+e.message; }
   };
@@ -1195,7 +1441,7 @@ function drawTab(){
   }
   else if(S.tab==='bq'){
     S.snap=null;
-    f.innerHTML='<span class="msg">Read-only. BQ import and as-built come in the next modules.</span>';
+    f.innerHTML='<span class="msg">Tendered BQ (read-only). Replace it with Details › Upload file while the BQ is not locked.</span>';
     b.innerHTML='<div style="padding:20px;color:var(--ink3)"><span class="spin"></span> Loading…</div>';
     getDetail(t.arza_no).then(function(d){
       if(S.cur!==t || S.tab!=='bq') return;
@@ -1206,7 +1452,8 @@ function drawTab(){
         '<div class="tbl"><table class="mini"><thead><tr><th>Bill / section</th><th class="r">Lines</th><th class="r">Amount (B$)</th><th class="r">%</th></tr></thead><tbody>'+
         d.bills.map(function(x){ return '<tr style="cursor:default"><td class="no">'+esc(x.bill)+'</td><td class="r num">'+x.lines+'</td><td class="r num">'+money(x.amount)+'</td><td class="r num">'+(tot?(x.amount/tot*100).toFixed(1)+'%':'')+'</td></tr>'; }).join('')+
         '<tr style="cursor:default;font-weight:600"><td>Total</td><td class="r num">'+lines+'</td><td class="r num">'+money(tot)+'</td><td class="r num">100%</td></tr></tbody></table></div>'+
-        '<p style="font-size:12.5px;color:var(--ink3);margin-top:10px">ID scheme '+esc(t.id_scheme||'–')+' · as-built lines: '+(t._asbuilt_lines||0)+'</p>';
+        '<p style="font-size:12.5px;color:var(--ink3);margin-top:10px">ID scheme '+esc(t.id_scheme||'–')+' · as-built lines: '+(t._asbuilt_lines||0)+' · <a href="#" id="toAB">Open As-built →</a></p>';
+      if($('toAB')) $('toAB').onclick=function(e){ e.preventDefault(); var no=t.arza_no; closeDrawer(true); openAsBuilt(no); };
     }).catch(function(e){ b.innerHTML='<div class="note w">'+esc(e.message)+'</div>'; });
   }
   else if(S.tab==='log'){
@@ -1389,8 +1636,8 @@ function showView(v){
   if(v==='import'){ startImport(); return; }
   S.view=v;
   document.querySelectorAll('#nav a[data-v]').forEach(function(a){ a.classList.toggle('on', a.dataset.v===v); });
-  $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports');
-  if(v==='reports') renderReports(); else render();
+  $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports'); $('vAB').classList.toggle('hidden', v!=='asbuilt');
+  if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else render();
 }
 function repRows(){
   var by=function(key,vals){ return vals.map(function(v){ var arr=S.tenders.filter(function(t){ return key==='status'&&v==='(not set)' ? !t.status : t[key]===v; }); return {k:v, st:stats(arr)}; }).filter(function(r){return r.st.n;}); };
@@ -1509,6 +1756,200 @@ function exportReports(){
   XLSX.writeFile(wb,'QS CRM reports '+today()+'.xlsx');
 }
 
+/* ---------- as-built (Breakdown QTY) ---------- */
+var AB = { no:'', items:[], rows:[], set:'', tab:'sum', only:false, cache:{} };
+function abTenders(){ return S.tenders.filter(function(t){ return (t._bq_lines||0)>0; }).sort(function(a,b){ return String(b.arza_no).localeCompare(String(a.arza_no)); }); }
+function getAsBuilt(no){
+  if(ro()){
+    var items=(S.fileDB.bq||[]).filter(function(r){return r.arza_no===no && r.bq_set==='Tendered';});
+    var rows=(S.fileDB.ab||[]).filter(function(r){return r.arza_no===no;});
+    return Promise.resolve({items:items, rows:rows});
+  }
+  return api('asBuiltData',{arza_no:no});
+}
+function abSets(){ var o={}; AB.rows.forEach(function(r){ o[r.measure_set]=(o[r.measure_set]||0)+1; }); return Object.keys(o).sort().map(function(k){ return {k:k,n:o[k]}; }); }
+function abRows(){ return AB.rows.filter(function(r){ return r.measure_set===AB.set; }); }
+function abTender(){ return S.tenders.filter(function(t){return t.arza_no===AB.no;})[0]||{}; }
+function openAsBuilt(no){ if(no) AB.no=no; showView('asbuilt'); }
+function loadAB(no){
+  AB.no=no; $('vAB').querySelector('#abBody').innerHTML='<div class="empty"><span class="spin"></span> Loading '+esc(no)+'…</div>';
+  return getAsBuilt(no).then(function(d){
+    if(AB.no!==no) return;
+    AB.items=d.items||[]; AB.rows=d.rows||[];
+    var sets=abSets(); if(!sets.some(function(x){return x.k===AB.set;})) AB.set = sets.length? sets[sets.length-1].k : '';
+    drawAB();
+  }).catch(function(e){ $('vAB').querySelector('#abBody').innerHTML='<div class="note w">'+esc(e.message)+'</div>'; if(e.auth) fail(e); });
+}
+function renderAsBuilt(){
+  var ts=abTenders();
+  if(!AB.no || !ts.some(function(t){return t.arza_no===AB.no;})) AB.no = ts.length? ts[0].arza_no : '';
+  $('vAB').innerHTML='<div class="bar"><div><h2>As-built</h2><div class="scope">Site Breakdown QTY measured against the tendered BQ. Report 1 = As-Built BQ · Report 2 = Tendered vs As-Built.</div></div><span style="flex:1"></span>'+
+    '<a class="btn" href="Breakdown_QTY_Template.xlsx" download title="Standard Breakdown QTY template (Excel)">Template</a>'+
+    (ro()?'':'<button class="btn imp" id="abImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>Import Breakdown QTY</button>')+'</div>'+
+    '<div class="bar"><select id="abTender" style="flex:1 1 360px;max-width:640px">'+(ts.length? ts.map(function(t){ return '<option value="'+esc(t.arza_no)+'"'+(t.arza_no===AB.no?' selected':'')+'>'+esc(t.arza_no+' — '+(t.title_en||t.title||'').slice(0,90))+'</option>'; }).join('') : '<option value="">No tender has BQ lines yet — import a priced workbook first</option>')+'</select>'+
+    '<select id="abSet"></select><span style="flex:1"></span>'+
+    '<button class="btn exp" id="abExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button>'+
+    '<button class="btn" id="abPrint" title="Opens a print view - choose Save as PDF">PDF / Print</button>'+(ro()?'':'<button class="btn warn" id="abDel" title="Delete this measure set">Delete set</button>')+'</div>'+
+    '<div class="tabs abtabs" id="abTabs"><a data-t="sum">Summary</a><a data-t="r1">Report 1 · As-Built BQ</a><a data-t="r2">Report 2 · Tendered vs As-Built</a><a data-t="chk">Matching check</a><a data-t="lines">Lines</a></div>'+
+    '<div id="abBody"></div>';
+  $('abTender').onchange=function(){ AB.set=''; loadAB(this.value); };
+  if($('abImport')) $('abImport').onclick=function(){ if(!AB.no){ toast('Pick a tender with BQ lines first.',true); return; } $('abFile').click(); };
+  $('abTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a) return; AB.tab=a.dataset.t; drawAB(); };
+  $('abExport').onclick=exportAB; $('abPrint').onclick=printAB;
+  if($('abDel')) $('abDel').onclick=deleteSet;
+  if(AB.no) loadAB(AB.no); else drawAB();
+}
+function drawAB(){
+  var sets=abSets(), sel=$('abSet');
+  if(sel){ sel.innerHTML = sets.length ? sets.map(function(x){ return '<option value="'+esc(x.k)+'"'+(x.k===AB.set?' selected':'')+'>'+esc(x.k)+' ('+x.n+' lines)</option>'; }).join('') : '<option value="">No measure set yet</option>';
+    sel.onchange=function(){ AB.set=this.value; drawAB(); }; }
+  document.querySelectorAll('#abTabs a').forEach(function(a){ a.classList.toggle('on', a.dataset.t===AB.tab); });
+  ['abExport','abPrint','abDel'].forEach(function(id){ if($(id)) $(id).disabled=!AB.set; });
+  var b=$('abBody'), t=abTender();
+  if(!AB.no){ b.innerHTML='<div class="empty">Import a priced tender workbook first (Tenders › Import), then come back to measure it.</div>'; return; }
+  if(!AB.set){ b.innerHTML='<div class="card"><h3>No as-built measurement for '+esc(AB.no)+' yet</h3><p style="color:var(--ink2);margin:0 0 10px">1. Download the <a href="Breakdown_QTY_Template.xlsx" download>Breakdown QTY template</a> and measure on site (one BQ item per row).<br>2. Click <b>Import Breakdown QTY</b>. The old MOE Block D layout (SL NO / LOCATION / DESCRIPTION / TOTAL QUANTITY) is read too.<br>3. Check the matching, then save it as a measure set (e.g. "As-built", "Interim 1").</p><p class="n" style="font-size:12px;color:var(--ink3);margin:0">Tendered BQ: '+AB.items.length+' lines · ID scheme '+esc(t.id_scheme||'–')+'.</p></div>'; return; }
+  var C=BQTY.compare(AB.items, abRows()), T=C.totals, st=countStatus(abRows());
+  if(AB.tab==='sum'){
+    var kp=[['Items measured',T.measured+' / '+T.items, (T.items?Math.round(T.measured/T.items*100):0)+'% of tendered BQ lines'],
+      ['Tendered (B$)',money0(T.tendered),'from the locked / imported BQ'],
+      ['As-built (B$)',money0(T.asbuilt),'measured qty × tender rate (+ lump sums carried)'],
+      ['Difference (B$)',(T.diff>0?'+':'')+money0(T.diff),T.tendered?pct(T.diff/T.tendered)+' vs tendered':''],
+      ['Lines to check',st.Unmatched+st['VO?']+(st.Shared?'':''),st.Matched+' matched · '+st.Shared+' shared · '+st.Unmatched+' unmatched · '+st['VO?']+' VO?']];
+    b.innerHTML='<div class="kpis">'+kp.map(function(k){ return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+k[2]+'</div></div>'; }).join('')+'</div>'+
+      '<div class="card"><h3>By bill</h3><div class="tbl"><table><thead><tr><th>Bill / section</th><th class="r">Items</th><th class="r">Measured</th><th class="r">Tendered (B$)</th><th class="r">As-built (B$)</th><th class="r">Difference (B$)</th><th class="r">%</th></tr></thead><tbody>'+
+      Object.keys(C.bills).map(function(k){ var x=C.bills[k], d=x.asbuilt-x.tendered; return '<tr><td class="no">'+esc(k)+'</td><td class="r num">'+x.items+'</td><td class="r num">'+x.measured+'</td><td class="r num">'+money(x.tendered)+'</td><td class="r num">'+money(x.asbuilt)+'</td><td class="r num '+(d<0?'neg':'pos')+'">'+money(d)+'</td><td class="r num">'+(x.tendered?pct(d/x.tendered):'–')+'</td></tr>'; }).join('')+
+      '<tr style="font-weight:600"><td>Total</td><td class="r num">'+T.items+'</td><td class="r num">'+T.measured+'</td><td class="r num">'+money(T.tendered)+'</td><td class="r num">'+money(T.asbuilt)+'</td><td class="r num">'+money(T.diff)+'</td><td class="r num">'+(T.tendered?pct(T.diff/T.tendered):'–')+'</td></tr></tbody></table></div>'+
+      '<p class="n">Not-measured items count as nil in the as-built (except lump sums, carried at the tendered amount). Rates are the tendered rates; rationalised revisions come in v2.</p></div>';
+  }
+  else if(AB.tab==='r1'){
+    b.innerHTML=reportToolbar(false)+'<div class="tbl"><table class="rep1"><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">As-built qty</th><th class="r">Rate (B$)</th><th class="r">Amount (B$)</th><th>Note</th></tr></thead><tbody>'+
+      billRows(C,function(i){ return '<td class="no">'+esc(i.item_id)+'</td><td class="dsc">'+esc(i.description)+'</td><td>'+esc(i.unit)+'</td><td class="r num">'+(i.ab_qty==null?(i.lump?'1':'–'):qty(i.ab_qty))+'</td><td class="r num">'+money(i.rate)+'</td><td class="r num">'+(i.ab_amount==null?'–':money(i.ab_amount))+'</td><td class="nt">'+esc(i.flag==='Not measured'?'Not measured':(i.lump&&i.ab_qty==null?'Carried at tender':''))+'</td>'; }, 'asbuilt', 7)+
+      '</tbody></table></div>';
+    bindReportFilter();
+  }
+  else if(AB.tab==='r2'){
+    b.innerHTML=reportToolbar(true)+'<div class="tbl"><table class="rep2"><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">Tendered qty</th><th class="r">As-built qty</th><th class="r">Diff qty</th><th class="r">Diff %</th><th class="r">Rate (B$)</th><th class="r">Tendered (B$)</th><th class="r">As-built (B$)</th><th class="r">Diff (B$)</th><th>Flag</th></tr></thead><tbody>'+
+      billRows(C,function(i){ var d=i.diff_amount; return '<td class="no">'+esc(i.item_id)+'</td><td class="dsc">'+esc(i.description)+'</td><td>'+esc(i.unit)+'</td><td class="r num">'+qty(i.qty)+'</td><td class="r num">'+(i.ab_qty==null?'–':qty(i.ab_qty))+'</td><td class="r num">'+(i.diff_qty==null?'–':qty(i.diff_qty))+'</td><td class="r num">'+(i.diff_pct==null?'–':pct(i.diff_pct))+'</td><td class="r num">'+money(i.rate)+'</td><td class="r num">'+money(i.t_amount)+'</td><td class="r num">'+(i.ab_amount==null?'–':money(i.ab_amount))+'</td><td class="r num '+(d<0?'neg':d>0?'pos':'')+'">'+(d==null?'–':money(d))+'</td><td>'+flagChip(i.flag)+'</td>'; }, 'diff', 12)+
+      '</tbody></table></div>';
+    bindReportFilter();
+  }
+  else if(AB.tab==='chk'){
+    var R=abRows(), un=R.filter(function(r){return r.match_status==='Unmatched';}), vo=R.filter(function(r){return r.match_status==='VO?';}), sh={};
+    R.filter(function(r){return r.match_status==='Shared';}).forEach(function(r){ sh[r.item_ref_raw]=(sh[r.item_ref_raw]||[]); if(sh[r.item_ref_raw].indexOf(r.item_id)<0) sh[r.item_ref_raw].push(r.item_id); });
+    var nm=C.items.filter(function(i){return i.flag==='Not measured';}), big=C.items.filter(function(i){return /10%/.test(i.flag);});
+    var unitW=C.items.filter(function(i){ return i.ab_qty!=null && R.some(function(r){ return r.item_id===i.item_id && r.unit && unitKey(r.unit)!==unitKey(i.unit); }); });
+    function lines(arr){ return arr.length? '<div class="tbl"><table><thead><tr><th>Level</th><th>Location</th><th>Ref as typed</th><th>Description</th><th>Unit</th><th class="r">Qty</th><th>Remark</th><th>Source</th></tr></thead><tbody>'+arr.map(function(r){ return '<tr><td>'+esc(r.level)+'</td><td>'+esc(r.location)+'</td><td class="no">'+esc(r.item_ref_raw||'(blank)')+'</td><td class="dsc">'+esc(r.description)+'</td><td>'+esc(r.unit)+'</td><td class="r num">'+qty(r.qty)+'</td><td>'+esc(r.remark)+'</td><td class="nt">'+esc(r.source_row?('row '+r.source_row):'')+'</td></tr>'; }).join('')+'</tbody></table></div>' : '<p class="ok">None.</p>'; }
+    b.innerHTML=
+      '<div class="card"><h3>Lines with a ref that is not in the tendered BQ ('+un.length+')</h3><p class="n">Typo in the ref, or work outside the BQ. Fix the ref in the Breakdown QTY and re-import, or treat as a variation.</p>'+lines(un)+'</div>'+
+      '<div class="card"><h3>Marked VO? — not in the BQ ('+vo.length+')</h3>'+lines(vo)+'</div>'+
+      '<div class="card"><h3>BQ items not measured ('+nm.length+')</h3>'+(nm.length?'<div class="tbl"><table><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">Tendered qty</th><th class="r">Tendered (B$)</th></tr></thead><tbody>'+nm.map(function(i){ return '<tr><td class="no">'+esc(i.item_id)+'</td><td class="dsc">'+esc(i.description)+'</td><td>'+esc(i.unit)+'</td><td class="r num">'+qty(i.qty)+'</td><td class="r num">'+money(i.t_amount)+'</td></tr>'; }).join('')+'</tbody></table></div>':'<p class="ok">All measurable items have a quantity.</p>')+'</div>'+
+      '<div class="grid2"><div class="card"><h3>One measurement used for several items ('+Object.keys(sh).length+')</h3><p class="n">The full quantity is counted for each item (e.g. screed and floor finish over the same area). Check that this is intended.</p>'+(Object.keys(sh).length?'<ul class="plain">'+Object.keys(sh).map(function(k){ return '<li><code>'+esc(k.replace(/\s+/g,' '))+'</code> → '+sh[k].map(esc).join(', ')+'</li>'; }).join('')+'</ul>':'<p class="ok">None.</p>')+'</div>'+
+      '<div class="card"><h3>Over / under 10% ('+big.length+') · unit differs ('+unitW.length+')</h3>'+(big.length||unitW.length?'<ul class="plain">'+big.map(function(i){ return '<li><code>'+esc(i.item_id)+'</code> '+esc(i.unit)+' '+qty(i.qty)+' → '+qty(i.ab_qty)+' ('+pct(i.diff_pct)+')</li>'; }).join('')+unitW.map(function(i){ return '<li><code>'+esc(i.item_id)+'</code> BQ unit '+esc(i.unit)+' but measured in another unit</li>'; }).join('')+'</ul>':'<p class="ok">None.</p>')+'</div></div>';
+  }
+  else if(AB.tab==='lines'){
+    var R2=abRows();
+    b.innerHTML='<div class="bar"><input type="search" id="abQ" placeholder="Filter lines: item, location, level, status…"><span class="count">'+R2.length+' lines</span></div><div class="tbl"><table><thead><tr><th>Item</th><th>Status</th><th>Level</th><th>Location</th><th>Unit</th><th class="r">Nos</th><th class="r">L</th><th class="r">W</th><th class="r">H</th><th class="r">Qty</th><th>Ref as typed</th><th>Remark</th></tr></thead><tbody id="abLines"></tbody></table></div>';
+    var drawL=function(){ var q=($('abQ').value||'').toLowerCase(); $('abLines').innerHTML=R2.filter(function(r){ return !q || [r.item_id,r.match_status,r.level,r.location,r.item_ref_raw,r.remark,r.description].join(' ').toLowerCase().indexOf(q)>=0; }).map(function(r){ return '<tr><td class="no">'+esc(r.item_id||'–')+'</td><td>'+statusChip(r.match_status)+'</td><td>'+esc(r.level)+'</td><td>'+esc(r.location)+'</td><td>'+esc(r.unit)+'</td><td class="r num">'+qty(r.nos)+'</td><td class="r num">'+qty(r.l)+'</td><td class="r num">'+qty(r.w)+'</td><td class="r num">'+qty(r.h)+'</td><td class="r num">'+qty(r.qty)+'</td><td class="nt">'+esc(String(r.item_ref_raw||'').replace(/\s+/g,' '))+'</td><td>'+esc(r.remark)+'</td></tr>'; }).join(''); };
+    $('abQ').oninput=drawL; drawL();
+  }
+}
+function countStatus(R){ var o={Matched:0,Shared:0,Unmatched:0,'VO?':0}; R.forEach(function(r){ if(o[r.match_status]!=null) o[r.match_status]++; }); return o; }
+function qty(x){ if(x===''||x==null||isNaN(Number(x))) return ''; return Number(x).toLocaleString('en-US',{maximumFractionDigits:3}); }
+function unitKey(u){ var k=String(u||'').trim().toLowerCase(); return {'m²':'m2','sqm':'m2','sq.m':'m2','m³':'m3','lm':'m','nos':'no','nr':'no','no.':'no'}[k]||k; }
+function flagChip(f){ if(!f) return ''; var c=/Over/.test(f)?'st-Lost':/Under/.test(f)?'st-Pricing':/carried/.test(f)?'st-Prospect':'st-none'; return '<span class="chip '+c+'">'+esc(f)+'</span>'; }
+function statusChip(s){ var c={Matched:'st-Won',Shared:'st-Submitted',Unmatched:'st-Lost','VO?':'st-Pricing'}[s]||'st-none'; return '<span class="chip '+c+'">'+esc(s||'')+'</span>'; }
+function reportToolbar(diffs){ return '<div class="bar"><label class="chkrow" style="margin:0"><input type="checkbox" id="abOnly"'+(AB.only?' checked':'')+'> '+(diffs?'Show only items with a difference or not measured':'Hide items not measured')+'</label></div>'; }
+function bindReportFilter(){ if($('abOnly')) $('abOnly').onchange=function(){ AB.only=this.checked; drawAB(); }; }
+function billRows(C, cells, mode, ncol){
+  var out='', groups={}, order=[];
+  C.items.forEach(function(i){ var k=i.bill||'-'; if(!groups[k]){ groups[k]=[]; order.push(k); } groups[k].push(i); });
+  var T={t:0,a:0};
+  order.forEach(function(k){
+    var arr=groups[k].filter(function(i){ if(!AB.only) return true; return mode==='diff' ? (i.diff_amount!==0 || i.ab_qty==null) : i.ab_amount!=null; });
+    var tb=groups[k].reduce(function(s,i){return s+(i.t_amount||0);},0), ab=groups[k].reduce(function(s,i){return s+(i.ab_amount||0);},0);
+    T.t+=tb; T.a+=ab;
+    out+='<tr class="bh"><td colspan="'+ncol+'">'+esc(k)+(groups[k][0].heading?' — '+esc(String(groups[k][0].heading).slice(0,80)):'')+'</td></tr>';
+    out+=arr.map(function(i){ return '<tr>'+cells(i)+'</tr>'; }).join('');
+    out+= mode==='diff' ? '<tr class="bt"><td colspan="8">'+esc(k)+' total</td><td class="r num">'+money(tb)+'</td><td class="r num">'+money(ab)+'</td><td class="r num">'+money(ab-tb)+'</td><td></td></tr>'
+                        : '<tr class="bt"><td colspan="5">'+esc(k)+' total</td><td class="r num">'+money(ab)+'</td><td></td></tr>';
+  });
+  out+= mode==='diff' ? '<tr class="gt"><td colspan="8">Total</td><td class="r num">'+money(T.t)+'</td><td class="r num">'+money(T.a)+'</td><td class="r num">'+money(T.a-T.t)+'</td><td></td></tr>'
+                      : '<tr class="gt"><td colspan="5">Total as-built</td><td class="r num">'+money(T.a)+'</td><td></td></tr>';
+  return out;
+}
+
+/* import a Breakdown QTY file */
+function showABImport(f){
+  if(f.err||!f.wb){ toast('Could not read the file: '+(f.err||'not an Excel workbook'),true); return; }
+  var t=abTender(), scheme=t.id_scheme||'PL';
+  var r=BQTY.readBQTY(f.wb,{XLSX:XLSX,scheme:scheme});
+  if(!r.lines.length){ toast(r.issues[0]||'No measured lines found in this file.',true); return; }
+  var m=BQTY.match(r.lines,scheme,AB.items), s=m.stats;
+  var sets=abSets(), def = AB.set || 'As-built';
+  var body='<div class="note">Read <b>'+esc(f.name)+'</b> — '+(r.format==='legacy'?'old layout (SL NO / DESCRIPTION / TOTAL QUANTITY)':'standard template')+', sheets: '+esc(r.sheets.join(', '))+'. Matched against the tendered BQ of <b>'+esc(t.arza_no)+'</b> ('+AB.items.length+' lines, scheme '+esc(scheme)+').</div>'+
+    '<div class="kpis" style="grid-template-columns:repeat(5,1fr)">'+[['Lines read',r.lines.length,(r.labels?r.labels+' total/label rows skipped':'')],['Matched',s.Matched,'one item each'],['Shared',s.Shared,'one line → several items'],['Unmatched',s.Unmatched,'ref not in the BQ'],['VO?',s['VO?'],'blank ref, VO in remark']].map(function(k){ return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+k[2]+'</div></div>'; }).join('')+'</div>'+
+    (s.unitWarn?'<div class="issues">'+s.unitWarn+' line(s) measured in a different unit from the BQ item — see Matching check after saving.</div>':'')+
+    (r.issues.length?'<div class="issues"><b>'+r.issues.length+' line(s) to check:</b><br>'+r.issues.slice(0,15).map(esc).join('<br>')+(r.issues.length>15?'<br>…':'')+'</div>':'')+
+    '<div class="form" style="margin-top:12px"><div class="f"><label>Save as measure set</label><input id="ab_set" list="ab_sets" value="'+esc(def)+'"><datalist id="ab_sets">'+sets.map(function(x){return '<option value="'+esc(x.k)+'">';}).join('')+'</datalist><div class="hint">Same name replaces that set (e.g. re-import after fixing refs). New name = new set (e.g. "Interim 1", "Final").</div></div>'+
+    '<div class="f"><label>&nbsp;</label><label class="chkrow" style="margin:6px 0"><input type="checkbox" id="ab_drive" checked> Save the file to the tender\'s Drive folder</label></div></div>';
+  modal('Import Breakdown QTY — '+t.arza_no, body, '<span class="msg">'+m.rows.length+' rows will be saved</span><button class="btn" id="abC">Cancel</button><button class="btn pri" id="abGo">Save measure set</button>');
+  $('abC').onclick=closeModal;
+  $('abGo').onclick=function(){
+    var set=$('ab_set').value.trim(); if(!set){ toast('Name the measure set.',true); return; }
+    if(sets.some(function(x){return x.k===set;}) && !confirm('Replace the existing measure set "'+set+'"?')) return;
+    var rows=m.rows.map(function(x){ return {item_ref_raw:x.item_ref_raw,item_id:x.item_id,match_status:x.match_status,level:x.level,location:x.location,description:x.description,unit:x.unit,nos:x.nos,l:x.l,w:x.w,h:x.h,qty:x.qty,remark:[x.remark,x.match_note].filter(Boolean).join(' | '),measured_by:x.measured_by,measured_date:x.measured_date,source_row:x.sheet+'!'+x.row}; });
+    var btn=$('abGo'); busy(btn,true,'Saving…');
+    api('importAsBuilt',{arza_no:t.arza_no, measure_set:set, rows:rows, stats:s, file:$('ab_drive').checked?{name:f.name,type:f.type,data:f.data}:null})
+      .then(function(res){
+        closeModal(); (res._log||[]).forEach(function(l){ S.log.push(l); });
+        var tt=S.tenders.filter(function(x){return x.arza_no===t.arza_no;})[0]; if(tt){ if(res.folder_link) tt.folder_link=res.folder_link; }
+        AB.set=set; toast('Saved '+res.lines+' lines as "'+set+'"');
+        return loadAB(t.arza_no).then(function(){ if(tt) tt._asbuilt_lines=AB.rows.length; });
+      }).catch(function(e){ busy(btn,false); fail(e); });
+  };
+}
+function deleteSet(){
+  if(!AB.set) return;
+  if(!confirm('Delete measure set "'+AB.set+'" of '+AB.no+'? The lines are removed from the database (the file in Drive stays).')) return;
+  api('deleteMeasureSet',{arza_no:AB.no, measure_set:AB.set}).then(function(r){ (r._log||[]).forEach(function(l){S.log.push(l);}); toast('Deleted '+r.removed+' lines'); AB.set=''; loadAB(AB.no); }).catch(fail);
+}
+function exportAB(){
+  if(!window.XLSX||!AB.set) return;
+  var C=BQTY.compare(AB.items, abRows()), wb=XLSX.utils.book_new(), t=abTender();
+  var r1=C.items.map(function(i){ return {bill:i.bill,item:i.item_id,description:i.description,unit:i.unit,asbuilt_qty:i.ab_qty,rate:i.rate,amount:i.ab_amount,note:i.flag}; });
+  var r2=C.items.map(function(i){ return {bill:i.bill,item:i.item_id,description:i.description,unit:i.unit,tendered_qty:i.qty,asbuilt_qty:i.ab_qty,diff_qty:i.diff_qty,diff_pct:i.diff_pct,rate:i.rate,tendered_amount:i.t_amount,asbuilt_amount:i.ab_amount,diff_amount:i.diff_amount,flag:i.flag}; });
+  var info=[{field:'ARZA no.',value:t.arza_no},{field:'Client ref',value:t.tender_ref},{field:'Title',value:t.title_en||t.title},{field:'Measure set',value:AB.set},{field:'Tendered (B$)',value:Math.round(C.totals.tendered*100)/100},{field:'As-built (B$)',value:Math.round(C.totals.asbuilt*100)/100},{field:'Difference (B$)',value:C.totals.diff},{field:'Items measured',value:C.totals.measured+' / '+C.totals.items},{field:'Exported',value:today()}];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(info),'Info');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(r1),'Report 1 As-Built BQ');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(r2),'Report 2 Tendered vs AB');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(abRows().map(function(r){ return {item:r.item_id,status:r.match_status,ref_as_typed:r.item_ref_raw,level:r.level,location:r.location,description:r.description,unit:r.unit,nos:r.nos,l:r.l,w:r.w,h:r.h,qty:r.qty,remark:r.remark,source:r.source_row}; })),'Lines');
+  XLSX.writeFile(wb, t.arza_no+' As-built '+AB.set+' '+today()+'.xlsx');
+}
+function printAB(){
+  if(!AB.set) return;
+  var t=abTender(), C=BQTY.compare(AB.items, abRows()), T=C.totals;
+  var logo=(document.querySelector('.lhead img.only-light')||{}).src||'';
+  var which = AB.tab==='r1' ? 'r1' : 'r2';
+  var keepOnly=AB.only; var tmp=$('abBody').innerHTML;
+  var tbl = which==='r1'
+    ? '<table><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">As-built qty</th><th class="r">Rate (B$)</th><th class="r">Amount (B$)</th><th>Note</th></tr></thead><tbody>'+billRows(C,function(i){ return '<td class="no">'+esc(i.item_id)+'</td><td>'+esc(i.description)+'</td><td>'+esc(i.unit)+'</td><td class="r">'+(i.ab_qty==null?(i.lump?'1':'–'):qty(i.ab_qty))+'</td><td class="r">'+money(i.rate)+'</td><td class="r">'+(i.ab_amount==null?'–':money(i.ab_amount))+'</td><td>'+esc(i.flag==='Not measured'?'Not measured':(i.lump&&i.ab_qty==null?'Carried at tender':''))+'</td>'; },'asbuilt',7)+'</tbody></table>'
+    : '<table><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">Tendered qty</th><th class="r">As-built qty</th><th class="r">Diff qty</th><th class="r">Diff %</th><th class="r">Rate</th><th class="r">Tendered (B$)</th><th class="r">As-built (B$)</th><th class="r">Diff (B$)</th><th>Flag</th></tr></thead><tbody>'+billRows(C,function(i){ return '<td class="no">'+esc(i.item_id)+'</td><td>'+esc(i.description)+'</td><td>'+esc(i.unit)+'</td><td class="r">'+qty(i.qty)+'</td><td class="r">'+(i.ab_qty==null?'–':qty(i.ab_qty))+'</td><td class="r">'+(i.diff_qty==null?'–':qty(i.diff_qty))+'</td><td class="r">'+(i.diff_pct==null?'–':pct(i.diff_pct))+'</td><td class="r">'+money(i.rate)+'</td><td class="r">'+money(i.t_amount)+'</td><td class="r">'+(i.ab_amount==null?'–':money(i.ab_amount))+'</td><td class="r">'+(i.diff_amount==null?'–':money(i.diff_amount))+'</td><td>'+esc(i.flag)+'</td>'; },'diff',12)+'</tbody></table>';
+  var title = which==='r1' ? 'Report 1 — As-Built Bill of Quantities' : 'Report 2 — Tendered vs As-Built';
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+esc(t.arza_no+' '+title)+'</title><style>'+
+    '@page{size:A4 '+(which==='r2'?'landscape':'portrait')+';margin:12mm}body{font:10px/1.35 Arial,sans-serif;color:#111;margin:0}'+
+    '.hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #120377;padding-bottom:8px;margin-bottom:8px}.hd img{height:34px}'+
+    'h1{font-size:15px;margin:0 0 2px;color:#120377}.meta{font-size:10px;color:#444}.kp{display:flex;gap:18px;margin:6px 0 10px;font-size:10.5px}.kp b{display:block;font-size:12.5px}'+
+    'table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccd;padding:3px 5px;vertical-align:top}th{background:#eef0fa;font-size:9px;text-transform:uppercase}.r{text-align:right;white-space:nowrap}.no{font-family:Consolas,monospace;white-space:nowrap}'+
+    'tr.bh td{background:#f3f4f8;font-weight:bold}tr.bt td{font-weight:bold;background:#fafafa}tr.gt td{font-weight:bold;background:#e8eaf6;font-size:11px}thead{display:table-header-group}tr{page-break-inside:avoid}'+
+    '.ft{margin-top:10px;font-size:9px;color:#666;display:flex;justify-content:space-between}'+
+    '</style></head><body><div class="hd"><div><h1>'+esc(title)+'</h1><div class="meta"><b>'+esc(t.arza_no)+'</b> · '+esc(t.tender_ref||'')+'<br>'+esc(t.title_en||t.title||'')+'<br>Measure set: <b>'+esc(AB.set)+'</b> · printed '+esc(fmtDate(today()))+'</div></div>'+(logo?'<img src="'+logo+'">':'<b>ARZA SDN BHD</b>')+'</div>'+
+    '<div class="kp"><div>Tendered<b>B$ '+money(T.tendered)+'</b></div><div>As-built<b>B$ '+money(T.asbuilt)+'</b></div><div>Difference<b>B$ '+money(T.diff)+(T.tendered?' ('+pct(T.diff/T.tendered)+')':'')+'</b></div><div>Items measured<b>'+T.measured+' / '+T.items+'</b></div></div>'+
+    tbl+'<div class="ft"><span>QS CRM ARZA SDN BHD — as-built quantities from site Breakdown QTY; rates as tendered.</span><span>Prepared by: ____________ &nbsp; Checked by: ____________</span></div>'+
+    '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>';
+  var w=window.open('','_blank'); if(!w){ toast('Allow pop-ups to print / save as PDF.',true); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
 /* ---------- export ---------- */
 function exportXlsx(){
   if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
@@ -1535,6 +1976,7 @@ $('btnImport').onclick=startImport;
 $('impFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showImport); };
 $('upFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showUpload); };
 $('impClose').onclick=closeModal;
+$('abFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showABImport); };
 $('dFull').onclick=toggleFull;
 $('nav').onclick=function(e){ var a=e.target.closest('a'); if(!a) return; if(a.classList.contains('off')){ toast(a.title); return; } if(a.dataset.v) showView(a.dataset.v); };
 $('types').onclick=function(e){ var b=e.target.closest('.tcard'); if(!b) return; $('fType').value = $('fType').value===b.dataset.ty ? '' : b.dataset.ty; render(); };
