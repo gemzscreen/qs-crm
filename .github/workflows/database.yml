@@ -1,0 +1,23 @@
+# Applies supabase/schema.sql to the Supabase database when it changes on main (or by hand: Actions › Database › Run workflow).
+# schema.sql is safe to run again; it runs as one transaction, so a failure changes nothing.
+# Needs the repository secret SUPABASE_DB_URL = the "Session pooler" connection string (Supabase › Connect), password included.
+name: Database
+on:
+  push:
+    branches: [main]
+    paths: [supabase/schema.sql]
+  workflow_dispatch:
+concurrency: database
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply supabase/schema.sql
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then echo "::error::Add the repository secret SUPABASE_DB_URL (Settings › Secrets and variables › Actions)"; exit 1; fi
+          command -v psql >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client)
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 --single-transaction -q -f supabase/schema.sql
+          psql "$SUPABASE_DB_URL" -At -c "select 'Database OK: ' || (select count(*) from public.tenders) || ' tenders, ' || (select count(*) from public.profiles) || ' users'"

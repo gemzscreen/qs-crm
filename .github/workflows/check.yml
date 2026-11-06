@@ -1,0 +1,31 @@
+# Runs on every pull request (and push to main): version numbers agree, changelog current, JavaScript parses,
+# and an app / database / Apps Script change must come with a new VERSION.
+name: Check
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Versions, changelog, syntax
+        run: node scripts/version.mjs check
+      - name: App change needs a new version
+        if: github.event_name == 'pull_request'
+        run: |
+          V=$(cat VERSION | tr -d '[:space:]')
+          git fetch --tags --quiet
+          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- index.html supabase/schema.sql Code.gs src/ || true)
+          if [ -n "$CHANGED" ] && git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
+            echo "::error::These files changed but v$V is already released: $CHANGED"
+            echo "Run: node scripts/version.mjs bump x.y.z, add the CHANGELOG entry in index.html, then node scripts/version.mjs changelog"
+            exit 1
+          fi
+          echo "OK (v$V)"
