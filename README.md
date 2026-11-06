@@ -1,6 +1,22 @@
 # ARZA QS CRM SYSTEM — v2.1.1 (Supabase)
 
-**Updating from v2.1.0:** run the new `supabase/schema.sql` once (SQL Editor › Run — keeps data and users), upload `index.html`, paste the new `Code.gs` and deploy a New version.
+## How updates work (from v2.1.1)
+Claude opens a **pull request** with each change. You review it and click **Merge**. Then, automatically:
+- **Website** — GitHub Pages republishes `index.html` (1–2 minutes).
+- **Database** — the *Database* workflow runs `supabase/schema.sql` on Supabase when that file changed (safe to re-run, one transaction: an error changes nothing).
+- **Version** — the *Release* workflow tags `vX.Y.Z` and publishes a GitHub release with the notes from the app's "What's new".
+- **Apps Script** (`Code.gs`, the Drive file service) rarely changes. When it does, the release notes say so: paste it in Apps Script and Deploy › Manage deployments › Edit › New version.
+
+Check results in the repo's **Actions** tab (green = done). Database by hand: Actions › Database › Run workflow.
+
+**One-time setup:** Supabase › **Connect** › *Session pooler* › copy the connection string and put your database password in it (letters/digits are safest; symbols must be URL-encoded, e.g. `@` → `%40`). GitHub › repo **Settings › Secrets and variables › Actions › New repository secret**: name `SUPABASE_DB_URL`, value = that string. Use the Session pooler (not Direct connection — GitHub's servers cannot reach the direct IPv6 address).
+
+## Versioning
+- `VERSION` is the single source of truth (`x.y.z`). The app shows the same number (top bar, "What's new"), and each release is tagged `vX.Y.Z` on GitHub.
+- New version: `node scripts/version.mjs bump x.y.z` → add the entry at the top of `CHANGELOG` in `index.html` → `node scripts/version.mjs changelog` (regenerates `CHANGELOG.md`).
+- The *Check* workflow blocks a pull request when the numbers disagree, `CHANGELOG.md` is stale, any JavaScript has a syntax error, or the app / database / Apps Script changed without a new version.
+- `schema.sql` and `Code.gs` headers carry the version in which they last changed (never higher than `VERSION`).
+- patch (2.1.**1**) = fixes · minor (2.**2**.0) = new features · major (**3**.0.0) = big platform change.
 
 Tender register, priced BQs, rationalized revisions, bid results and as-built reports for ARZA SDN BHD.
 **Data:** Supabase (PostgreSQL, sign-in, roles). **Files:** Google Drive (Apps Script file service). **Masterlists:** Google Sheets (pricing, inventory).
@@ -44,6 +60,8 @@ Everyone can change their password by clicking their name (top right). Forgot pa
 | File | Purpose |
 |---|---|
 | `index.html` | the app (one file; SheetJS + supabase-js from CDN) |
+| `VERSION`, `CHANGELOG.md`, `scripts/version.mjs` | version number, changelog (generated), version tool |
+| `.github/workflows/` | Check (pull requests), Database (apply schema.sql), Release (tag + notes) |
 | `config.js` | Supabase URL + anon key + Drive service URL |
 | `supabase/schema.sql` | tables, row-level security, roles, all business rules (crm_* functions) |
 | `Code.gs` | Apps Script: Google Drive file service (+ add users) |

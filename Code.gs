@@ -16,10 +16,12 @@
  *  After editing this file: Deploy › Manage deployments › Edit › Version: New version.
  */
 
+// Paste the values below ONLY in the Apps Script editor, run setSupabase(), then put the PASTE-… texts back.
+// Do not commit filled-in values to GitHub (the repo is public). url = Project URL, anon = sb_publishable_…, service = sb_secret_… (optional).
 function setSupabase() {
-  var url = 'https://pasqkzohnecptbhzznxm.supabase.co';          // e.g. https://abcdefgh.supabase.co
-  var anon = 'https://pasqkzohnecptbhzznxm.supabase.co';            // publishable key (sb_publishable_…) or legacy anon key
-  var service = 'sb_publishable_i7DPeYESDvYNJMqzXoXqVg_PSUka53m';      // optional: secret key (sb_secret_…) or legacy service_role key - keep secret; leave as is to add users in the Supabase dashboard instead
+  var url = 'PASTE-PROJECT-URL';          // e.g. https://abcdefgh.supabase.co
+  var anon = 'PASTE-ANON-KEY';            // publishable key (sb_publishable_…) or legacy anon key
+  var service = 'PASTE-SERVICE-KEY';      // optional: secret key (sb_secret_…) or legacy service_role key - keep secret; leave as is to add users in the Supabase dashboard instead
   var p = PropertiesService.getScriptProperties();
   url = String(url).trim().replace(/\/(rest|auth|storage)\/v1.*$/i, '').replace(/\/+$/, '');
   if (!/^https:\/\/.+\.supabase\.co\/?$/.test(url)) throw new Error('Paste the Supabase Project URL first (https://….supabase.co).');
@@ -31,7 +33,7 @@ function setSupabase() {
 }
 
 function setDriveFolder() {
-  var link = 'https://drive.google.com/drive/u/0/folders/1VuFsJr1LDZDEjBxokCXu1ohNqa4sKLu0';   // e.g. https://drive.google.com/drive/folders/1AbC...xyz
+  var link = 'PASTE-FOLDER-LINK';   // e.g. https://drive.google.com/drive/folders/1AbC...xyz
   var p = PropertiesService.getScriptProperties();
   Logger.log('Step 1/2: checking Drive access ... My Drive = ' + DriveApp.getRootFolder().getName());
   if (link === 'PASTE-FOLDER-LINK' || !link) {
