@@ -1,5 +1,5 @@
 /**
- * QS CRM — Google Drive file service (Apps Script), v2.1.0
+ * QS CRM — Google Drive file service (Apps Script), v2.1.1
  * From v2.1.0 the data lives in Supabase. This script only:
  *   - stores tender files in Google Drive (one sub-folder per tender) and returns the links;
  *   - optionally creates sign-in accounts for the Users page (needs the Supabase service key).
@@ -7,8 +7,8 @@
  * only QS / admin users may upload, only the admin may create users.
  *
  * Setup (once) — in a new Apps Script project (script.google.com › New project) or the old one (replace all code):
- *  1. setSupabase(): paste the Project URL and the anon public key (Supabase › Project Settings › API).
- *     Optional: the service_role key, only if you want to add users from the app. Run it, then put the
+ *  1. setSupabase(): paste the Project URL (Supabase › Connect) and the publishable key (Project Settings › API Keys).
+ *     Optional: a secret key, only if you want to add users from the app. Run it, then put the
  *     PASTE-… texts back and save (the values stay in Script Properties, not in the code).
  *  2. setDriveFolder(): paste the link of the Drive folder for tender files (or leave it to make "QS CRM - Tenders"). Run it.
  *     "An unknown error has occurred" = several Google accounts signed in -> use an Incognito window with one account.
@@ -21,8 +21,9 @@ function setSupabase() {
   var anon = 'PASTE-ANON-KEY';            // publishable key (sb_publishable_…) or legacy anon key
   var service = 'PASTE-SERVICE-KEY';      // optional: secret key (sb_secret_…) or legacy service_role key - keep secret; leave as is to add users in the Supabase dashboard instead
   var p = PropertiesService.getScriptProperties();
+  url = String(url).trim().replace(/\/(rest|auth|storage)\/v1.*$/i, '').replace(/\/+$/, '');
   if (!/^https:\/\/.+\.supabase\.co\/?$/.test(url)) throw new Error('Paste the Supabase Project URL first (https://….supabase.co).');
-  if (anon.indexOf('PASTE') === 0 || anon.length < 30) throw new Error('Paste the anon public key first.');
+  if (anon.indexOf('PASTE') === 0 || anon.length < 30) throw new Error('Paste the publishable key first.');
   p.setProperty('SUPABASE_URL', url.replace(/\/$/, ''));
   p.setProperty('SUPABASE_ANON', anon);
   if (service.indexOf('PASTE') !== 0 && service.length > 30) p.setProperty('SUPABASE_SERVICE', service); else p.deleteProperty('SUPABASE_SERVICE');

@@ -1354,7 +1354,9 @@ function formSnap(){ var b=$('dBody'); if(!b) return ''; return Array.prototype.
 function cancel(){ if(dirty() && !confirm('Discard the changes you made?')) return; closeDrawer(true); }
 
 /* ---------- connection: Supabase (data, sign-in) + Apps Script (Drive files) ---------- */
-function cfg(){ var c=window.QSCRM_CONFIG||{}, o={}; ['supabaseUrl','supabaseKey','driveUrl'].forEach(function(k){ o[k]=String(c[k]||load('cfg.'+k)||'').trim(); }); return o; }
+function cfg(){ var c=window.QSCRM_CONFIG||{}, o={}; ['supabaseUrl','supabaseKey','driveUrl'].forEach(function(k){ o[k]=String(c[k]||load('cfg.'+k)||'').trim(); });
+  o.supabaseUrl=o.supabaseUrl.replace(/\/(rest|auth|storage)\/v1.*$/i,'').replace(/\/+$/,'');   // 'https://x.supabase.co/rest/v1/' -> project URL
+  return o; }
 function cfgOk(){ var c=cfg(); return /^https:\/\/.+/.test(c.supabaseUrl) && c.supabaseKey.length>20; }
 function store(k,v,persist){ try{ (persist?localStorage:sessionStorage).setItem('qscrm.'+k,v); }catch(e){} }
 function load(k){ try{ return sessionStorage.getItem('qscrm.'+k) || localStorage.getItem('qscrm.'+k) || ''; }catch(e){ return ''; } }
