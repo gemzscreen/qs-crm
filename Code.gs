@@ -1,6 +1,8 @@
 /**
  * QS CRM — API on the Google Sheet "QS CRM DB" (Apps Script, bound to the sheet).
- * v1.4.0 - tender register, as-built (Breakdown QTY) sets, bid results, activity log, workbook import and Google Drive file storage.
+ * v2.0.0 - tender register, rationalized BQ revisions (R1, R2 … with approval record), as-built (Breakdown QTY) sets,
+ *          bid results, activity log, workbook import and Google Drive file storage.
+ * v2: the Revisions tab and the contract_sum / contract_rev columns on Tenders are added automatically on the first call.
  * Each save is one call (log entries returned with the row).
  *
  * Setup (once):
@@ -19,7 +21,10 @@
  *  After editing this file: Deploy > Manage deployments > Edit > Version: New version (keeps the same URL).
  */
 
-var TABS = { tenders: 'Tenders', bq: 'BQ_Items', asbuilt: 'AsBuilt_Items', log: 'Log', lists: 'Lists' };
+var TABS = { tenders: 'Tenders', bq: 'BQ_Items', asbuilt: 'AsBuilt_Items', log: 'Log', lists: 'Lists', rev: 'Revisions' };
+var REV_COLS = ['arza_no', 'rev', 'status', 'based_on', 'description', 'lines', 'rev_sum', 'base_sum', 'tender_sum', 'approved_date',
+  'arza_rep', 'client_rep', 'client_org', 'letter_ref', 'document', 'doc_link', 'approved_at', 'void_reason', 'notes', 'created_at', 'updated_at'];
+var SCHEMA_VER = '2';
 var LOCKED_FIELDS = ['our_sum', 'id_scheme'];            // cannot change once the tendered BQ is locked
 var EDITABLE = ['tender_ref', 'project_no', 'title', 'title_en', 'client', 'client_group', 'location', 'tender_type', 'id_scheme',
   'site_visit_date', 'closing_date', 'status', 'our_sum', 'completion_period', 'submitted_date', 'workbook_file', 'folder_link', 'notes'];
@@ -48,6 +53,7 @@ function doPost(e) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(20000);
+    ensureSchema_();
     var fn = ACTIONS[req.action];
     if (!fn) return json_({ ok: false, error: 'Unknown action ' + req.action });
     var data = fn(req);
@@ -74,11 +80,12 @@ var ACTIONS = {
   /* everything the register screen needs in one call */
   list: function () {
     var t = read_(TABS.tenders);
-    var bq = read_(TABS.bq), ab = read_(TABS.asbuilt);
-    var lines = {}, asb = {};
+    var bq = read_(TABS.bq), ab = read_(TABS.asbuilt), rv = read_(TABS.rev);
+    var lines = {}, asb = {}, revs = {}, draft = {};
     bq.rows.forEach(function (r) { if (r.bq_set === 'Tendered') lines[r.arza_no] = (lines[r.arza_no] || 0) + 1; });
     ab.rows.forEach(function (r) { asb[r.arza_no] = (asb[r.arza_no] || 0) + 1; });
-    t.rows.forEach(function (r) { r._bq_lines = lines[r.arza_no] || 0; r._asbuilt_lines = asb[r.arza_no] || 0; });
+    rv.rows.forEach(function (r) { if (r.status !== 'Void') revs[r.arza_no] = (revs[r.arza_no] || 0) + 1; if (r.status === 'Draft') draft[r.arza_no] = r.rev; });
+    t.rows.forEach(function (r) { r._bq_lines = lines[r.arza_no] || 0; r._asbuilt_lines = asb[r.arza_no] || 0; r._revs = revs[r.arza_no] || 0; r._draft = draft[r.arza_no] || ''; });
     var dId = PropertiesService.getScriptProperties().getProperty('DRIVE_ROOT_ID');
     return { tenders: t.rows, lists: lists_(), log: read_(TABS.log).rows.slice(-200), drive: dId ? 'https://drive.google.com/drive/folders/' + dId : '' };
   },
@@ -94,7 +101,8 @@ var ACTIONS = {
       bills[k].lines++; bills[k].amount += Number(r.amount) || 0;
     });
     var log = read_(TABS.log).rows.filter(function (r) { return r.arza_no === req.arza_no; });
-    return { tender: t.row, bills: order.map(function (k) { bills[k].amount = round2_(bills[k].amount); return bills[k]; }), log: log };
+    return { tender: t.row, bills: order.map(function (k) { bills[k].amount = round2_(bills[k].amount); return bills[k]; }), log: log,
+      revisions: revs_(req.arza_no) };
   },
 
   /* create (no arza_no) or update tender fields; req.lock = true also locks the BQ in the same call */
@@ -127,6 +135,7 @@ var ACTIONS = {
     var cur = find_(req.arza_no), row = cur.row, ts = now_(), msg = [];
     if (req.replaceBQ) {
       if (row.locked === 'Y') throw new Error('Tendered BQ is locked - unlock first to replace it');
+      if (revs_(row.arza_no).some(function (r) { return r.status !== 'Void'; })) throw new Error('Rationalized revisions exist for ' + row.arza_no + ' - the tendered BQ cannot be replaced');
       var n = writeBQ_(row.arza_no, req.items || [], ts, true);
       if (req.our_sum != null && req.our_sum !== '') row.our_sum = Number(req.our_sum);
       if (req.id_scheme) row.id_scheme = req.id_scheme;
@@ -142,9 +151,11 @@ var ACTIONS = {
 
   /* everything the As-built screen needs for one tender: tendered BQ lines + all as-built lines */
   asBuiltData: function (req) {
-    var no = req.arza_no;
+    var no = req.arza_no, bq = read_(TABS.bq).rows, cur = currentRev_(no);
     return {
-      items: read_(TABS.bq).rows.filter(function (r) { return r.arza_no === no && r.bq_set === 'Tendered'; }),
+      items: bq.filter(function (r) { return r.arza_no === no && r.bq_set === 'Tendered'; }),
+      revision: cur,
+      revLines: cur ? bq.filter(function (r) { return r.arza_no === no && r.bq_set === cur.rev; }) : [],
       rows: read_(TABS.asbuilt).rows.filter(function (r) { return r.arza_no === no; })
     };
   },
@@ -190,10 +201,106 @@ var ACTIONS = {
   unlock: function (req) {
     if (!req.reason || String(req.reason).trim().length < 5) throw new Error('Give a reason to unlock');
     var cur = find_(req.arza_no);
+    var live = revs_(req.arza_no).filter(function (r) { return r.status !== 'Void'; });
+    if (live.length) throw new Error('Revision ' + live.map(function (r) { return r.rev; }).join(', ') + ' exists - the tendered BQ stays locked (delete the draft / void the revision first)');
     cur.row.locked = 'N'; cur.row.locked_at = ''; cur.row.updated_at = now_();
     write_(TABS.tenders, cur.idx, cur.row);
     log_('unlock', req.arza_no, req.reason);
     return cur.row;
+  },
+
+  /* ---------- v2: rationalized revisions ---------- */
+  /* everything the Rationalized BQ page needs for one tender */
+  revData: function (req) {
+    var no = req.arza_no, bq = read_(TABS.bq).rows.filter(function (r) { return r.arza_no === no; });
+    return {
+      tender: find_(no).row,
+      items: bq.filter(function (r) { return r.bq_set === 'Tendered'; }),
+      lines: bq.filter(function (r) { return r.bq_set !== 'Tendered'; }),
+      revisions: revs_(no)
+    };
+  },
+
+  /* create (no rev) or update a Draft revision: record + all its lines, one call */
+  saveRevision: function (req) {
+    var t = find_(req.arza_no), no = t.row.arza_no, ts = now_(), m = req.meta || {};
+    if (t.row.locked !== 'Y') throw new Error('Lock the tendered BQ of ' + no + ' first - revisions are made after submission');
+    var all = revs_(no), rec;
+    if (!req.rev) {
+      var dr = all.filter(function (r) { return r.status === 'Draft'; })[0];
+      if (dr) throw new Error(dr.rev + ' is still a draft - approve or delete it before starting another revision');
+      var cur = currentRev_(no);
+      rec = { arza_no: no, rev: nextRev_(all), status: 'Draft', based_on: cur ? cur.rev : 'Tendered', created_at: ts };
+    } else {
+      rec = all.filter(function (r) { return r.rev === req.rev; })[0];
+      if (!rec) throw new Error('Revision ' + req.rev + ' not found');
+      if (rec.status !== 'Draft') throw new Error(rec.rev + ' is ' + rec.status + ' and locked - start a new revision instead');
+    }
+    var items = cleanLines_(req.items || []);
+    if (!items.length) throw new Error('A revision needs at least one BQ line');
+    ['description', 'notes'].forEach(function (k) { if (m[k] != null) rec[k] = String(m[k]).trim(); });
+    if (!rec.description) throw new Error('Describe the revision (e.g. "Rationalization to budget, JKR letter …")');
+    var rows = items.map(function (it) { return bqRow_(no, rec.rev, it, ts); });
+    var n = replaceRows_(TABS.bq, function (r) { return r.arza_no === no && r.bq_set === rec.rev; }, rows, TEXT_COLS);
+    rec.lines = rows.length;
+    rec.rev_sum = round2_(rows.reduce(function (s, r) { return s + (Number(r.amount) || 0); }, 0));
+    rec.base_sum = setSum_(no, rec.based_on);
+    rec.tender_sum = Number(t.row.our_sum) || '';
+    rec.updated_at = ts;
+    if (req.file) { var f = saveFile_(t.row, req.file, true); write_(TABS.tenders, t.idx, t.row); if (f) rec.notes = (rec.notes ? rec.notes + ' | ' : '') + 'Workbook: ' + req.file.name; }
+    upsertRev_(rec);
+    log_('revision', no, (n.removed ? 'Updated draft ' : 'New draft ') + rec.rev + ' (from ' + rec.based_on + '): ' + rec.lines + ' lines, B$' + fmt_(rec.rev_sum) +
+      ' (' + diffTxt_(rec.rev_sum, rec.base_sum) + ' vs ' + rec.based_on + ')' + (req.file ? '; ' + req.file.name : ''));
+    return { revision: rec, tender: t.row };
+  },
+
+  /* approval record (both parties) - locks the revision and makes it the contract BQ */
+  approveRevision: function (req) {
+    var t = find_(req.arza_no), no = t.row.arza_no, a = req.approval || {}, ts = now_();
+    var rec = revs_(no).filter(function (r) { return r.rev === req.rev; })[0];
+    if (!rec) throw new Error('Revision ' + req.rev + ' not found');
+    if (rec.status !== 'Draft') throw new Error(rec.rev + ' is already ' + rec.status);
+    var need = { approved_date: 'approval date', arza_rep: 'ARZA representative', client_rep: 'client representative', letter_ref: 'letter / document ref' };
+    Object.keys(need).forEach(function (k) { if (!String(a[k] || '').trim()) throw new Error('Give the ' + need[k]); });
+    if (!(Number(rec.lines) > 0)) throw new Error(rec.rev + ' has no BQ lines');
+    ['approved_date', 'arza_rep', 'client_rep', 'client_org', 'letter_ref'].forEach(function (k) { rec[k] = String(a[k] || '').trim(); });
+    if (a.notes) rec.notes = (rec.notes ? rec.notes + ' | ' : '') + String(a.notes).trim();
+    if (req.file) { var f = saveFile_(t.row, req.file, true); if (f) { rec.document = req.file.name; rec.doc_link = f.getUrl(); } }
+    rec.status = 'Approved'; rec.approved_at = ts; rec.updated_at = ts;
+    upsertRev_(rec);
+    t.row.contract_sum = rec.rev_sum; t.row.contract_rev = rec.rev; t.row.updated_at = ts;
+    write_(TABS.tenders, t.idx, t.row);
+    log_('approve', no, rec.rev + ' approved ' + rec.approved_date + ', ref ' + rec.letter_ref + ' (ARZA: ' + rec.arza_rep + '; client: ' + rec.client_rep +
+      (rec.client_org ? ', ' + rec.client_org : '') + '). Contract sum B$' + fmt_(rec.rev_sum) + ' (' + diffTxt_(rec.rev_sum, rec.tender_sum) + ' vs tendered)' +
+      (rec.document ? '; document ' + rec.document : '; no document attached'));
+    return { revision: rec, tender: t.row };
+  },
+
+  /* delete a Draft revision (lines and record) */
+  deleteRevision: function (req) {
+    var no = req.arza_no, rec = revs_(no).filter(function (r) { return r.rev === req.rev; })[0];
+    if (!rec) throw new Error('Revision ' + req.rev + ' not found');
+    if (rec.status !== 'Draft') throw new Error(rec.rev + ' is ' + rec.status + ' - only drafts can be deleted (void an approved revision instead)');
+    var n = replaceRows_(TABS.bq, function (r) { return r.arza_no === no && r.bq_set === rec.rev; }, [], []);
+    replaceRows_(TABS.rev, function (r) { return r.arza_no === no && r.rev === rec.rev; }, [], []);
+    log_('revision', no, 'Deleted draft ' + rec.rev + ' (' + n.removed + ' lines)');
+    return { removed: n.removed };
+  },
+
+  /* void the latest approved revision (mistake / superseded agreement) - needs a reason, lines are kept */
+  voidRevision: function (req) {
+    if (!req.reason || String(req.reason).trim().length < 5) throw new Error('Give a reason to void the revision');
+    var t = find_(req.arza_no), no = t.row.arza_no, all = revs_(no), cur = currentRev_(no);
+    if (!cur || cur.rev !== req.rev) throw new Error('Only the latest approved revision' + (cur ? ' (' + cur.rev + ')' : '') + ' can be voided');
+    var dr = all.filter(function (r) { return r.status === 'Draft'; })[0];
+    if (dr) throw new Error('Delete draft ' + dr.rev + ' first (it is based on ' + dr.based_on + ')');
+    cur.status = 'Void'; cur.void_reason = String(req.reason).trim(); cur.updated_at = now_();
+    upsertRev_(cur);
+    var prev = currentRev_(no);
+    t.row.contract_sum = prev ? prev.rev_sum : ''; t.row.contract_rev = prev ? prev.rev : ''; t.row.updated_at = cur.updated_at;
+    write_(TABS.tenders, t.idx, t.row);
+    log_('void', no, cur.rev + ' voided: ' + cur.void_reason + '. Contract BQ is now ' + (prev ? prev.rev + ' B$' + fmt_(prev.rev_sum) : 'the tendered BQ'));
+    return { revision: cur, tender: t.row };
   },
 
   /* bid result: Won / Lost / Cancelled / No bid + winner & winning sum */
@@ -282,7 +389,7 @@ function tenderFolder_(row) {
   var name = row.arza_no + (row.tender_ref ? ' - ' + String(row.tender_ref).replace(/[\/\\:*?"<>|]+/g, '-') : '');
   return rootFolder_().createFolder(name);
 }
-function saveFile_(row, file) {
+function saveFile_(row, file, otherDoc) {   // otherDoc: a revision workbook / approval letter - keeps workbook_file as it is
   if (!file || !file.data) return null;
   var folder;
   try { folder = tenderFolder_(row); }
@@ -290,7 +397,7 @@ function saveFile_(row, file) {
   var blob = Utilities.newBlob(Utilities.base64Decode(file.data), file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', file.name);
   var f = folder.createFile(blob);
   row.folder_link = folder.getUrl();
-  row.workbook_file = file.name;
+  if (!otherDoc) row.workbook_file = file.name;
   return f;
 }
 
@@ -315,6 +422,76 @@ function writeBQ_(no, items, ts, replace) {
   });
   sh.getRange(start, 1, rows.length, head.length).setValues(rows);
   return rows.length;
+}
+
+/* one BQ_Items row object (Tendered or a revision set) */
+function bqRow_(no, set, it, ts) {
+  var o = { arza_no: no, bq_set: set, imported_at: ts,
+    provisional: /provisional|prov\.? sum/i.test((it.heading || '') + ' ' + (it.description || '') + ' ' + (it.remarks || '')) ? 'Y' : 'N' };
+  ['item_id', 'bill', 'page', 'item', 'heading', 'description', 'unit', 'qty', 'rate', 'amount', 'remarks', 'source'].forEach(function (k) { o[k] = it[k] == null ? '' : it[k]; });
+  return o;
+}
+/* revision lines from the app: unique item_id, numbers checked, amount = qty x rate */
+function cleanLines_(items) {
+  var seen = {}, out = [];
+  items.forEach(function (it, i) {
+    var id = String(it.item_id || '').trim();
+    if (!id) throw new Error('Line ' + (i + 1) + ' has no item ID');
+    if (seen[id]) throw new Error('Item ID ' + id + ' is used twice');
+    seen[id] = 1;
+    var q = numOrBlank_(it.qty, id, 'qty'), r = numOrBlank_(it.rate, id, 'rate'), a = numOrBlank_(it.amount, id, 'amount');
+    if (q !== '' && r !== '') a = round2_(q * r);
+    var o = {}; for (var k in it) o[k] = it[k];
+    o.item_id = id; o.qty = q; o.rate = r; o.amount = a === '' ? 0 : a;
+    out.push(o);
+  });
+  return out;
+}
+function numOrBlank_(v, id, what) {
+  if (v === '' || v == null) return '';
+  var n = Number(String(v).replace(/,/g, ''));
+  if (isNaN(n)) throw new Error(id + ': ' + what + ' "' + v + '" is not a number');
+  return n;
+}
+function revs_(no) {
+  return read_(TABS.rev).rows.filter(function (r) { return r.arza_no === no; })
+    .sort(function (a, b) { return revN_(a.rev) - revN_(b.rev); });
+}
+function revN_(r) { var m = String(r || '').match(/^R(\d+)$/i); return m ? +m[1] : 0; }
+function nextRev_(all) { var mx = 0; all.forEach(function (r) { mx = Math.max(mx, revN_(r.rev)); }); return 'R' + (mx + 1); }
+function currentRev_(no) {
+  var a = revs_(no).filter(function (r) { return r.status === 'Approved'; });
+  return a.length ? a[a.length - 1] : null;
+}
+function setSum_(no, set) {
+  return round2_(read_(TABS.bq).rows.reduce(function (s, r) { return s + (r.arza_no === no && r.bq_set === set ? (Number(r.amount) || 0) : 0); }, 0));
+}
+function upsertRev_(rec) {
+  var rv = read_(TABS.rev), hit = rv.rows.filter(function (r) { return r.arza_no === rec.arza_no && r.rev === rec.rev; })[0];
+  if (hit) write_(TABS.rev, hit._row, rec); else append_(TABS.rev, rec);
+}
+function diffTxt_(a, b) {
+  a = Number(a) || 0; b = Number(b) || 0; var d = round2_(a - b);
+  return (d >= 0 ? '+' : '-') + 'B$' + fmt_(Math.abs(d)) + (b ? ', ' + (d >= 0 ? '+' : '') + (d / b * 100).toFixed(2) + '%' : '');
+}
+
+/* v2 schema: add the Revisions tab and new Tenders columns once (keeps existing data) */
+function ensureSchema_() {
+  var p = PropertiesService.getScriptProperties();
+  if (p.getProperty('SCHEMA_VER') === SCHEMA_VER) return;
+  var ss = SpreadsheetApp.getActive(), rs = ss.getSheetByName(TABS.rev);
+  if (!rs) { rs = ss.insertSheet(TABS.rev); rs.getRange(1, 1, 1, REV_COLS.length).setValues([REV_COLS]); rs.setFrozenRows(1); rs.getRange('B:B').setNumberFormat('@'); }
+  else addCols_(rs, REV_COLS);
+  addCols_(sheet_(TABS.tenders), ['contract_sum', 'contract_rev']);
+  p.setProperty('SCHEMA_VER', SCHEMA_VER);
+}
+function addCols_(sh, cols) {
+  var last = sh.getLastColumn(), head = last ? sh.getRange(1, 1, 1, last).getValues()[0].map(String) : [];
+  var miss = cols.filter(function (c) { return head.indexOf(c) < 0; });
+  if (!miss.length) return;
+  var need = last + miss.length - sh.getMaxColumns();
+  if (need > 0) sh.insertColumnsAfter(sh.getMaxColumns(), need);
+  sh.getRange(1, last + 1, 1, miss.length).setValues([miss]);
 }
 
 /* remove rows matching dropFn (by header name), then append new row objects; textCols are stored as text */

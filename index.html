@@ -181,23 +181,23 @@ td.dt{white-space:nowrap;font-size:13px}
 .barc i{display:block;height:8px;border-radius:4px;background:var(--brand2);min-width:2px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .abtabs{margin:4px 0 12px;border-bottom:1px solid var(--line)}
-#vAB .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
-#vAB .card h3{margin:0 0 8px;font-size:14px}
-#vAB .n{font-size:12px;color:var(--ink3);margin:4px 0 8px}
-#vAB h2{font-size:16px;margin:0 0 4px;color:var(--bink)}
-#vAB table th{position:static;cursor:default}
-#vAB tbody tr{cursor:default}
-#vAB td.dsc{max-width:440px;font-size:12.5px}
-#vAB td.nt{font-size:12px;color:var(--ink3)}
-#vAB tr.bh td{background:var(--th);font-weight:600;color:var(--bink)}
-#vAB tr.bt td{font-weight:600;border-bottom:2px solid var(--line)}
-#vAB tr.gt td{font-weight:700;background:var(--sel)}
-#vAB td.neg{color:var(--bad)} #vAB td.pos{color:var(--ok)}
-#vAB .ok{color:var(--ok);margin:4px 0}
-#vAB ul.plain{margin:0;padding-left:18px;font-size:13px}
-#vAB code{font-family:var(--mono);color:var(--bink)}
-#vAB select{padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--field)}
-#vAB a.btn{text-decoration:none;color:inherit}
+#vAB .card,#vRV .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+#vAB .card h3,#vRV .card h3{margin:0 0 8px;font-size:14px}
+#vAB .n,#vRV .n{font-size:12px;color:var(--ink3);margin:4px 0 8px}
+#vAB h2,#vRV h2{font-size:16px;margin:0 0 4px;color:var(--bink)}
+#vAB table th,#vRV table th{position:static;cursor:default}
+#vAB tbody tr,#vRV tbody tr{cursor:default}
+#vAB td.dsc,#vRV td.dsc{max-width:440px;font-size:12.5px}
+#vAB td.nt,#vRV td.nt{font-size:12px;color:var(--ink3)}
+#vAB tr.bh td,#vRV tr.bh td{background:var(--th);font-weight:600;color:var(--bink)}
+#vAB tr.bt td,#vRV tr.bt td{font-weight:600;border-bottom:2px solid var(--line)}
+#vAB tr.gt td,#vRV tr.gt td{font-weight:700;background:var(--sel)}
+#vAB td.neg,#vRV td.neg{color:var(--bad)} #vAB td.pos,#vRV td.pos{color:var(--ok)}
+#vAB .ok,#vRV .ok{color:var(--ok);margin:4px 0}
+#vAB ul.plain,#vRV ul.plain{margin:0;padding-left:18px;font-size:13px}
+#vAB code,#vRV code{font-family:var(--mono);color:var(--bink)}
+#vAB select,#vRV select{padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--field)}
+#vAB a.btn,#vRV a.btn{text-decoration:none;color:inherit}
 .tabs{display:flex;gap:2px}
 .tabs a{padding:8px 12px;font-size:13px;color:var(--ink2);text-decoration:none;border-bottom:2px solid transparent;cursor:pointer}
 .tabs a.on{color:var(--bink);border-color:var(--bink);font-weight:600}
@@ -273,6 +273,20 @@ footer.foot a:hover{text-decoration:underline}
 @media (max-width:1100px){.conn{display:none}}
 @media (max-width:1100px){.types{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}.types{grid-template-columns:repeat(2,1fr)}.hello{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.res-sum{grid-template-columns:1fr}td.ttl{min-width:200px}.nav{display:none}.brand i,.brand span{display:none}}
+/* v2 rationalized BQ */
+#vRV td input.ed{width:92px;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:var(--field);text-align:right;font:inherit;font-variant-numeric:tabular-nums}
+#vRV td input.ed.txt{width:100%;text-align:left}
+#vRV td input.ed.chg{border-color:var(--warn);background:var(--warnbg)}
+#vRV tr.om td.dsc,#vRV tr.om td.r{text-decoration:line-through;color:var(--ink3)}
+#vRV tr.void td{color:var(--ink3)}
+#vRV .edbar{position:sticky;bottom:0;z-index:2;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-top:10px;box-shadow:0 -4px 12px rgba(0,0,0,.06)}
+#vRV .edbar .tot{font-variant-numeric:tabular-nums;font-size:13px}
+#vRV .edbar .tot b{font-size:14.5px}
+#vRV dl.rec{display:grid;grid-template-columns:190px 1fr;gap:6px 14px;margin:0;font-size:13px}
+#vRV dl.rec dt{color:var(--ink3)} #vRV dl.rec dd{margin:0}
+.st-Draft{background:var(--warnbg);color:var(--warn)} .st-Approved{background:var(--okbg);color:var(--ok)} .st-Void{background:var(--mutebg);color:var(--mute);text-decoration:line-through}
+.ch-Added{background:var(--infobg);color:var(--info)} .ch-Omitted{background:var(--badbg);color:var(--bad)} .ch-Qty,.ch-Rate,.ch-Qtyrate,.ch-Amount{background:var(--warnbg);color:var(--warn)}
+td.sub2{font-size:11.5px;color:var(--ink3)}
 </style>
 </head>
 <body>
@@ -280,12 +294,12 @@ footer.foot a:hover{text-decoration:underline}
 <header class="top hidden" id="top">
   <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPQAAABACAMAAAAaqqqvAAAAwFBMVEUAAAD///////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMq5OnAAAAQHRSTlMA+wcrj2/PUK8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAmtaE/QAAByFJREFUeNrdW9m26yYMtYUY/v+Li0YEHnLuabvawEMSO0Zma0aWj+MyAPgjjQFy6th2GGIAhcqDjveFTdAE4ZD6YXzYEzZDFqAAi8IzMzZEDYfKEx7UfkthR1QQhssb9hM2wQP/tfwR2LIZ5GPYM6SM2BrmmmDY9b3uf7VqO2TI5SyltD4KfdeAFvbRcFft/pHaWRqJWXD3X6Wgq8E2qCFghnZ2nOUMo9Bxhr1QO47+VTvEZmCLY++wS9oJdcSMHR6jbFlSUahZeNBZUQ31Dj7cMJNqZxJuyROqxHxoeGYLaenbnTho8O1SLSUTvAxrcgLIrDjRuPPlCm4I+mc7CVtLM2SBXQV1lr+OBH88/m8RWsSHjBmfLivkxrtdH+uG5IsF3WVJuo2PkkqEup1pbLF/K+n/nmOgaSacFJzxTXGpipJ+odgyeUrrQzp/y5nng8c59we3V7qgsevuWfri/r0QccTk/l7e8HjwifKPC0Mec1nQXbkTW7gN7COPw4o+cq7q4RPOI01X14XPncFZ0vmcDrWqQDM5QzJNtrSADlJkQcZlElNGv6yjogOYyestWbtN0D0HId+cnCkcvk4LyeTopoGsJXk+aaGcQsHJmhOTgelyXtNCtVQFILdWBGXQlTElyRRuiFCi31WnVJt/Q14TE7qLKHcADUIaXSdWfHS5UL+A1iUMlumNcJ1/oYqynOI3UP7VZ9CM7kegmTxtqfQiFfRhoH3Zp280VtC8wPwAWm/WjuBalEN961bGCm4IGGghJpJ+Bd3gp6ADxs5MWgfvtRw0rgrLy6tSC5c/1aXLKEO0pp+DZQKaVZ69QfU/B9XanIKClt/3oJvcu7ohvIDm9ekeIg3tJteNUg41rx60MIC2W7dhdDJwMsO62Lh4KDVOAF1MXaiiK3gZivIEWn9XI/QMukTyzUEnAl0hgpYsfNilLU9HNltSzyxaWqMba+h2GUA3fZ5AZZm0UBW9hcNBE8EXSfOYQVvsmEHP5BV0JpOGKGkQwsOVLcvDKGmTrFuCLCDwPqh3yWFn6pIOt6juROV+75L2+Xq3IP8g6Ym8+rFeEdK/zMiVBPqSJkUUTpoUzemhZyAyTRgXQFcvxeRkJaoJdDJXxjON47egS6o00J0fz8Vax+kLaLnEQJMfa1rRH8suYxUOWquFs2BFMM15oAoyqcMasqjaeA8aFXRVv/HReyO4914j2QwaxKgdtGtxissGaCbRa3BBT6M1EZmVvbuCFAK9JCc4BRoPWfegQdXpE+g6kpM/AV1W0Oan1AxuQDc31slxuxsrbsSW+Wt+WObs5hl0lv/wc5zGX0j6uIA2a1Tn2IYiWmKRjyVTqwOzW6aIPFsBTqswPWKWEc9eQKs/S7cZWck80NOkH9j0ot4YQateUjVUrTdFRayDuxfHPSRffHYZkvYNRfXU/NmRdb7ycXv13mBh7gfe+82RXZO3kTAORVL3lqYMfUpropqx3HuQaCpvM4EJNEwhK8eFPMZpi0OvcXomP4cs23Vdln1G6/P9F6usJ7+ep9S7HP0IsX0Eejjm6N9icsK5W/kEGuoE+j4jm8nfJSduvTLKkjCOLANsUW3ap5fLbJBiRQ3X8sQg6ZFoeBo6vMKbeltC/Ab6mMgb6BrSUEVSHMXF+tS9eSQ+cx3DDCcaV9YKTdEA3cVTpm0az8zLhiPH/fbVken93Dm8bDhm8ncbDnMnsGScwfpMAOloF0PQyyGmxkVc98jIVqO53VoKq1TBX0MWX/q7raXkIGnNq8Vo8Jj9rDD4Crq43kZXXjXnxDWpuIDOo4iQI3//of20BBn1ZGzUVbiQBA/MJZQU8nBX8HwFnZcNZRpFErajcWW6lotaCuWiHPkbQ+ICurDH+wnolm7LRQw6cxFt3ERP8NfYY9BRt5RlyJlY5NYTVhikuBULg2lMHS0vPCkZf+f1kKMIt9NZVHIcc3Stj+TVSFsTUXtXyaVcPJeh4fMT73l2grWqC3+rmvvnpeJAXkvAiUvAMPVHXkaVSurvBjxw4/YpyGMV/6bYD78v9jey6iYO82nQIxCr93z58zvJl6Tanx91RVKS7uWPkbl97wO85IWRbGHy3m6QH1taufO7n1CDebxWMO4Z14ebjQuFVi357l6E8VAeCtcvEVZhcxSk2Ij7tCL4U3lFXap1Wfk3aEG4HVsod2wu6qgLWtEuAtfuG8XsbNoFddMusoLVJF2lqtXQSrywRYOoeXBx0c1Kd9Qkae1zdLIGzLBLp7cE4+6xEJd9ROsnGuzWHOoNsdw9VU7pgtXiPnWGthQaYjfpAobQ+ky7GNpdSwMw9wLj6IvYB/OM2nrcpTkEa5qb3DfqcofwBscFmLedbAU5NInCtDWLb67s9wpH6JiEh+03wI5vZsFISeHu9cs938GDKcWMqi0vI24IecBOS2emF3uOzd+r3fdd4r8AzaM1wK5ex1cAAAAASUVORK5CYII=" alt="ARZA SDN BHD" width="122" height="32"><i></i><span>QS CRM</span></div>
   <nav class="nav" id="nav">
-    <a data-v="tenders" class="on">Tenders</a><a data-v="asbuilt">As-built</a><a data-v="reports">Reports</a>
+    <a data-v="tenders" class="on">Tenders</a><a data-v="rev">Rationalized BQ</a><a data-v="asbuilt">As-built</a><a data-v="reports">Reports</a>
   </nav>
   <div class="sp"></div>
   <div class="conn hidden" id="conn"><i></i><span></span></div>
   <div class="hello" id="hello"></div>
-  <button id="btnVer" class="ver" title="What's new">v1.2.0</button>
+  <button id="btnVer" class="ver" title="What's new">v2.0.0</button>
   <button id="btnOut" class="hidden">Sign out</button>
   <button id="btnTheme" class="ibtn" aria-label="Theme"></button>
 </header>
@@ -339,7 +353,9 @@ footer.foot a:hover{text-decoration:underline}
 </main>
 
 <main id="vRep" class="hidden rep"></main>
+<main id="vRV" class="hidden"></main>
 <main id="vAB" class="hidden"></main>
+<input type="file" id="rvFile" accept=".xlsx,.xlsm" class="hidden">
 <input type="file" id="abFile" accept=".xlsx,.xlsm" class="hidden">
 
 <footer class="foot"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</footer>
@@ -1049,7 +1065,7 @@ footer.foot a:hover{text-decoration:underline}
   function compare(bqItems, asb) {
     var sum = {}, cnt = {};
     asb.forEach(function (a) { if (!a.item_id) return; sum[a.item_id] = (sum[a.item_id] || 0) + (Number(a.qty) || 0); cnt[a.item_id] = (cnt[a.item_id] || 0) + 1; });
-    var bills = {}, T = { tendered: 0, asbuilt: 0, diff: 0, measured: 0, items: 0 };
+    var bills = {}, T = { tendered: 0, asbuilt: 0, diff: 0, measured: 0, items: 0, tend: 0 };   // tendered = contract BQ amount; tend = original tendered (v2)
     var items = bqItems.map(function (b) {
       var tq = Number(b.qty) || 0, rate = Number(b.rate) || 0, measured = b.item_id in sum;
       var aq = measured ? round(sum[b.item_id]) : null;
@@ -1060,9 +1076,12 @@ footer.foot a:hover{text-decoration:underline}
         diff_qty: measured ? round(aq - tq) : null, diff_pct: measured && tq ? (aq - tq) / tq : null,
         diff_amount: aAmt != null ? round(aAmt - tAmt, 2) : null, t_amount: tAmt, lump: lump });
       o.flag = !measured ? (lump ? 'Lump sum (carried)' : 'Not measured') : (Math.abs(o.diff_pct || 0) > 0.1 ? (o.diff_qty > 0 ? 'Over +10%' : 'Under −10%') : '');
-      var k = b.bill || '-'; var bb = bills[k] || (bills[k] = { bill: k, tendered: 0, asbuilt: 0, items: 0, measured: 0 });
-      bb.tendered += tAmt || 0; bb.asbuilt += aAmt || 0; bb.items++; if (measured) bb.measured++;
-      T.tendered += tAmt || 0; T.asbuilt += aAmt || 0; T.items++; if (measured) T.measured++;
+      if (b.rev_change === 'Omitted') { o.flag = measured ? 'Omitted but measured' : 'Omitted'; if (!measured) o.ab_amount = 0; }
+      else if (b.rev_change === 'Added' && !measured) o.flag = 'Added, not measured';
+      o.tend_amount = 'tend_amount' in b ? (Number(b.tend_amount) || 0) : tAmt;   // contract BQ lines (v2) carry the original tendered amount
+      var k = b.bill || '-'; var bb = bills[k] || (bills[k] = { bill: k, tendered: 0, asbuilt: 0, items: 0, measured: 0, tend: 0 });
+      bb.tendered += tAmt || 0; bb.asbuilt += o.ab_amount || 0; bb.items++; if (measured) bb.measured++; bb.tend += o.tend_amount;
+      T.tendered += tAmt || 0; T.asbuilt += o.ab_amount || 0; T.items++; if (measured) T.measured++; T.tend += o.tend_amount;
       return o;
     });
     T.diff = round(T.asbuilt - T.tendered, 2);
@@ -1077,11 +1096,142 @@ footer.foot a:hover{text-decoration:underline}
 
 </script>
 <script>
+/*
+ * QS CRM — Rationalized BQ revisions (v2).
+ * A revision (R1, R2 …) is a full copy of the BQ lines after rationalization, stored in BQ_Items with bq_set = 'R1' …
+ * Lines keep the tendered item_id, so as-built quantities match across Tendered, every revision and As-built.
+ *
+ *   Rev.diff(base, rev)          -> line-by-line changes (Unchanged / Qty / Rate / Qty & rate / Added / Omitted) + totals per bill
+ *   Rev.contract(tendered, rev)  -> the contract BQ: revision lines + tendered items omitted from it (qty 0),
+ *                                   each line carrying tend_qty / tend_rate / tend_amount (blank for added items)
+ *   Rev.current(revisions)       -> latest Approved revision record (or null)
+ *   Rev.nextNo(revisions)        -> 'R1', 'R2' …
+ *   Rev.amount(qty, rate, amt)   -> qty × rate rounded to cents (falls back to the typed amount when qty or rate is blank)
+ */
+(function (root) {
+  'use strict';
+
+  function num(v) {
+    if (v === '' || v == null) return null;
+    var n = typeof v === 'number' ? v : Number(String(v).replace(/,/g, ''));
+    return isNaN(n) ? null : n;
+  }
+  function r2(x) { return Math.round((x + (x >= 0 ? 1e-9 : -1e-9)) * 100) / 100; }
+  function amount(qty, rate, amt) {
+    var q = num(qty), r = num(rate);
+    if (q != null && r != null) return r2(q * r);
+    var a = num(amt);
+    return a == null ? 0 : r2(a);
+  }
+  function lineAmt(l) { var a = num(l.amount); return a != null ? a : amount(l.qty, l.rate); }
+  function sum(lines) { return r2((lines || []).reduce(function (s, l) { return s + lineAmt(l); }, 0)); }
+  function same(a, b, eps) { a = num(a); b = num(b); if (a == null && b == null) return true; if (a == null || b == null) return false; return Math.abs(a - b) <= eps; }
+  function omitted(l) { return l && num(l.qty) === 0 && lineAmt(l) === 0; }
+
+  function diff(base, rev) {
+    base = base || []; rev = rev || [];
+    var bIdx = {}, rIds = {};
+    base.forEach(function (b, i) { bIdx[b.item_id] = i; });
+    rev.forEach(function (r) { rIds[r.item_id] = true; });
+    var rows = [], done = {}, next = 0;
+    function emitOmitted(upTo) {
+      for (; next < upTo; next++) {
+        var b = base[next];
+        if (!rIds[b.item_id] && !done[b.item_id]) { rows.push(row(b, null)); done[b.item_id] = 1; }
+      }
+    }
+    function row(b, r) {
+      var st;
+      if (!b) st = 'Added';
+      else if (!r || (omitted(r) && !omitted(b))) st = 'Omitted';
+      else {
+        var q = same(b.qty, r.qty, 1e-6), p = same(b.rate, r.rate, 0.005);
+        st = q && p ? (same(lineAmt(b), lineAmt(r), 0.005) ? 'Unchanged' : 'Amount') : (!q && !p ? 'Qty & rate' : (!q ? 'Qty' : 'Rate'));
+      }
+      var ba = b ? lineAmt(b) : 0, ra = r ? lineAmt(r) : 0;
+      var src = r || b;
+      return {
+        item_id: src.item_id, bill: src.bill, page: src.page, item: src.item, heading: src.heading, description: src.description, unit: src.unit,
+        status: st,
+        base_qty: b ? num(b.qty) : null, base_rate: b ? num(b.rate) : null, base_amount: b ? ba : null,
+        rev_qty: r ? num(r.qty) : (b ? 0 : null), rev_rate: r ? num(r.rate) : (b ? num(b.rate) : null), rev_amount: r ? ra : 0,
+        diff_amount: r2(ra - ba),
+        text_changed: !!(b && r && (String(b.description || '') !== String(r.description || '') || String(b.unit || '') !== String(r.unit || '')))
+      };
+    }
+    rev.forEach(function (r) {
+      var i = bIdx[r.item_id];
+      if (i != null) { emitOmitted(i); rows.push(row(base[i], r)); done[r.item_id] = 1; if (i >= next) next = i + 1; }
+      else rows.push(row(null, r));
+    });
+    emitOmitted(base.length);
+    var T = { base: 0, rev: 0, diff: 0, counts: { Unchanged: 0, Qty: 0, Rate: 0, 'Qty & rate': 0, Amount: 0, Added: 0, Omitted: 0 } }, bills = {}, order = [];
+    rows.forEach(function (x) {
+      T.base += x.base_amount || 0; T.rev += x.rev_amount || 0; T.counts[x.status]++;
+      var k = x.bill || '-'; if (!bills[k]) { bills[k] = { bill: k, base: 0, rev: 0, changed: 0, lines: 0 }; order.push(k); }
+      bills[k].base += x.base_amount || 0; bills[k].rev += x.rev_amount || 0; bills[k].lines++; if (x.status !== 'Unchanged') bills[k].changed++;
+    });
+    T.base = r2(T.base); T.rev = r2(T.rev); T.diff = r2(T.rev - T.base);
+    T.changed = rows.length - T.counts.Unchanged;
+    order.forEach(function (k) { bills[k].base = r2(bills[k].base); bills[k].rev = r2(bills[k].rev); });
+    return { rows: rows, totals: T, bills: order.map(function (k) { return bills[k]; }) };
+  }
+
+  /* contract BQ used by the as-built reports */
+  function contract(tendered, revLines) {
+    tendered = tendered || [];
+    if (!revLines || !revLines.length) {
+      return tendered.map(function (b) {
+        return Object.assign({}, b, { tend_qty: num(b.qty), tend_rate: num(b.rate), tend_amount: lineAmt(b), rev_change: '' });
+      });
+    }
+    var tIdx = {}; tendered.forEach(function (b) { tIdx[b.item_id] = b; });
+    return diff(tendered, revLines).rows.map(function (x) {
+      var t = tIdx[x.item_id] || null;
+      var src = x.status === 'Omitted' ? t : (revLines.filter(function (r) { return r.item_id === x.item_id; })[0] || t);
+      var o = Object.assign({}, src);
+      if (x.status === 'Omitted') { o.qty = 0; o.amount = 0; o.rate = t ? t.rate : ''; }
+      o.tend_qty = t ? num(t.qty) : null; o.tend_rate = t ? num(t.rate) : null; o.tend_amount = t ? lineAmt(t) : null;
+      o.rev_change = x.status === 'Unchanged' ? '' : x.status;
+      return o;
+    });
+  }
+
+  function revNo(r) { var m = String(r || '').match(/^R(\d+)$/i); return m ? +m[1] : 0; }
+  function nextNo(revs) { var mx = 0; (revs || []).forEach(function (r) { mx = Math.max(mx, revNo(r.rev)); }); return 'R' + (mx + 1); }
+  function current(revs) {
+    var a = (revs || []).filter(function (r) { return r.status === 'Approved'; }).sort(function (x, y) { return revNo(y.rev) - revNo(x.rev); });
+    return a[0] || null;
+  }
+  /* the set a new revision starts from: latest approved revision, else the tendered BQ */
+  function baseOf(revs, rev) {
+    var n = revNo(rev);
+    var a = (revs || []).filter(function (r) { return r.status === 'Approved' && revNo(r.rev) < n; }).sort(function (x, y) { return revNo(y.rev) - revNo(x.rev); });
+    return a[0] ? a[0].rev : 'Tendered';
+  }
+
+  var api = { diff: diff, contract: contract, current: current, nextNo: nextNo, baseOf: baseOf, revNo: revNo, amount: amount, sum: sum, num: num };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.Rev = api;
+})(this);
+</script>
+<script>
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'1.4.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'2.0.0', user:'Gemz' };
 var CHANGELOG = [
+  { v:'2.0.0', date:'6 Nov 2026', items:[
+    'v2 starts: Rationalized BQ page (top bar, between Tenders and As-built).',
+    'Rationalized revisions R1, R2 … of the locked tendered BQ: start a draft as a copy of the tendered BQ (or the last approved revision), or import a rationalized priced workbook.',
+    'Draft editor: change quantities and rates, omit items, add items, undo; live total against the base and against the tendered sum. One draft at a time.',
+    'Changes: every line marked Qty / Rate / Qty & rate / Added / Omitted, by bill with totals; compare with the base revision or the tendered BQ.',
+    'Approval record: date, for ARZA, for the client (name, designation, organisation), letter / document ref and the signed document (saved to the tender\'s Drive folder). The revision is then locked and becomes the contract BQ.',
+    'Void the latest approved revision with a reason (kept on record, logged). The tendered BQ cannot be unlocked or replaced once revisions exist.',
+    'Tender sum history: tendered → R1 → R2 … with change against the base and against tendered; also in the tender panel (BQ tab) and the register (contract sum under our sum).',
+    'As-built: matched and priced against the contract BQ. Report 2 is now Tendered | Rationalized | As-Built | Diff qty | Diff % | Rate | Rationalized B$ | As-built B$ | Diff B$; omitted and added items flagged. Excel and PDF updated.',
+    'Rationalization statement (PDF / Print) with both signature blocks, and Excel export of revisions, sum history, lines and changes.',
+    'Google Sheet: the Revisions tab and the contract_sum / contract_rev columns are added automatically on the first call after updating Code.gs.' ]},
   { v:'1.4.0', date:'6 Nov 2026', items:[
     'As-built module — v1 complete.',
     'Import Breakdown QTY: standard ARZA template and the old MOE Block D layout (SL NO / DESCRIPTION / TOTAL QUANTITY; "Total …" rows skipped). File saved to the tender\'s Drive folder.',
@@ -1188,7 +1338,7 @@ function forget(){ try{ ['pw'].forEach(function(k){ sessionStorage.removeItem('q
 
 /* ---------- login ---------- */
 function showLogin(err){
-  $('vLogin').classList.remove('hidden'); $('vMain').classList.add('hidden'); $('vRep').classList.add('hidden'); $('vAB').classList.add('hidden'); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
+  $('vLogin').classList.remove('hidden'); $('vMain').classList.add('hidden'); $('vRep').classList.add('hidden'); $('vAB').classList.add('hidden'); $('vRV').classList.add('hidden'); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
   $('inUrl').value = load('url'); $('loginErr').textContent = err||''; closeDrawer();
   setTimeout(function(){ ($('inUrl').value? $('inPw') : $('inUrl')).focus(); }, 30);
 }
@@ -1228,13 +1378,14 @@ function openFile(f){
       var wb=XLSX.read(new Uint8Array(rd.result),{type:'array'});
       var get=function(n){ return wb.Sheets[n] ? XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:'',raw:true}) : []; };
       var t=get('Tenders'); if(!t.length || !('arza_no' in t[0])) throw new Error('No "Tenders" tab with an arza_no column');
-      var bq=get('BQ_Items'), ab=get('AsBuilt_Items'), lines={}, asb={};
+      var bq=get('BQ_Items'), ab=get('AsBuilt_Items'), rv=get('Revisions'), lines={}, asb={}, nrev={};
       bq.forEach(function(r){ if(r.bq_set==='Tendered') lines[r.arza_no]=(lines[r.arza_no]||0)+1; });
       ab.forEach(function(r){ asb[r.arza_no]=(asb[r.arza_no]||0)+1; });
-      t.forEach(function(r){ r._bq_lines=lines[r.arza_no]||0; r._asbuilt_lines=asb[r.arza_no]||0; });
+      rv.forEach(function(r){ if(r.status!=='Void') nrev[r.arza_no]=(nrev[r.arza_no]||0)+1; });
+      t.forEach(function(r){ r._bq_lines=lines[r.arza_no]||0; r._asbuilt_lines=asb[r.arza_no]||0; r._revs=nrev[r.arza_no]||0; });
       var lists={}, lr=wb.Sheets.Lists ? XLSX.utils.sheet_to_json(wb.Sheets.Lists,{header:1,defval:''}) : [];
       (lr[0]||[]).forEach(function(h,c){ if(!h) return; lists[h]=[]; for(var i=1;i<lr.length;i++) if(lr[i][c]!=='' && String(lr[i][c]).length<30) lists[h].push(String(lr[i][c])); });
-      S.mode='file'; S.fileName=f.name; S.tenders=t; S.lists=lists; S.log=get('Log'); S.fileDB={bq:bq, ab:ab};
+      S.mode='file'; S.fileName=f.name; S.tenders=t; S.lists=lists; S.log=get('Log'); S.fileDB={bq:bq, ab:ab, rev:rv};
       enter();
     }catch(e){ $('loginErr').textContent='Could not read that file: '+e.message; }
   };
@@ -1323,7 +1474,7 @@ function render(){
       '<td class="ttl">'+esc(t.title_en||t.title)+'<div class="sub">'+esc([t.tender_type,t.project_no,t.notes?'📝':''].filter(Boolean).join(' · '))+'</div></td>'+
       '<td><span class="grp">'+esc(t.client_group||'–')+'</span></td>'+
       '<td class="dt">'+cl+'</td>'+
-      '<td class="r num">'+money(t.our_sum)+'</td>'+
+      '<td class="r num">'+money(t.our_sum)+(t.contract_rev?'<div style="font-size:11.5px;color:var(--ink3)" title="Contract sum after rationalization">'+esc(t.contract_rev)+': '+money(t.contract_sum)+'</div>':'')+'</td>'+
       '<td>'+chip(t.status)+(t.locked==='Y'?' <span class="lock y" title="Tendered BQ locked '+esc(t.locked_at)+'">🔒</span>':'')+'</td>'+
       '<td class="r num">'+res+'</td>'+
       '<td class="r num">'+(t._bq_lines||'')+'</td></tr>';
@@ -1376,7 +1527,7 @@ function drawHead(){
   var full=$('drawer').classList.contains('full'); $('dFull').innerHTML=full?ICONS.shrink:ICONS.full;
   $('dFull').title=(full?'Exit full screen':'Full screen')+(t._new?'':' (Shift+click: pop out in a new window)');
   $('dTitle').textContent = t._new ? 'New tender (next T number is given on save)' : (t.title_en||t.title||'(no title)');
-  $('dMeta').innerHTML = t._new ? '' : [t.tender_ref||'No client ref', t.client_group, chip(t.status), t.locked==='Y'?'🔒 BQ locked '+esc(fmtDate(t.locked_at)):'BQ not locked'].filter(Boolean).map(function(x){return x.indexOf('<')===0?x:esc(x);}).join(' · ').replace(/&lt;span/g,'<span');
+  $('dMeta').innerHTML = t._new ? '' : [t.tender_ref||'No client ref', t.client_group, chip(t.status), t.locked==='Y'?'🔒 BQ locked '+esc(fmtDate(t.locked_at)):'BQ not locked', t.contract_rev?'Contract '+t.contract_rev+' B$'+money(t.contract_sum):''].filter(Boolean).map(function(x){return x.indexOf('<')===0?x:esc(x);}).join(' · ').replace(/&lt;span/g,'<span');
   document.querySelectorAll('#dTabs a').forEach(function(a){ a.classList.toggle('on', a.dataset.t===S.tab); a.classList.toggle('hidden', !!t._new && a.dataset.t!=='det'); });
 }
 function drawTab(){
@@ -1452,8 +1603,13 @@ function drawTab(){
         '<div class="tbl"><table class="mini"><thead><tr><th>Bill / section</th><th class="r">Lines</th><th class="r">Amount (B$)</th><th class="r">%</th></tr></thead><tbody>'+
         d.bills.map(function(x){ return '<tr style="cursor:default"><td class="no">'+esc(x.bill)+'</td><td class="r num">'+x.lines+'</td><td class="r num">'+money(x.amount)+'</td><td class="r num">'+(tot?(x.amount/tot*100).toFixed(1)+'%':'')+'</td></tr>'; }).join('')+
         '<tr style="cursor:default;font-weight:600"><td>Total</td><td class="r num">'+lines+'</td><td class="r num">'+money(tot)+'</td><td class="r num">100%</td></tr></tbody></table></div>'+
-        '<p style="font-size:12.5px;color:var(--ink3);margin-top:10px">ID scheme '+esc(t.id_scheme||'–')+' · as-built lines: '+(t._asbuilt_lines||0)+' · <a href="#" id="toAB">Open As-built →</a></p>';
+        '<p style="font-size:12.5px;color:var(--ink3);margin-top:10px">ID scheme '+esc(t.id_scheme||'–')+' · as-built lines: '+(t._asbuilt_lines||0)+' · <a href="#" id="toAB">Open As-built →</a></p>'+
+        '<h3 style="font-size:13.5px;margin:16px 0 6px">Tender sum history</h3>'+(function(){ var rv=d.revisions||[]; if(!rv.length) return '<p style="font-size:12.5px;color:var(--ink3);margin:0">No rationalized revision yet'+(t.locked==='Y'?'':' (lock the BQ first)')+'. <a href="#" class="toRV">Open Rationalized BQ →</a></p>';
+          return '<div class="tbl"><table class="mini"><thead><tr><th>Stage</th><th>Status</th><th>Date</th><th class="r">Sum (B$)</th><th class="r">vs tendered</th></tr></thead><tbody><tr style="cursor:default"><td class="no">Tendered</td><td>'+(t.locked==='Y'?'Locked':'Not locked')+'</td><td class="dt">'+esc(fmtDate(t.submitted_date))+'</td><td class="r num">'+money(tot)+'</td><td></td></tr>'+
+            rv.map(function(r){ return '<tr style="cursor:default'+(r.status==='Void'?';color:var(--ink3)':'')+'"><td class="no">'+esc(r.rev)+(t.contract_rev===r.rev?' ✓':'')+'</td><td>'+revChip(r.status)+'</td><td class="dt">'+esc(fmtDate(r.approved_date||String(r.updated_at||'').slice(0,10)))+'</td><td class="r num">'+money(r.rev_sum)+'</td><td class="r num">'+(tot?pct((Number(r.rev_sum)-tot)/tot):'')+'</td></tr>'; }).join('')+
+            '</tbody></table></div><p style="font-size:12.5px;color:var(--ink3);margin:6px 0 0">✓ = contract BQ · <a href="#" class="toRV">Open Rationalized BQ →</a></p>'; })();
       if($('toAB')) $('toAB').onclick=function(e){ e.preventDefault(); var no=t.arza_no; closeDrawer(true); openAsBuilt(no); };
+      b.querySelectorAll('.toRV').forEach(function(a){ a.onclick=function(e){ e.preventDefault(); var no=t.arza_no; closeDrawer(true); RV.no=no; RV.sel=''; showView('rev'); }; });
     }).catch(function(e){ b.innerHTML='<div class="note w">'+esc(e.message)+'</div>'; });
   }
   else if(S.tab==='log'){
@@ -1465,7 +1621,7 @@ function drawTab(){
 }
 function getDetail(no){
   if(ro()){ var bills={},order=[]; S.fileDB.bq.forEach(function(r){ if(r.arza_no!==no||r.bq_set!=='Tendered') return; var k=r.bill||'-'; if(!bills[k]){bills[k]={bill:k,lines:0,amount:0};order.push(k);} bills[k].lines++; bills[k].amount+=Number(r.amount)||0; });
-    return Promise.resolve({bills:order.map(function(k){return bills[k];})}); }
+    return Promise.resolve({bills:order.map(function(k){return bills[k];}), revisions:(S.fileDB.rev||[]).filter(function(r){return r.arza_no===no;})}); }
   return api('get',{arza_no:no});
 }
 function busy(btn,on,label){ if(!btn) return; btn.disabled=on; if(on){ btn.dataset.l=btn.textContent; btn.innerHTML='<span class="spin"></span> '+(label||'Saving…'); } else btn.textContent=btn.dataset.l||btn.textContent; }
@@ -1479,7 +1635,7 @@ function collect(){
 function afterSave(row, msg){
   var logs=row._log||[]; delete row._log;
   var i=S.tenders.findIndex(function(x){return x.arza_no===row.arza_no;});
-  var keep = i>=0 ? {_bq_lines:S.tenders[i]._bq_lines,_asbuilt_lines:S.tenders[i]._asbuilt_lines} : {_bq_lines:0,_asbuilt_lines:0};
+  var keep = i>=0 ? {_bq_lines:S.tenders[i]._bq_lines,_asbuilt_lines:S.tenders[i]._asbuilt_lines,_revs:S.tenders[i]._revs,_draft:S.tenders[i]._draft} : {_bq_lines:0,_asbuilt_lines:0,_revs:0,_draft:''};
   Object.assign(row,keep); if(i>=0) S.tenders[i]=row; else S.tenders.push(row);
   S.log=S.log.concat(logs); S.cur=row; toast(msg);
   fillFilters(); drawHead(); drawTab(); render();
@@ -1634,10 +1790,12 @@ function showUpload(f){
 /* ---------- views & reports ---------- */
 function showView(v){
   if(v==='import'){ startImport(); return; }
+  if(S.view==='rev' && v!=='rev' && !rvLeave()) return;
+  if(v!=='rev'){ RV.dirty=false; RV.edit=null; }
   S.view=v;
   document.querySelectorAll('#nav a[data-v]').forEach(function(a){ a.classList.toggle('on', a.dataset.v===v); });
-  $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports'); $('vAB').classList.toggle('hidden', v!=='asbuilt');
-  if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else render();
+  $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports'); $('vAB').classList.toggle('hidden', v!=='asbuilt'); $('vRV').classList.toggle('hidden', v!=='rev');
+  if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else if(v==='rev') renderRV(); else render();
 }
 function repRows(){
   var by=function(key,vals){ return vals.map(function(v){ var arr=S.tenders.filter(function(t){ return key==='status'&&v==='(not set)' ? !t.status : t[key]===v; }); return {k:v, st:stats(arr)}; }).filter(function(r){return r.st.n;}); };
@@ -1651,7 +1809,7 @@ function statTable(rows, label){
 }
 function renderReports(){
   var R=repRows(), maxV=Math.max.apply(null,R.statuses.map(function(r){return r.st.value;}).concat([1]));
-  $('vRep').innerHTML='<div class="bar"><div><h2>Reports</h2><div class="scope">From the register: '+S.tenders.length+' records. As-built reports (Report 1 and 2) come with module 3.</div></div><span style="flex:1"></span><button class="btn" id="repExport">Export to Excel</button></div>'+
+  $('vRep').innerHTML='<div class="bar"><div><h2>Reports</h2><div class="scope">From the register: '+S.tenders.length+' records. As-built reports are on the As-built page; rationalized revisions on Rationalized BQ.</div></div><span style="flex:1"></span><button class="btn" id="repExport">Export to Excel</button></div>'+
     chartsHTML()+
     '<div class="card"><h3>By type: tenders and non-tender pricing</h3>'+statTable(R.types,'Type')+'<p class="n">Quotations, sub-contract and supply quotes and internal estimates each have their own row, so the tender win rate is not mixed with internal pricing.</p></div>'+
     '<div class="card"><h3>By client</h3><div class="tbl"><table><thead><tr><th>Client</th><th class="r">Records</th><th class="r">Value (B$)</th><th class="r">Won</th><th class="r">Lost</th><th class="r">Win rate</th></tr></thead><tbody>'+
@@ -1757,25 +1915,28 @@ function exportReports(){
 }
 
 /* ---------- as-built (Breakdown QTY) ---------- */
-var AB = { no:'', items:[], rows:[], set:'', tab:'sum', only:false, cache:{} };
+var AB = { no:'', items:[], tend:[], rev:null, rows:[], set:'', tab:'sum', only:false, cache:{} };   // items = contract BQ (latest approved revision, else tendered)
 function abTenders(){ return S.tenders.filter(function(t){ return (t._bq_lines||0)>0; }).sort(function(a,b){ return String(b.arza_no).localeCompare(String(a.arza_no)); }); }
 function getAsBuilt(no){
   if(ro()){
     var items=(S.fileDB.bq||[]).filter(function(r){return r.arza_no===no && r.bq_set==='Tendered';});
     var rows=(S.fileDB.ab||[]).filter(function(r){return r.arza_no===no;});
-    return Promise.resolve({items:items, rows:rows});
+    var cur=Rev.current((S.fileDB.rev||[]).filter(function(r){return r.arza_no===no;}));
+    return Promise.resolve({items:items, rows:rows, revision:cur, revLines:cur?(S.fileDB.bq||[]).filter(function(r){return r.arza_no===no && r.bq_set===cur.rev;}):[]});
   }
   return api('asBuiltData',{arza_no:no});
 }
 function abSets(){ var o={}; AB.rows.forEach(function(r){ o[r.measure_set]=(o[r.measure_set]||0)+1; }); return Object.keys(o).sort().map(function(k){ return {k:k,n:o[k]}; }); }
 function abRows(){ return AB.rows.filter(function(r){ return r.measure_set===AB.set; }); }
+function abRevLabel(){ return AB.rev ? AB.rev.rev : 'Tendered'; }
+function abBasis(){ return AB.rev ? 'Contract BQ = '+AB.rev.rev+' (approved '+fmtDate(AB.rev.approved_date)+', '+AB.rev.letter_ref+')' : 'No approved rationalized revision — contract BQ = tendered BQ'; }
 function abTender(){ return S.tenders.filter(function(t){return t.arza_no===AB.no;})[0]||{}; }
 function openAsBuilt(no){ if(no) AB.no=no; showView('asbuilt'); }
 function loadAB(no){
   AB.no=no; $('vAB').querySelector('#abBody').innerHTML='<div class="empty"><span class="spin"></span> Loading '+esc(no)+'…</div>';
   return getAsBuilt(no).then(function(d){
     if(AB.no!==no) return;
-    AB.items=d.items||[]; AB.rows=d.rows||[];
+    AB.tend=d.items||[]; AB.rev=d.revision||null; AB.items=Rev.contract(AB.tend, AB.rev?d.revLines:null); AB.rows=d.rows||[];
     var sets=abSets(); if(!sets.some(function(x){return x.k===AB.set;})) AB.set = sets.length? sets[sets.length-1].k : '';
     drawAB();
   }).catch(function(e){ $('vAB').querySelector('#abBody').innerHTML='<div class="note w">'+esc(e.message)+'</div>'; if(e.auth) fail(e); });
@@ -1783,14 +1944,14 @@ function loadAB(no){
 function renderAsBuilt(){
   var ts=abTenders();
   if(!AB.no || !ts.some(function(t){return t.arza_no===AB.no;})) AB.no = ts.length? ts[0].arza_no : '';
-  $('vAB').innerHTML='<div class="bar"><div><h2>As-built</h2><div class="scope">Site Breakdown QTY measured against the tendered BQ. Report 1 = As-Built BQ · Report 2 = Tendered vs As-Built.</div></div><span style="flex:1"></span>'+
+  $('vAB').innerHTML='<div class="bar"><div><h2>As-built</h2><div class="scope">Site Breakdown QTY measured against the contract BQ (latest approved rationalized revision, else the tendered BQ). Report 1 = As-Built BQ · Report 2 = Tendered vs Rationalized vs As-Built.</div></div><span style="flex:1"></span>'+
     '<a class="btn" href="Breakdown_QTY_Template.xlsx" download title="Standard Breakdown QTY template (Excel)">Template</a>'+
     (ro()?'':'<button class="btn imp" id="abImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>Import Breakdown QTY</button>')+'</div>'+
     '<div class="bar"><select id="abTender" style="flex:1 1 360px;max-width:640px">'+(ts.length? ts.map(function(t){ return '<option value="'+esc(t.arza_no)+'"'+(t.arza_no===AB.no?' selected':'')+'>'+esc(t.arza_no+' — '+(t.title_en||t.title||'').slice(0,90))+'</option>'; }).join('') : '<option value="">No tender has BQ lines yet — import a priced workbook first</option>')+'</select>'+
     '<select id="abSet"></select><span style="flex:1"></span>'+
     '<button class="btn exp" id="abExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button>'+
     '<button class="btn" id="abPrint" title="Opens a print view - choose Save as PDF">PDF / Print</button>'+(ro()?'':'<button class="btn warn" id="abDel" title="Delete this measure set">Delete set</button>')+'</div>'+
-    '<div class="tabs abtabs" id="abTabs"><a data-t="sum">Summary</a><a data-t="r1">Report 1 · As-Built BQ</a><a data-t="r2">Report 2 · Tendered vs As-Built</a><a data-t="chk">Matching check</a><a data-t="lines">Lines</a></div>'+
+    '<div class="tabs abtabs" id="abTabs"><a data-t="sum">Summary</a><a data-t="r1">Report 1 · As-Built BQ</a><a data-t="r2">Report 2 · Tendered vs Rationalized vs As-Built</a><a data-t="chk">Matching check</a><a data-t="lines">Lines</a></div>'+
     '<div id="abBody"></div>';
   $('abTender').onchange=function(){ AB.set=''; loadAB(this.value); };
   if($('abImport')) $('abImport').onclick=function(){ if(!AB.no){ toast('Pick a tender with BQ lines first.',true); return; } $('abFile').click(); };
@@ -1807,19 +1968,20 @@ function drawAB(){
   ['abExport','abPrint','abDel'].forEach(function(id){ if($(id)) $(id).disabled=!AB.set; });
   var b=$('abBody'), t=abTender();
   if(!AB.no){ b.innerHTML='<div class="empty">Import a priced tender workbook first (Tenders › Import), then come back to measure it.</div>'; return; }
-  if(!AB.set){ b.innerHTML='<div class="card"><h3>No as-built measurement for '+esc(AB.no)+' yet</h3><p style="color:var(--ink2);margin:0 0 10px">1. Download the <a href="Breakdown_QTY_Template.xlsx" download>Breakdown QTY template</a> and measure on site (one BQ item per row).<br>2. Click <b>Import Breakdown QTY</b>. The old MOE Block D layout (SL NO / LOCATION / DESCRIPTION / TOTAL QUANTITY) is read too.<br>3. Check the matching, then save it as a measure set (e.g. "As-built", "Interim 1").</p><p class="n" style="font-size:12px;color:var(--ink3);margin:0">Tendered BQ: '+AB.items.length+' lines · ID scheme '+esc(t.id_scheme||'–')+'.</p></div>'; return; }
+  if(!AB.set){ b.innerHTML='<div class="card"><h3>No as-built measurement for '+esc(AB.no)+' yet</h3><p style="color:var(--ink2);margin:0 0 10px">1. Download the <a href="Breakdown_QTY_Template.xlsx" download>Breakdown QTY template</a> and measure on site (one BQ item per row).<br>2. Click <b>Import Breakdown QTY</b>. The old MOE Block D layout (SL NO / LOCATION / DESCRIPTION / TOTAL QUANTITY) is read too.<br>3. Check the matching, then save it as a measure set (e.g. "As-built", "Interim 1").</p><p class="n" style="font-size:12px;color:var(--ink3);margin:0">'+esc(abBasis())+': '+AB.items.length+' lines · ID scheme '+esc(t.id_scheme||'–')+'.</p></div>'; return; }
   var C=BQTY.compare(AB.items, abRows()), T=C.totals, st=countStatus(abRows());
   if(AB.tab==='sum'){
-    var kp=[['Items measured',T.measured+' / '+T.items, (T.items?Math.round(T.measured/T.items*100):0)+'% of tendered BQ lines'],
-      ['Tendered (B$)',money0(T.tendered),'from the locked / imported BQ'],
-      ['As-built (B$)',money0(T.asbuilt),'measured qty × tender rate (+ lump sums carried)'],
-      ['Difference (B$)',(T.diff>0?'+':'')+money0(T.diff),T.tendered?pct(T.diff/T.tendered)+' vs tendered':''],
+    var RL=abRevLabel();
+    var kp=[['Tendered (B$)',money0(T.tend),'locked tendered BQ · '+AB.tend.length+' lines'],
+      ['Rationalized (B$)',money0(T.tendered),AB.rev?RL+' approved '+fmtDate(AB.rev.approved_date)+' ('+pct((T.tendered-T.tend)/(T.tend||1))+')':'no approved revision — = tendered'],
+      ['As-built (B$)',money0(T.asbuilt),'measured qty × '+(AB.rev?RL:'tender')+' rate · '+T.measured+' / '+T.items+' items measured'],
+      ['Difference (B$)',(T.diff>0?'+':'')+money0(T.diff),T.tendered?pct(T.diff/T.tendered)+' vs '+(AB.rev?'rationalized':'tendered'):''],
       ['Lines to check',st.Unmatched+st['VO?']+(st.Shared?'':''),st.Matched+' matched · '+st.Shared+' shared · '+st.Unmatched+' unmatched · '+st['VO?']+' VO?']];
     b.innerHTML='<div class="kpis">'+kp.map(function(k){ return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+k[2]+'</div></div>'; }).join('')+'</div>'+
-      '<div class="card"><h3>By bill</h3><div class="tbl"><table><thead><tr><th>Bill / section</th><th class="r">Items</th><th class="r">Measured</th><th class="r">Tendered (B$)</th><th class="r">As-built (B$)</th><th class="r">Difference (B$)</th><th class="r">%</th></tr></thead><tbody>'+
-      Object.keys(C.bills).map(function(k){ var x=C.bills[k], d=x.asbuilt-x.tendered; return '<tr><td class="no">'+esc(k)+'</td><td class="r num">'+x.items+'</td><td class="r num">'+x.measured+'</td><td class="r num">'+money(x.tendered)+'</td><td class="r num">'+money(x.asbuilt)+'</td><td class="r num '+(d<0?'neg':'pos')+'">'+money(d)+'</td><td class="r num">'+(x.tendered?pct(d/x.tendered):'–')+'</td></tr>'; }).join('')+
-      '<tr style="font-weight:600"><td>Total</td><td class="r num">'+T.items+'</td><td class="r num">'+T.measured+'</td><td class="r num">'+money(T.tendered)+'</td><td class="r num">'+money(T.asbuilt)+'</td><td class="r num">'+money(T.diff)+'</td><td class="r num">'+(T.tendered?pct(T.diff/T.tendered):'–')+'</td></tr></tbody></table></div>'+
-      '<p class="n">Not-measured items count as nil in the as-built (except lump sums, carried at the tendered amount). Rates are the tendered rates; rationalised revisions come in v2.</p></div>';
+      '<div class="card"><h3>By bill</h3><div class="tbl"><table><thead><tr><th>Bill / section</th><th class="r">Items</th><th class="r">Measured</th><th class="r">Tendered (B$)</th><th class="r">Rationalized (B$)</th><th class="r">As-built (B$)</th><th class="r">As-built − rationalized (B$)</th><th class="r">%</th></tr></thead><tbody>'+
+      Object.keys(C.bills).map(function(k){ var x=C.bills[k], d=x.asbuilt-x.tendered; return '<tr><td class="no">'+esc(k)+'</td><td class="r num">'+x.items+'</td><td class="r num">'+x.measured+'</td><td class="r num">'+money(x.tend)+'</td><td class="r num">'+money(x.tendered)+'</td><td class="r num">'+money(x.asbuilt)+'</td><td class="r num '+(d<0?'neg':'pos')+'">'+money(d)+'</td><td class="r num">'+(x.tendered?pct(d/x.tendered):'–')+'</td></tr>'; }).join('')+
+      '<tr style="font-weight:600"><td>Total</td><td class="r num">'+T.items+'</td><td class="r num">'+T.measured+'</td><td class="r num">'+money(T.tend)+'</td><td class="r num">'+money(T.tendered)+'</td><td class="r num">'+money(T.asbuilt)+'</td><td class="r num">'+money(T.diff)+'</td><td class="r num">'+(T.tendered?pct(T.diff/T.tendered):'–')+'</td></tr></tbody></table></div>'+
+      '<p class="n">'+esc(abBasis())+'. Not-measured items count as nil in the as-built (except lump sums, carried at the contract amount; items omitted in the revision = nil). Rates are the contract BQ rates.</p></div>';
   }
   else if(AB.tab==='r1'){
     b.innerHTML=reportToolbar(false)+'<div class="tbl"><table class="rep1"><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">As-built qty</th><th class="r">Rate (B$)</th><th class="r">Amount (B$)</th><th>Note</th></tr></thead><tbody>'+
@@ -1828,8 +1990,8 @@ function drawAB(){
     bindReportFilter();
   }
   else if(AB.tab==='r2'){
-    b.innerHTML=reportToolbar(true)+'<div class="tbl"><table class="rep2"><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">Tendered qty</th><th class="r">As-built qty</th><th class="r">Diff qty</th><th class="r">Diff %</th><th class="r">Rate (B$)</th><th class="r">Tendered (B$)</th><th class="r">As-built (B$)</th><th class="r">Diff (B$)</th><th>Flag</th></tr></thead><tbody>'+
-      billRows(C,function(i){ var d=i.diff_amount; return '<td class="no">'+esc(i.item_id)+'</td><td class="dsc">'+esc(i.description)+'</td><td>'+esc(i.unit)+'</td><td class="r num">'+qty(i.qty)+'</td><td class="r num">'+(i.ab_qty==null?'–':qty(i.ab_qty))+'</td><td class="r num">'+(i.diff_qty==null?'–':qty(i.diff_qty))+'</td><td class="r num">'+(i.diff_pct==null?'–':pct(i.diff_pct))+'</td><td class="r num">'+money(i.rate)+'</td><td class="r num">'+money(i.t_amount)+'</td><td class="r num">'+(i.ab_amount==null?'–':money(i.ab_amount))+'</td><td class="r num '+(d<0?'neg':d>0?'pos':'')+'">'+(d==null?'–':money(d))+'</td><td>'+flagChip(i.flag)+'</td>'; }, 'diff', 12)+
+    b.innerHTML=reportToolbar(true)+'<div class="tbl"><table class="rep2"><thead>'+r2Head()+'</thead><tbody>'+
+      billRows(C,function(i){ return r2Cells(i,true); }, 'diff', 13)+
       '</tbody></table></div>';
     bindReportFilter();
   }
@@ -1856,7 +2018,10 @@ function drawAB(){
 function countStatus(R){ var o={Matched:0,Shared:0,Unmatched:0,'VO?':0}; R.forEach(function(r){ if(o[r.match_status]!=null) o[r.match_status]++; }); return o; }
 function qty(x){ if(x===''||x==null||isNaN(Number(x))) return ''; return Number(x).toLocaleString('en-US',{maximumFractionDigits:3}); }
 function unitKey(u){ var k=String(u||'').trim().toLowerCase(); return {'m²':'m2','sqm':'m2','sq.m':'m2','m³':'m3','lm':'m','nos':'no','nr':'no','no.':'no'}[k]||k; }
-function flagChip(f){ if(!f) return ''; var c=/Over/.test(f)?'st-Lost':/Under/.test(f)?'st-Pricing':/carried/.test(f)?'st-Prospect':'st-none'; return '<span class="chip '+c+'">'+esc(f)+'</span>'; }
+function r2Head(){ var RL=abRevLabel(); return '<tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">Tendered qty</th><th class="r">Rationalized qty'+(AB.rev?' ('+esc(RL)+')':' (= tendered)')+'</th><th class="r">As-built qty</th><th class="r">Diff qty</th><th class="r">Diff %</th><th class="r">Rate (B$)</th><th class="r">Rationalized (B$)</th><th class="r">As-built (B$)</th><th class="r">Diff (B$)</th><th>Flag</th></tr>'; }
+function r2Cells(i,screen){ var d=i.diff_amount, n=screen?' num':'';
+  return '<td class="no">'+esc(i.item_id)+'</td><td class="dsc">'+esc(i.description)+'</td><td>'+esc(i.unit)+'</td><td class="r'+n+'">'+(i.tend_qty==null?(i.rev_change==='Added'?'added':'–'):qty(i.tend_qty))+'</td><td class="r'+n+'">'+qty(i.qty)+'</td><td class="r'+n+'">'+(i.ab_qty==null?'–':qty(i.ab_qty))+'</td><td class="r'+n+'">'+(i.diff_qty==null?'–':qty(i.diff_qty))+'</td><td class="r'+n+'">'+(i.diff_pct==null?'–':pct(i.diff_pct))+'</td><td class="r'+n+'">'+money(i.rate)+'</td><td class="r'+n+'">'+money(i.t_amount)+'</td><td class="r'+n+'">'+(i.ab_amount==null?'–':money(i.ab_amount))+'</td><td class="r'+n+(screen?' '+(d<0?'neg':d>0?'pos':''):'')+'">'+(d==null?'–':money(d))+'</td><td>'+(screen?flagChip(i.flag):esc(i.flag))+'</td>'; }
+function flagChip(f){ if(!f) return ''; var c=/Over|but measured/.test(f)?'st-Lost':/Under/.test(f)?'st-Pricing':/carried/.test(f)?'st-Prospect':/Omitted|Added/.test(f)?'st-Submitted':'st-none'; return '<span class="chip '+c+'">'+esc(f)+'</span>'; }
 function statusChip(s){ var c={Matched:'st-Won',Shared:'st-Submitted',Unmatched:'st-Lost','VO?':'st-Pricing'}[s]||'st-none'; return '<span class="chip '+c+'">'+esc(s||'')+'</span>'; }
 function reportToolbar(diffs){ return '<div class="bar"><label class="chkrow" style="margin:0"><input type="checkbox" id="abOnly"'+(AB.only?' checked':'')+'> '+(diffs?'Show only items with a difference or not measured':'Hide items not measured')+'</label></div>'; }
 function bindReportFilter(){ if($('abOnly')) $('abOnly').onchange=function(){ AB.only=this.checked; drawAB(); }; }
@@ -1870,10 +2035,10 @@ function billRows(C, cells, mode, ncol){
     T.t+=tb; T.a+=ab;
     out+='<tr class="bh"><td colspan="'+ncol+'">'+esc(k)+(groups[k][0].heading?' — '+esc(String(groups[k][0].heading).slice(0,80)):'')+'</td></tr>';
     out+=arr.map(function(i){ return '<tr>'+cells(i)+'</tr>'; }).join('');
-    out+= mode==='diff' ? '<tr class="bt"><td colspan="8">'+esc(k)+' total</td><td class="r num">'+money(tb)+'</td><td class="r num">'+money(ab)+'</td><td class="r num">'+money(ab-tb)+'</td><td></td></tr>'
+    out+= mode==='diff' ? '<tr class="bt"><td colspan="'+(ncol-4)+'">'+esc(k)+' total</td><td class="r num">'+money(tb)+'</td><td class="r num">'+money(ab)+'</td><td class="r num">'+money(ab-tb)+'</td><td></td></tr>'
                         : '<tr class="bt"><td colspan="5">'+esc(k)+' total</td><td class="r num">'+money(ab)+'</td><td></td></tr>';
   });
-  out+= mode==='diff' ? '<tr class="gt"><td colspan="8">Total</td><td class="r num">'+money(T.t)+'</td><td class="r num">'+money(T.a)+'</td><td class="r num">'+money(T.a-T.t)+'</td><td></td></tr>'
+  out+= mode==='diff' ? '<tr class="gt"><td colspan="'+(ncol-4)+'">Total</td><td class="r num">'+money(T.t)+'</td><td class="r num">'+money(T.a)+'</td><td class="r num">'+money(T.a-T.t)+'</td><td></td></tr>'
                       : '<tr class="gt"><td colspan="5">Total as-built</td><td class="r num">'+money(T.a)+'</td><td></td></tr>';
   return out;
 }
@@ -1886,7 +2051,7 @@ function showABImport(f){
   if(!r.lines.length){ toast(r.issues[0]||'No measured lines found in this file.',true); return; }
   var m=BQTY.match(r.lines,scheme,AB.items), s=m.stats;
   var sets=abSets(), def = AB.set || 'As-built';
-  var body='<div class="note">Read <b>'+esc(f.name)+'</b> — '+(r.format==='legacy'?'old layout (SL NO / DESCRIPTION / TOTAL QUANTITY)':'standard template')+', sheets: '+esc(r.sheets.join(', '))+'. Matched against the tendered BQ of <b>'+esc(t.arza_no)+'</b> ('+AB.items.length+' lines, scheme '+esc(scheme)+').</div>'+
+  var body='<div class="note">Read <b>'+esc(f.name)+'</b> — '+(r.format==='legacy'?'old layout (SL NO / DESCRIPTION / TOTAL QUANTITY)':'standard template')+', sheets: '+esc(r.sheets.join(', '))+'. Matched against the contract BQ of <b>'+esc(t.arza_no)+'</b> ('+esc(abRevLabel())+', '+AB.items.length+' lines, scheme '+esc(scheme)+').</div>'+
     '<div class="kpis" style="grid-template-columns:repeat(5,1fr)">'+[['Lines read',r.lines.length,(r.labels?r.labels+' total/label rows skipped':'')],['Matched',s.Matched,'one item each'],['Shared',s.Shared,'one line → several items'],['Unmatched',s.Unmatched,'ref not in the BQ'],['VO?',s['VO?'],'blank ref, VO in remark']].map(function(k){ return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+k[2]+'</div></div>'; }).join('')+'</div>'+
     (s.unitWarn?'<div class="issues">'+s.unitWarn+' line(s) measured in a different unit from the BQ item — see Matching check after saving.</div>':'')+
     (r.issues.length?'<div class="issues"><b>'+r.issues.length+' line(s) to check:</b><br>'+r.issues.slice(0,15).map(esc).join('<br>')+(r.issues.length>15?'<br>…':'')+'</div>':'')+
@@ -1917,11 +2082,11 @@ function exportAB(){
   if(!window.XLSX||!AB.set) return;
   var C=BQTY.compare(AB.items, abRows()), wb=XLSX.utils.book_new(), t=abTender();
   var r1=C.items.map(function(i){ return {bill:i.bill,item:i.item_id,description:i.description,unit:i.unit,asbuilt_qty:i.ab_qty,rate:i.rate,amount:i.ab_amount,note:i.flag}; });
-  var r2=C.items.map(function(i){ return {bill:i.bill,item:i.item_id,description:i.description,unit:i.unit,tendered_qty:i.qty,asbuilt_qty:i.ab_qty,diff_qty:i.diff_qty,diff_pct:i.diff_pct,rate:i.rate,tendered_amount:i.t_amount,asbuilt_amount:i.ab_amount,diff_amount:i.diff_amount,flag:i.flag}; });
-  var info=[{field:'ARZA no.',value:t.arza_no},{field:'Client ref',value:t.tender_ref},{field:'Title',value:t.title_en||t.title},{field:'Measure set',value:AB.set},{field:'Tendered (B$)',value:Math.round(C.totals.tendered*100)/100},{field:'As-built (B$)',value:Math.round(C.totals.asbuilt*100)/100},{field:'Difference (B$)',value:C.totals.diff},{field:'Items measured',value:C.totals.measured+' / '+C.totals.items},{field:'Exported',value:today()}];
+  var r2=C.items.map(function(i){ return {bill:i.bill,item:i.item_id,description:i.description,unit:i.unit,tendered_qty:i.tend_qty,rationalized_qty:i.qty,asbuilt_qty:i.ab_qty,diff_qty:i.diff_qty,diff_pct:i.diff_pct,rate:i.rate,tendered_amount:i.tend_amount,rationalized_amount:i.t_amount,asbuilt_amount:i.ab_amount,diff_amount:i.diff_amount,revision_change:i.rev_change,flag:i.flag}; });
+  var info=[{field:'ARZA no.',value:t.arza_no},{field:'Client ref',value:t.tender_ref},{field:'Title',value:t.title_en||t.title},{field:'Measure set',value:AB.set},{field:'Contract BQ',value:abBasis()},{field:'Tendered (B$)',value:Math.round(C.totals.tend*100)/100},{field:'Rationalized (B$)',value:Math.round(C.totals.tendered*100)/100},{field:'As-built (B$)',value:Math.round(C.totals.asbuilt*100)/100},{field:'Difference (B$)',value:C.totals.diff},{field:'Items measured',value:C.totals.measured+' / '+C.totals.items},{field:'Exported',value:today()}];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(info),'Info');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(r1),'Report 1 As-Built BQ');
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(r2),'Report 2 Tendered vs AB');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(r2),'Report 2 Tend-Rat-AB');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(abRows().map(function(r){ return {item:r.item_id,status:r.match_status,ref_as_typed:r.item_ref_raw,level:r.level,location:r.location,description:r.description,unit:r.unit,nos:r.nos,l:r.l,w:r.w,h:r.h,qty:r.qty,remark:r.remark,source:r.source_row}; })),'Lines');
   XLSX.writeFile(wb, t.arza_no+' As-built '+AB.set+' '+today()+'.xlsx');
 }
@@ -1933,8 +2098,8 @@ function printAB(){
   var keepOnly=AB.only; var tmp=$('abBody').innerHTML;
   var tbl = which==='r1'
     ? '<table><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">As-built qty</th><th class="r">Rate (B$)</th><th class="r">Amount (B$)</th><th>Note</th></tr></thead><tbody>'+billRows(C,function(i){ return '<td class="no">'+esc(i.item_id)+'</td><td>'+esc(i.description)+'</td><td>'+esc(i.unit)+'</td><td class="r">'+(i.ab_qty==null?(i.lump?'1':'–'):qty(i.ab_qty))+'</td><td class="r">'+money(i.rate)+'</td><td class="r">'+(i.ab_amount==null?'–':money(i.ab_amount))+'</td><td>'+esc(i.flag==='Not measured'?'Not measured':(i.lump&&i.ab_qty==null?'Carried at tender':''))+'</td>'; },'asbuilt',7)+'</tbody></table>'
-    : '<table><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">Tendered qty</th><th class="r">As-built qty</th><th class="r">Diff qty</th><th class="r">Diff %</th><th class="r">Rate</th><th class="r">Tendered (B$)</th><th class="r">As-built (B$)</th><th class="r">Diff (B$)</th><th>Flag</th></tr></thead><tbody>'+billRows(C,function(i){ return '<td class="no">'+esc(i.item_id)+'</td><td>'+esc(i.description)+'</td><td>'+esc(i.unit)+'</td><td class="r">'+qty(i.qty)+'</td><td class="r">'+(i.ab_qty==null?'–':qty(i.ab_qty))+'</td><td class="r">'+(i.diff_qty==null?'–':qty(i.diff_qty))+'</td><td class="r">'+(i.diff_pct==null?'–':pct(i.diff_pct))+'</td><td class="r">'+money(i.rate)+'</td><td class="r">'+money(i.t_amount)+'</td><td class="r">'+(i.ab_amount==null?'–':money(i.ab_amount))+'</td><td class="r">'+(i.diff_amount==null?'–':money(i.diff_amount))+'</td><td>'+esc(i.flag)+'</td>'; },'diff',12)+'</tbody></table>';
-  var title = which==='r1' ? 'Report 1 — As-Built Bill of Quantities' : 'Report 2 — Tendered vs As-Built';
+    : '<table><thead>'+r2Head()+'</thead><tbody>'+billRows(C,function(i){ return r2Cells(i,false); },'diff',13)+'</tbody></table>';
+  var title = which==='r1' ? 'Report 1 — As-Built Bill of Quantities' : 'Report 2 — Tendered vs Rationalized vs As-Built';
   var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+esc(t.arza_no+' '+title)+'</title><style>'+
     '@page{size:A4 '+(which==='r2'?'landscape':'portrait')+';margin:12mm}body{font:10px/1.35 Arial,sans-serif;color:#111;margin:0}'+
     '.hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #120377;padding-bottom:8px;margin-bottom:8px}.hd img{height:34px}'+
@@ -1943,9 +2108,464 @@ function printAB(){
     'tr.bh td{background:#f3f4f8;font-weight:bold}tr.bt td{font-weight:bold;background:#fafafa}tr.gt td{font-weight:bold;background:#e8eaf6;font-size:11px}thead{display:table-header-group}tr{page-break-inside:avoid}'+
     '.ft{margin-top:10px;font-size:9px;color:#666;display:flex;justify-content:space-between}'+
     '</style></head><body><div class="hd"><div><h1>'+esc(title)+'</h1><div class="meta"><b>'+esc(t.arza_no)+'</b> · '+esc(t.tender_ref||'')+'<br>'+esc(t.title_en||t.title||'')+'<br>Measure set: <b>'+esc(AB.set)+'</b> · printed '+esc(fmtDate(today()))+'</div></div>'+(logo?'<img src="'+logo+'">':'<b>ARZA SDN BHD</b>')+'</div>'+
-    '<div class="kp"><div>Tendered<b>B$ '+money(T.tendered)+'</b></div><div>As-built<b>B$ '+money(T.asbuilt)+'</b></div><div>Difference<b>B$ '+money(T.diff)+(T.tendered?' ('+pct(T.diff/T.tendered)+')':'')+'</b></div><div>Items measured<b>'+T.measured+' / '+T.items+'</b></div></div>'+
-    tbl+'<div class="ft"><span>QS CRM ARZA SDN BHD — as-built quantities from site Breakdown QTY; rates as tendered.</span><span>Prepared by: ____________ &nbsp; Checked by: ____________</span></div>'+
+    '<div class="kp"><div>Tendered<b>B$ '+money(T.tend)+'</b></div><div>Rationalized'+(AB.rev?' ('+esc(AB.rev.rev)+')':'')+'<b>B$ '+money(T.tendered)+'</b></div><div>As-built<b>B$ '+money(T.asbuilt)+'</b></div><div>Difference vs '+(AB.rev?'rationalized':'tendered')+'<b>B$ '+money(T.diff)+(T.tendered?' ('+pct(T.diff/T.tendered)+')':'')+'</b></div><div>Items measured<b>'+T.measured+' / '+T.items+'</b></div></div>'+
+    tbl+'<div class="ft"><span>QS CRM ARZA SDN BHD — as-built quantities from site Breakdown QTY; '+esc(abBasis())+'; rates from the contract BQ.</span><span>Prepared by: ____________ &nbsp; Checked by: ____________</span></div>'+
     '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>';
+  var w=window.open('','_blank'); if(!w){ toast('Allow pop-ups to print / save as PDF.',true); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+/* ---------- v2: rationalized BQ revisions ---------- */
+var RV = { no:'', items:[], lines:[], revs:[], tender:null, sel:'', tab:'sum', only:true, q:'', cmp:'base', edit:null, editRev:'', desc:'', dirty:false };
+function getRevData(no){
+  if(ro()){
+    var bq=S.fileDB.bq||[];
+    return Promise.resolve({ tender:S.tenders.filter(function(t){return t.arza_no===no;})[0]||null,
+      items:bq.filter(function(r){return r.arza_no===no && r.bq_set==='Tendered';}),
+      lines:bq.filter(function(r){return r.arza_no===no && r.bq_set!=='Tendered';}),
+      revisions:(S.fileDB.rev||[]).filter(function(r){return r.arza_no===no;}).sort(function(a,b){ return Rev.revNo(a.rev)-Rev.revNo(b.rev); }) });
+  }
+  return api('revData',{arza_no:no});
+}
+function rvTender(){ return S.tenders.filter(function(t){return t.arza_no===RV.no;})[0] || RV.tender || {}; }
+function rvRec(rev){ return RV.revs.filter(function(r){return r.rev===rev;})[0]||null; }
+function rvSet(key){ return key==='Tendered' ? RV.items : RV.lines.filter(function(r){return r.bq_set===key;}); }
+function rvDraft(){ return RV.revs.filter(function(r){return r.status==='Draft';})[0]||null; }
+function rvBase(rec){ return rec ? (rec.based_on || Rev.baseOf(RV.revs, rec.rev)) : ''; }
+function rvSum(key){ return Rev.sum(rvSet(key)); }
+function syncTender(row){
+  var i=S.tenders.findIndex(function(x){return x.arza_no===row.arza_no;}); if(i<0) return;
+  var o=S.tenders[i]; ['contract_sum','contract_rev','folder_link','locked','locked_at','updated_at'].forEach(function(k){ if(k in row) o[k]=row[k]; });
+}
+function rvCounts(){ var d=rvDraft(); var t=rvTender(); if(t){ t._revs=RV.revs.filter(function(r){return r.status!=='Void';}).length; t._draft=d?d.rev:''; } }
+function revChip(st){ return '<span class="chip st-'+esc(st)+'">'+esc(st)+'</span>'; }
+function chgChip(st){ return st && st!=='Unchanged' ? '<span class="chip ch-'+String(st).replace(/\W+/g,'')+'">'+esc(st)+'</span>' : ''; }
+function dpct(a,b){ return b ? pct((a-b)/b) : ''; }
+function signed(x){ x=Math.round((Number(x)||0)*100)/100; return (x>0?'+':'')+money(x); }
+function rvLeave(){ return !RV.dirty || confirm('Discard the unsaved changes to '+RV.editRev+'?'); }
+
+function loadRV(no, sel){
+  RV.no=no; RV.dirty=false; RV.edit=null; RV.editRev='';
+  var b=$('rvBody'); if(b) b.innerHTML='<div class="empty"><span class="spin"></span> Loading '+esc(no)+'…</div>';
+  return getRevData(no).then(function(d){
+    if(RV.no!==no) return;
+    RV.items=d.items||[]; RV.lines=d.lines||[]; RV.revs=d.revisions||[]; RV.tender=d.tender||null;
+    if(d.tender) syncTender(d.tender);
+    rvCounts();
+    var want = sel || RV.sel, okSel = want==='Tendered' || !!rvRec(want);
+    if(!okSel || !sel){ var dr=rvDraft(), cur=Rev.current(RV.revs); if(!okSel) want = dr? dr.rev : cur? cur.rev : (RV.revs.length? RV.revs[RV.revs.length-1].rev : 'Tendered'); }
+    RV.sel=want; drawRV();
+  }).catch(function(e){ var bb=$('rvBody'); if(bb) bb.innerHTML='<div class="note w">'+esc(e.message)+'</div>'; if(e.auth) fail(e); });
+}
+function renderRV(){
+  var ts=abTenders();
+  if(!RV.no || !ts.some(function(t){return t.arza_no===RV.no;})) RV.no = ts.length? (ts.filter(function(t){return t.contract_rev||t._revs;})[0]||ts[0]).arza_no : '';
+  var ic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">';
+  $('vRV').innerHTML='<div class="bar"><div><h2>Rationalized BQ</h2><div class="scope">Revisions of the locked tendered BQ agreed with the client (R1, R2 …), each approved and locked with its record. The latest approved revision is the contract BQ for the as-built reports.</div></div><span style="flex:1"></span>'+
+    (ro()?'':'<button class="btn imp" id="rvImp" title="Read a rationalized BQ workbook (standard B-sheets) as a draft revision">'+ic+'<path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>Import revision workbook</button><button class="btn pri" id="rvNew">+ New revision</button>')+'</div>'+
+    '<div class="bar"><select id="rvTender" style="flex:1 1 360px;max-width:640px">'+(ts.length? ts.map(function(t){ return '<option value="'+esc(t.arza_no)+'"'+(t.arza_no===RV.no?' selected':'')+'>'+esc(t.arza_no+' — '+(t.title_en||t.title||'').slice(0,80)+(t.contract_rev?'  ['+t.contract_rev+']':''))+'</option>'; }).join('') : '<option value="">No tender has BQ lines yet — import a priced workbook first</option>')+'</select>'+
+    '<select id="rvSet"></select><span style="flex:1"></span>'+
+    '<button class="btn exp" id="rvExport">'+ic+'<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button>'+
+    '<button class="btn" id="rvPrint" title="Rationalization statement - opens a print view, choose Save as PDF">PDF / Print</button></div>'+
+    '<div class="tabs abtabs" id="rvTabs"><a data-t="sum">Summary &amp; sum history</a><a data-t="lines">Lines</a><a data-t="chg">Changes</a><a data-t="apr">Approval record</a></div>'+
+    '<div id="rvBody"></div>';
+  $('rvTender').onchange=function(){ if(!rvLeave()){ this.value=RV.no; return; } RV.sel=''; loadRV(this.value); };
+  $('rvTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a) return; if(RV.tab==='lines' && a.dataset.t!=='lines' && !rvLeave()) return; if(a.dataset.t!=='lines'){ RV.dirty=false; RV.edit=null; } RV.tab=a.dataset.t; drawRV(); };
+  if($('rvNew')) $('rvNew').onclick=newRevision;
+  if($('rvImp')) $('rvImp').onclick=startRVImport;
+  $('rvExport').onclick=exportRV; $('rvPrint').onclick=printRV;
+  if(RV.no) loadRV(RV.no, RV.sel); else drawRV();
+}
+function drawRV(){
+  var t=rvTender(), sel=$('rvSet'), cur=Rev.current(RV.revs), dr=rvDraft();
+  if(sel){
+    sel.innerHTML = RV.no ? '<option value="Tendered"'+(RV.sel==='Tendered'?' selected':'')+'>Tendered — B$'+money(rvSum('Tendered'))+'</option>'+
+      RV.revs.map(function(r){ return '<option value="'+esc(r.rev)+'"'+(r.rev===RV.sel?' selected':'')+'>'+esc(r.rev+' — '+r.status+(r.status==='Approved'?' '+fmtDate(r.approved_date):'')+(cur&&cur.rev===r.rev?' (contract)':'')+' — B$'+money(r.rev_sum))+'</option>'; }).join('') : '';
+    sel.onchange=function(){ if(!rvLeave()){ this.value=RV.sel; return; } RV.dirty=false; RV.edit=null; RV.sel=this.value; drawRV(); };
+  }
+  document.querySelectorAll('#rvTabs a').forEach(function(a){ a.classList.toggle('on', a.dataset.t===RV.tab); });
+  if($('rvNew')) { $('rvNew').disabled=!RV.no; $('rvNew').textContent = dr ? 'Open draft '+dr.rev : '+ New revision'; }
+  if($('rvImp')) $('rvImp').disabled=!RV.no;
+  if($('rvPrint')) $('rvPrint').disabled=!RV.no;
+  $('rvExport').disabled=!RV.no;
+  var b=$('rvBody');
+  if(!RV.no){ b.innerHTML='<div class="empty">Import a priced tender workbook first (Tenders › Import), lock it at submission, then rationalize it here.</div>'; return; }
+  var lockNote = t.locked!=='Y' ? '<div class="note w">The tendered BQ of '+esc(t.arza_no)+' is not locked. Lock it at submission (Tenders › '+esc(t.arza_no)+' › Lock BQ) — revisions start from the locked tendered BQ.</div>' : '';
+  if(RV.tab==='sum') b.innerHTML=lockNote+rvSummaryHTML();
+  else if(RV.tab==='lines') drawRVLines(lockNote);
+  else if(RV.tab==='chg') drawRVChanges();
+  else if(RV.tab==='apr') drawRVApproval();
+  bindTips(b);
+}
+
+/* ----- summary & tender sum history ----- */
+function rvHistory(){
+  var t=rvTender(), tend=rvSum('Tendered'), rows=[], prevSum={Tendered:tend};
+  rows.push({stage:'Tendered', status:t.locked==='Y'?'Locked':'Not locked', date:t.submitted_date||String(t.locked_at||'').slice(0,10), base:'', lines:RV.items.length, sum:tend, chg:null, vs:null,
+    ref:(Math.abs(tend-(Number(t.our_sum)||0))>0.01?'Our sum in the register B$'+money(t.our_sum)+' (differs) · ':'')+(t.tender_ref||'')});
+  RV.revs.forEach(function(r){
+    var base=rvBase(r), bs = prevSum[base]!=null ? prevSum[base] : Number(r.base_sum)||0, s=Number(r.rev_sum)||0;
+    if(r.status!=='Void') prevSum[r.rev]=s;
+    rows.push({ stage:r.rev, status:r.status, date:r.status==='Approved'?r.approved_date:(r.status==='Draft'?'draft '+fmtDate(String(r.updated_at||'').slice(0,10)):fmtDate(String(r.updated_at||'').slice(0,10))),
+      base:base, lines:r.lines, sum:s, chg:s-bs, vs:tend?(s-tend)/tend:null, void:r.status==='Void',
+      ref:[r.letter_ref, r.description, r.status==='Void'?'Voided: '+r.void_reason:''].filter(Boolean).join(' · ') });
+  });
+  if(t.status==='Lost' && t.winning_sum!=='' && t.winning_sum!=null) rows.push({stage:'Bid result', status:'Lost', date:t.result_date, base:'', lines:'', sum:Number(t.winning_sum), chg:null, vs:tend?(Number(t.winning_sum)-tend)/tend:null, ref:'Winner: '+(t.winner||'–'), info:1});
+  return rows;
+}
+function rvSummaryHTML(){
+  var t=rvTender(), cur=Rev.current(RV.revs), dr=rvDraft(), tend=rvSum('Tendered');
+  var con = cur ? Number(cur.rev_sum)||0 : tend, d=con-tend;
+  var nA=RV.revs.filter(function(r){return r.status==='Approved';}).length, nV=RV.revs.filter(function(r){return r.status==='Void';}).length;
+  var conLines = cur ? rvSet(cur.rev).length : RV.items.length;
+  var kp=[['Tendered (B$)',money0(tend),t.locked==='Y'?'locked '+fmtDate(String(t.locked_at||'').slice(0,10)):'not locked yet'],
+    ['Contract BQ (B$)',money0(con),cur?cur.rev+' approved '+fmtDate(cur.approved_date):'no approved revision — tendered BQ'],
+    ['Change vs tendered (B$)',(d>0?'+':'')+money0(d),tend?pct(d/tend):''],
+    ['Revisions',nA+' approved',(dr?dr.rev+' draft':'no draft')+(nV?' · '+nV+' void':'')],
+    ['BQ lines',RV.items.length+' → '+conLines,'tendered → contract']];
+  var H=rvHistory();
+  var hist='<div class="card"><h3>Tender sum history</h3><div class="tbl"><table><thead><tr><th>Stage</th><th>Status</th><th>Date</th><th>Based on</th><th class="r">Lines</th><th class="r">Sum (B$)</th><th class="r">Change vs base (B$)</th><th class="r">vs tendered</th><th>Ref / description</th></tr></thead><tbody>'+
+    H.map(function(h){ return '<tr'+(h.void?' class="void"':'')+(h.info?' style="font-style:italic"':'')+'><td class="no">'+esc(h.stage)+(cur&&cur.rev===h.stage?' <span class="chip st-Won" title="Contract BQ">contract</span>':'')+'</td><td>'+(h.stage==='Tendered'||h.info?esc(h.status):revChip(h.status))+'</td><td class="dt">'+esc(/^\d{4}-/.test(String(h.date))?fmtDate(h.date):h.date||'')+'</td><td>'+esc(h.base)+'</td><td class="r num">'+esc(h.lines)+'</td><td class="r num">'+money(h.sum)+'</td><td class="r num '+(h.chg<0?'neg':h.chg>0?'pos':'')+'">'+(h.chg==null?'':signed(h.chg))+'</td><td class="r num">'+(h.vs==null?'':pct(h.vs))+'</td><td class="nt">'+esc(h.ref)+'</td></tr>'; }).join('')+
+    '</tbody></table></div><p class="n">Change vs base = this revision against the BQ it was made from (tendered or the previous approved revision). Void revisions stay on record but do not count.</p></div>';
+  var byBill='';
+  if(cur){
+    var D=Rev.diff(RV.items, rvSet(cur.rev));
+    byBill='<div class="card"><h3>Contract BQ ('+esc(cur.rev)+') vs tendered, by bill</h3><div class="tbl"><table><thead><tr><th>Bill / section</th><th class="r">Lines</th><th class="r">Changed</th><th class="r">Tendered (B$)</th><th class="r">'+esc(cur.rev)+' (B$)</th><th class="r">Difference (B$)</th><th class="r">%</th></tr></thead><tbody>'+
+      D.bills.map(function(x){ var dd=x.rev-x.base; return '<tr><td class="no">'+esc(x.bill)+'</td><td class="r num">'+x.lines+'</td><td class="r num">'+x.changed+'</td><td class="r num">'+money(x.base)+'</td><td class="r num">'+money(x.rev)+'</td><td class="r num '+(dd<0?'neg':dd>0?'pos':'')+'">'+signed(dd)+'</td><td class="r num">'+(x.base?pct(dd/x.base):'–')+'</td></tr>'; }).join('')+
+      '<tr class="gt"><td>Total</td><td class="r num">'+D.rows.length+'</td><td class="r num">'+D.totals.changed+'</td><td class="r num">'+money(D.totals.base)+'</td><td class="r num">'+money(D.totals.rev)+'</td><td class="r num">'+signed(D.totals.diff)+'</td><td class="r num">'+(D.totals.base?pct(D.totals.diff/D.totals.base):'–')+'</td></tr></tbody></table></div>'+
+      '<p class="n">'+['Qty','Rate','Qty & rate','Added','Omitted'].map(function(k){ return D.totals.counts[k]+' '+k.toLowerCase(); }).join(' · ')+'</p></div>';
+  } else byBill='<div class="card"><h3>No approved revision yet</h3><p style="color:var(--ink2);margin:0">1. <b>+ New revision</b> copies the tendered BQ as draft R1 — edit quantities and rates, omit or add items. Or <b>Import revision workbook</b> if the rationalized BQ is in a priced workbook (same B-sheet layout).<br>2. Save the draft, check <b>Changes</b>.<br>3. <b>Approval record</b>: date, both parties, letter ref and the signed document. R1 is then locked and becomes the contract BQ.</p></div>';
+  return '<div class="kpis">'+kp.map(function(k){ return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+esc(k[2])+'</div></div>'; }).join('')+'</div>'+hist+byBill;
+}
+
+/* ----- lines: read-only table or draft editor ----- */
+function rvLineCells(x, edit){
+  var om = x.status==='Omitted';
+  var q = edit && !om ? '<input class="ed'+(x.base_qty!=null&&x.rev_qty!==x.base_qty?' chg':'')+'" data-k="qty" value="'+esc(x.rev_qty==null?'':x.rev_qty)+'" inputmode="decimal">' : qty(om?0:x.rev_qty);
+  var r = edit && !om ? '<input class="ed'+(x.base_rate!=null&&x.rev_rate!==x.base_rate?' chg':'')+'" data-k="rate" value="'+esc(x.rev_rate==null?'':x.rev_rate)+'" inputmode="decimal">' : money(x.rev_rate);
+  var added = x.status==='Added';
+  var dsc = edit && added ? '<input class="ed txt" data-k="description" value="'+esc(x.description)+'">' : esc(x.description);
+  var un = edit && added ? '<input class="ed txt" data-k="unit" value="'+esc(x.unit)+'" style="width:56px">' : esc(x.unit);
+  var act = !edit ? '' : '<td>'+(om ? '<button class="btn" data-a="restore" title="Put the line back as in '+esc(RV.editBase)+'">Restore</button>' :
+      (added ? '<button class="btn warn" data-a="remove" title="Remove this added line">✕</button>' : '<label class="chkrow" style="margin:0" title="Omit: quantity becomes 0"><input type="checkbox" data-a="omit"'+(Rev.num(x.rev_qty)===0&&!x.rev_amount?' checked':'')+'> omit</label>'))+'</td>';
+  return '<td class="no">'+esc(x.item_id)+'</td><td class="dsc">'+dsc+'</td><td>'+un+'</td>'+
+    '<td class="r num sub2">'+(x.base_qty==null?'–':qty(x.base_qty))+'</td><td class="r num">'+q+'</td>'+
+    '<td class="r num sub2">'+(x.base_rate==null?'–':money(x.base_rate))+'</td><td class="r num">'+r+'</td>'+
+    '<td class="r num" data-c="amt">'+money(x.rev_amount)+'</td><td class="r num '+(x.diff_amount<0?'neg':x.diff_amount>0?'pos':'')+'" data-c="dif">'+(x.diff_amount?signed(x.diff_amount):'')+'</td><td data-c="st">'+chgChip(x.status)+'</td>'+act;
+}
+function rvFilterRows(rows){
+  var q=(RV.q||'').toLowerCase();
+  return rows.filter(function(x){ if(RV.only && RV.tab!=='lines' && x.status==='Unchanged') return false; if(RV.onlyL && RV.tab==='lines' && x.status==='Unchanged') return false;
+    return !q || [x.item_id,x.description,x.unit,x.status,x.bill].join(' ').toLowerCase().indexOf(q)>=0; });
+}
+function rvGrouped(rows, cellsFn, ncol, totCols){
+  var groups={}, order=[], out='', all={b:0,r:0};
+  rows.forEach(function(x){ var k=x.bill||'-'; if(!groups[k]){ groups[k]=[]; order.push(k); } groups[k].push(x); });
+  order.forEach(function(k){
+    var g=groups[k], show=rvFilterRows(g), tb=g.reduce(function(s,x){return s+(x.base_amount||0);},0), tr=g.reduce(function(s,x){return s+(x.rev_amount||0);},0);
+    all.b+=tb; all.r+=tr;
+    if(!show.length && (RV.q || RV.only || RV.onlyL)) return;
+    out+='<tr class="bh"><td colspan="'+ncol+'">'+esc(k)+(g[0].heading?' — '+esc(String(g[0].heading).slice(0,80)):'')+'</td></tr>';
+    out+=show.map(function(x){ return '<tr data-id="'+esc(x.item_id)+'"'+(x.status==='Omitted'?' class="om"':'')+'>'+cellsFn(x)+'</tr>'; }).join('');
+    out+=totCols(k+' total', tb, tr, 'bt');
+  });
+  out+=totCols('Total', all.b, all.r, 'gt');
+  return out;
+}
+function drawRVLines(lockNote){
+  var b=$('rvBody'), rec=rvRec(RV.sel), isDraft=rec&&rec.status==='Draft'&&!ro();
+  if(RV.sel==='Tendered'){
+    var rows=Rev.diff(RV.items, RV.items).rows;
+    b.innerHTML=lockNote+'<div class="bar"><input type="search" id="rvQ" placeholder="Filter: item, description, unit…" value="'+esc(RV.q)+'"><span class="count">'+RV.items.length+' tendered lines · B$'+money(rvSum('Tendered'))+'</span></div>'+
+      '<div class="tbl"><table><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">Qty</th><th class="r">Rate (B$)</th><th class="r">Amount (B$)</th></tr></thead><tbody>'+
+      rvGrouped(rows,function(x){ return '<td class="no">'+esc(x.item_id)+'</td><td class="dsc">'+esc(x.description)+'</td><td>'+esc(x.unit)+'</td><td class="r num">'+qty(x.rev_qty)+'</td><td class="r num">'+money(x.rev_rate)+'</td><td class="r num">'+money(x.rev_amount)+'</td>'; },6,
+        function(l,tb,tr,c){ return '<tr class="'+c+'"><td colspan="5">'+esc(l)+'</td><td class="r num">'+money(tr)+'</td></tr>'; })+'</tbody></table></div>';
+    $('rvQ').oninput=function(){ RV.q=this.value; var p=this.selectionStart; drawRVLines(lockNote); var q=$('rvQ'); q.focus(); q.setSelectionRange(p,p); };
+    return;
+  }
+  if(!rec){ b.innerHTML='<div class="empty">Pick a revision.</div>'; return; }
+  var baseKey=rvBase(rec);
+  if(isDraft){
+    if(!RV.edit || RV.editRev!==rec.rev){ RV.edit=rvSet(rec.rev).map(function(x){ return Object.assign({},x); }); RV.editRev=rec.rev; RV.editBase=baseKey; RV.desc=rec.description||''; RV.dirty=false; }
+  }
+  var lines = isDraft ? RV.edit : rvSet(rec.rev);
+  var D=Rev.diff(rvSet(baseKey), lines);
+  var head='<tr><th>Item</th><th>Description</th><th>Unit</th><th class="r">'+esc(baseKey)+' qty</th><th class="r">'+esc(rec.rev)+' qty</th><th class="r">'+esc(baseKey)+' rate</th><th class="r">'+esc(rec.rev)+' rate</th><th class="r">Amount (B$)</th><th class="r">vs '+esc(baseKey)+' (B$)</th><th>Change</th>'+(isDraft?'<th></th>':'')+'</tr>';
+  var nc=isDraft?11:10;
+  var tot=function(l,tb,tr,c){ return '<tr class="'+c+'"><td colspan="7">'+esc(l)+'</td><td class="r num">'+money(tr)+'</td><td class="r num">'+signed(tr-tb)+'</td><td colspan="'+(nc-9)+'"></td></tr>'; };
+  b.innerHTML=lockNote+
+    (isDraft?'<div class="form" style="margin-bottom:8px"><div class="f full"><label for="rvDesc">'+esc(rec.rev)+' description (reason / basis of the revision)</label><input id="rvDesc" value="'+esc(RV.desc)+'" placeholder="e.g. Rationalization to JKR budget per meeting 12 Nov 2026"></div></div>':
+      '<div class="note">'+esc(rec.rev)+' is '+esc(rec.status)+(rec.status==='Approved'?' and locked ('+esc(fmtDate(rec.approved_date))+', '+esc(rec.letter_ref)+')':'')+'. '+esc(rec.description||'')+'</div>')+
+    '<div class="bar"><input type="search" id="rvQ" placeholder="Filter: item, description, change…" value="'+esc(RV.q)+'"><label class="chkrow" style="margin:0"><input type="checkbox" id="rvOnlyL"'+(RV.onlyL?' checked':'')+'> Only changed lines</label>'+
+    (isDraft?'<span style="flex:1"></span><button class="btn" id="rvAdd">+ Add item</button>':'')+'<span class="count">'+lines.length+' lines</span></div>'+
+    '<div class="tbl"><table id="rvTbl"><thead>'+head+'</thead><tbody>'+rvGrouped(D.rows, function(x){ return rvLineCells(x,isDraft); }, nc, tot)+'</tbody></table></div>'+
+    (isDraft?'<div class="edbar" id="rvBar"></div>':'');
+  var redraw=function(){ var p=$('rvQ').selectionStart, foc=document.activeElement&&document.activeElement.id; drawRVLines(lockNote); if(foc==='rvQ'){ var q=$('rvQ'); q.focus(); q.setSelectionRange(p,p); } };
+  $('rvQ').oninput=function(){ RV.q=this.value; redraw(); };
+  $('rvOnlyL').onchange=function(){ RV.onlyL=this.checked; redraw(); };
+  if(!isDraft) return;
+  rvBar();
+  $('rvDesc').oninput=function(){ RV.desc=this.value; RV.dirty=true; rvBar(); };
+  $('rvAdd').onclick=addRVItem;
+  var tb=$('rvTbl');
+  tb.addEventListener('change',function(e){
+    var el=e.target, tr=el.closest('tr[data-id]'); if(!tr) return;
+    var id=tr.dataset.id, ln=RV.edit.filter(function(x){return x.item_id===id;})[0], base=rvSet(RV.editBase).filter(function(x){return x.item_id===id;})[0];
+    if(el.dataset.a==='omit'){
+      if(!ln) return;
+      if(el.checked){ ln._q=ln.qty; ln.qty=0; } else { ln.qty = ln._q!=null && Number(ln._q)!==0 ? ln._q : (base?base.qty:1); }
+      ln.amount=Rev.amount(ln.qty,ln.rate,ln.amount); RV.dirty=true; redraw(); return;
+    }
+    var k=el.dataset.k; if(!k||!ln) return;
+    if(k==='qty'||k==='rate'){ var v=String(el.value).replace(/,/g,'').trim(); if(v!==''&&isNaN(Number(v))){ toast(id+': "'+el.value+'" is not a number',true); el.value=ln[k]; return; } ln[k]= v===''?'':Number(v); ln.amount=Rev.amount(ln.qty,ln.rate,ln.amount); }
+    else ln[k]=el.value.trim();
+    RV.dirty=true;
+    var x=Rev.diff(base?[base]:[], [ln]).rows[0];
+    tr.querySelector('[data-c="amt"]').textContent=money(x.rev_amount);
+    var dc=tr.querySelector('[data-c="dif"]'); dc.textContent=x.diff_amount?signed(x.diff_amount):''; dc.className='r num '+(x.diff_amount<0?'neg':x.diff_amount>0?'pos':'');
+    tr.querySelector('[data-c="st"]').innerHTML=chgChip(x.status);
+    if(k==='qty'||k==='rate') el.classList.toggle('chg', base!=null && Rev.num(ln[k])!==Rev.num(base[k]));
+    rvBar();
+  });
+  tb.addEventListener('click',function(e){
+    var bt=e.target.closest('button[data-a]'); if(!bt) return; var id=bt.closest('tr[data-id]').dataset.id;
+    if(bt.dataset.a==='remove'){ RV.edit=RV.edit.filter(function(x){return x.item_id!==id;}); }
+    if(bt.dataset.a==='restore'){
+      var base=rvSet(RV.editBase), bi=base.findIndex(function(x){return x.item_id===id;}), copy=Object.assign({},base[bi]);
+      var ex=RV.edit.filter(function(x){return x.item_id===id;})[0];
+      if(ex){ Object.assign(ex,copy); RV.dirty=true; redraw(); return; }
+      var ids={}; RV.edit.forEach(function(x,i){ ids[x.item_id]=i; });
+      var at=RV.edit.length; for(var j=bi+1;j<base.length;j++){ if(ids[base[j].item_id]!=null){ at=ids[base[j].item_id]; break; } }
+      RV.edit.splice(at,0,copy);
+    }
+    RV.dirty=true; redraw();
+  });
+}
+function rvBar(){
+  var bar=$('rvBar'); if(!bar) return;
+  var rec=rvRec(RV.editRev), base=rvSum(RV.editBase), sum=Rev.sum(RV.edit), tend=rvSum('Tendered');
+  bar.innerHTML='<span class="tot">'+esc(RV.editRev)+' draft · '+RV.edit.length+' lines · <b>B$'+money(sum)+'</b> · vs '+esc(RV.editBase)+' '+signed(sum-base)+' ('+(dpct(sum,base)||'–')+')'+(RV.editBase!=='Tendered'?' · vs tendered '+signed(sum-tend)+' ('+(dpct(sum,tend)||'–')+')':'')+'</span><span style="flex:1"></span>'+
+    '<span class="msg" style="font-size:12.5px;color:'+(RV.dirty?'var(--warn)':'var(--ink3)')+'">'+(RV.dirty?'Unsaved changes':'Saved '+esc(fmtDate(rec&&rec.updated_at)))+'</span>'+
+    '<button class="btn warn" id="rvDel">Delete draft</button>'+(RV.dirty?'<button class="btn" id="rvUndo">Undo changes</button>':'')+'<button class="btn pri" id="rvSave"'+(RV.dirty?'':' disabled')+'>Save draft</button>'+
+    '<button class="btn pri" id="rvApr"'+(RV.dirty?' disabled title="Save the draft first"':'')+'>Approve…</button>';
+  $('rvSave').onclick=saveDraft; $('rvDel').onclick=deleteDraft; $('rvApr').onclick=function(){ showApprove(); };
+  if($('rvUndo')) $('rvUndo').onclick=function(){ RV.edit=null; RV.dirty=false; drawRV(); };
+}
+function rvClean(lines){ return lines.map(function(x){ return {item_id:x.item_id,bill:x.bill,page:x.page,item:x.item,heading:x.heading,description:x.description,unit:x.unit,qty:x.qty,rate:x.rate,amount:Rev.amount(x.qty,x.rate,x.amount),remarks:x.remarks,source:x.source}; }); }
+function saveDraft(){
+  if(!RV.desc.trim()){ toast('Describe the revision (reason / basis) first.',true); $('rvDesc').focus(); return; }
+  var btn=$('rvSave'); busy(btn,true);
+  api('saveRevision',{arza_no:RV.no, rev:RV.editRev, meta:{description:RV.desc.trim()}, items:rvClean(RV.edit)})
+    .then(function(r){ (r._log||[]).forEach(function(l){S.log.push(l);}); toast(r.revision.rev+' saved — B$'+money(r.revision.rev_sum)); RV.dirty=false; return loadRV(RV.no, r.revision.rev); })
+    .catch(function(e){ busy(btn,false); fail(e); });
+}
+function deleteDraft(){
+  var rev=RV.editRev||RV.sel; if(!confirm('Delete draft '+rev+' of '+RV.no+'? Its lines are removed (files in Drive stay).')) return;
+  api('deleteRevision',{arza_no:RV.no, rev:rev}).then(function(r){ (r._log||[]).forEach(function(l){S.log.push(l);}); toast('Deleted '+rev); RV.dirty=false; RV.sel=''; RV.tab='sum'; loadRV(RV.no); }).catch(fail);
+}
+/* v0 standard for items added in a revision: next free X-number in the bill — PL B1.1.X1 (last page), NUM B4.X1, SEC C.X1 */
+function nextAddedId(bill){
+  var all=RV.edit.concat(RV.items), scheme=rvTender().id_scheme||'PL', pre=String(bill||'');
+  if(scheme==='PL'){ var pg=''; all.forEach(function(x){ if((x.bill||'-')===bill){ var m=String(x.item_id).match(/^B\d+\.([^.]+)\./); if(m && !/^X\d+$/.test(m[1])) pg=m[1]; } }); if(pg) pre+='.'+pg; }
+  var n=0, re=new RegExp('^'+pre.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\.X(\\d+)$','i');
+  all.forEach(function(x){ var m=String(x.item_id).match(re); if(m) n=Math.max(n,+m[1]); });
+  return pre+'.X'+(n+1);
+}
+function addRVItem(){
+  var bills=[], seen={}; RV.edit.concat(RV.items).forEach(function(x){ var k=x.bill||'-'; if(!seen[k]){ seen[k]=1; bills.push(k); } });
+  var units=L('units'); if(!units.length) units=['m','m2','m3','No','LS','Item','kg','t','Set','Lot','PS','PC'];
+  modal('Add item to '+RV.editRev, '<div class="note">For work added in the rationalization. The ID follows the ARZA standard for added items — next free X-number in the bill (<code>B1.1.X1</code>, <code>B4.X1</code>, <code>C.X1</code>). Use the same ref in the Breakdown QTY so as-built lines match it.</div>'+
+    '<div class="form"><div class="f"><label>Bill / section</label><select id="ai_bill">'+bills.map(function(k){return '<option>'+esc(k)+'</option>';}).join('')+'</select></div>'+
+    '<div class="f"><label>Item ID</label><input id="ai_id"></div>'+
+    '<div class="f full"><label>Description</label><textarea id="ai_desc"></textarea></div>'+
+    '<div class="f"><label>Unit</label><input id="ai_unit" list="ai_units"><datalist id="ai_units">'+units.map(function(u){return '<option value="'+esc(u)+'">';}).join('')+'</datalist></div>'+
+    '<div class="f"><label>Qty</label><input id="ai_qty" inputmode="decimal"></div><div class="f"><label>Rate (B$)</label><input id="ai_rate" inputmode="decimal"></div></div>',
+    '<button class="btn" id="aiC">Cancel</button><button class="btn pri" id="aiGo">Add</button>');
+  $('aiC').onclick=closeModal;
+  $('ai_id').value=nextAddedId($('ai_bill').value); $('ai_bill').onchange=function(){ $('ai_id').value=nextAddedId(this.value); };
+  $('aiGo').onclick=function(){
+    var id=$('ai_id').value.trim().toUpperCase().replace(/\s+/g,''), bill=$('ai_bill').value, q=$('ai_qty').value.replace(/,/g,'').trim(), r=$('ai_rate').value.replace(/,/g,'').trim();
+    if(!id){ toast('Give the item an ID.',true); return; }
+    if(RV.edit.concat(RV.items).some(function(x){return String(x.item_id).toUpperCase()===id;})){ toast(id+' is already used in this BQ.',true); return; }
+    if(!$('ai_desc').value.trim()){ toast('Give a description.',true); return; }
+    if((q&&isNaN(Number(q)))||(r&&isNaN(Number(r)))){ toast('Qty and rate must be numbers.',true); return; }
+    var ln={item_id:id,bill:bill,page:'',item:'',heading:'',description:$('ai_desc').value.trim(),unit:$('ai_unit').value.trim(),qty:q===''?'':Number(q),rate:r===''?'':Number(r),remarks:'Added in '+RV.editRev,source:'app'};
+    ln.amount=Rev.amount(ln.qty,ln.rate);
+    var at=-1; RV.edit.forEach(function(x,i){ if((x.bill||'-')===bill) at=i; });
+    RV.edit.splice(at<0?RV.edit.length:at+1,0,ln); RV.dirty=true; closeModal(); drawRV();
+  };
+}
+
+/* ----- new revision / import ----- */
+function rvCanStart(){
+  var t=rvTender();
+  if(ro()){ toast('Sign in to make revisions (read-only mode).',true); return false; }
+  if(t.locked!=='Y'){ toast('Lock the tendered BQ of '+t.arza_no+' first (Tenders › Lock BQ) — revisions are made after submission.',true); return false; }
+  return true;
+}
+function newRevision(){
+  if(!RV.no || !rvCanStart()) return;
+  var dr=rvDraft();
+  if(dr){ if(!rvLeave()) return; RV.sel=dr.rev; RV.tab='lines'; drawRV(); return; }
+  var cur=Rev.current(RV.revs), base=cur?cur.rev:'Tendered', lines=rvSet(base), nx=Rev.nextNo(RV.revs);
+  modal('New revision — '+RV.no+' '+nx, '<div class="note">'+esc(nx)+' starts as a copy of <b>'+esc(base)+'</b> ('+lines.length+' lines, B$'+money(Rev.sum(lines))+'). Change quantities and rates, omit or add items, save the draft, then record the approval.</div>'+
+    '<div class="form"><div class="f full"><label for="nr_desc">Description (reason / basis)</label><input id="nr_desc" placeholder="e.g. Rationalization to JKR budget, tender evaluation meeting 12 Nov 2026"></div></div>',
+    '<button class="btn" id="nrC">Cancel</button><button class="btn pri" id="nrGo">Create draft '+esc(nx)+'</button>');
+  $('nrC').onclick=closeModal; setTimeout(function(){ $('nr_desc').focus(); },30);
+  $('nrGo').onclick=function(){
+    var d=$('nr_desc').value.trim(); if(!d){ toast('Give a description.',true); return; }
+    var btn=$('nrGo'); busy(btn,true,'Creating…');
+    api('saveRevision',{arza_no:RV.no, rev:'', meta:{description:d}, items:rvClean(lines)})
+      .then(function(r){ closeModal(); (r._log||[]).forEach(function(l){S.log.push(l);}); toast('Draft '+r.revision.rev+' created'); RV.tab='lines'; return loadRV(RV.no, r.revision.rev); })
+      .catch(function(e){ busy(btn,false); fail(e); });
+  };
+}
+function startRVImport(){ if(!RV.no || !rvCanStart()) return; if(!rvLeave()) return; $('rvFile').click(); }
+function showRVImport(f){
+  if(f.size>MAX_FILE){ toast('File is larger than 20 MB.',true); return; }
+  if(f.err||!f.wb){ toast('Could not read the workbook: '+(f.err||'not an Excel file'),true); return; }
+  var t=rvTender(), bq=BQRead.readBQ(f.wb,{XLSX:XLSX,scheme:t.id_scheme||undefined});
+  if(!bq.items.length){ toast('No priced BQ lines found in this workbook (B-sheets).',true); return; }
+  var dr=rvDraft(), cur=Rev.current(RV.revs), target=dr?dr.rev:Rev.nextNo(RV.revs), baseKey=dr?rvBase(dr):(cur?cur.rev:'Tendered'), base=rvSet(baseKey);
+  var items=cleanItems(bq), D=Rev.diff(base,items), c=D.totals.counts;
+  var odd = (c.Added > items.length*0.3) || (c.Omitted > base.length*0.3);
+  var body='<div class="note">Read <b>'+esc(f.name)+'</b> — '+items.length+' priced lines, B$'+money(bq.total)+', scheme '+esc(bq.scheme)+(t.id_scheme&&bq.scheme!==t.id_scheme?' (read with the tender\'s scheme '+esc(t.id_scheme)+')':'')+'. Compared with <b>'+esc(baseKey)+'</b> by item ID.</div>'+
+    (odd?'<div class="note w">Many lines do not match '+esc(baseKey)+' by item ID ('+c.Added+' added, '+c.Omitted+' omitted). Check that this workbook keeps the tendered page / item numbering before saving.</div>':'')+
+    '<div class="kpis" style="grid-template-columns:repeat(5,1fr)">'+[['Sum (B$)',money0(D.totals.rev),'vs '+baseKey+' '+signed(D.totals.diff)],['Changed qty / rate',c.Qty+c.Rate+c['Qty & rate']+c.Amount,c.Qty+' qty · '+c.Rate+' rate · '+c['Qty & rate']+' both'],['Added',c.Added,'not in '+baseKey],['Omitted',c.Omitted,'in '+baseKey+', not here / qty 0'],['Unchanged',c.Unchanged,'']].map(function(k){ return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+esc(k[2])+'</div></div>'; }).join('')+'</div>'+
+    '<div class="tbl"><table class="mini"><thead><tr><th>Bill / section</th><th class="r">Changed</th><th class="r">'+esc(baseKey)+' (B$)</th><th class="r">This file (B$)</th><th class="r">Difference</th></tr></thead><tbody>'+
+      D.bills.map(function(x){ return '<tr style="cursor:default"><td class="no">'+esc(x.bill)+'</td><td class="r num">'+x.changed+'</td><td class="r num">'+money(x.base)+'</td><td class="r num">'+money(x.rev)+'</td><td class="r num">'+signed(x.rev-x.base)+'</td></tr>'; }).join('')+'</tbody></table></div>'+issuesBox(bq)+
+    '<div class="form" style="margin-top:12px"><div class="f full"><label for="ri_desc">Description (reason / basis)</label><input id="ri_desc" value="'+esc(dr?dr.description:'Rationalized BQ — '+f.name.replace(/\.xls[xm]$/i,''))+'"></div></div>'+
+    '<label class="chkrow"><input type="checkbox" id="ri_drive" checked> Save the workbook to the tender\'s Drive folder</label>';
+  modal('Import revision workbook — '+RV.no, body, '<span class="msg">'+(dr?'Replaces all lines of draft '+esc(dr.rev):'Creates draft '+esc(target)+' (from '+esc(baseKey)+')')+'</span><button class="btn" id="riC">Cancel</button><button class="btn pri" id="riGo">'+(dr?'Replace '+esc(dr.rev)+' lines':'Create '+esc(target))+'</button>');
+  $('riC').onclick=closeModal;
+  $('riGo').onclick=function(){
+    var d=$('ri_desc').value.trim(); if(!d){ toast('Give a description.',true); return; }
+    var btn=$('riGo'); busy(btn,true,'Saving…');
+    api('saveRevision',{arza_no:RV.no, rev:dr?dr.rev:'', meta:{description:d}, items:items, file:$('ri_drive').checked?{name:f.name,type:f.type,data:f.data}:null})
+      .then(function(r){ closeModal(); (r._log||[]).forEach(function(l){S.log.push(l);}); if(r.tender) syncTender(r.tender); toast(r.revision.rev+' saved from '+f.name); RV.tab='chg'; return loadRV(RV.no, r.revision.rev); })
+      .catch(function(e){ busy(btn,false); fail(e); });
+  };
+}
+
+/* ----- changes ----- */
+function drawRVChanges(){
+  var b=$('rvBody'), rec=rvRec(RV.sel);
+  if(!rec){ b.innerHTML='<div class="empty">Pick a revision (R1, R2 …) in the list above to see what changed.</div>'; return; }
+  var baseKey = RV.cmp==='Tendered' ? 'Tendered' : rvBase(rec), lines = (RV.edit && RV.editRev===rec.rev) ? RV.edit : rvSet(rec.rev);
+  var D=Rev.diff(rvSet(baseKey), lines), T=D.totals, c=T.counts;
+  var kp=[[baseKey+' (B$)',money0(T.base),rvSet(baseKey).length+' lines'],[rec.rev+' (B$)',money0(T.rev),lines.length+' lines · '+rec.status],['Difference (B$)',(T.diff>0?'+':'')+money0(T.diff),T.base?pct(T.diff/T.base):''],['Lines changed',T.changed,c.Qty+' qty · '+c.Rate+' rate · '+c['Qty & rate']+' both'],['Added / omitted',c.Added+' / '+c.Omitted,'']];
+  var tot=function(l,tb,tr,cl){ return '<tr class="'+cl+'"><td colspan="8">'+esc(l)+'</td><td class="r num">'+money(tb)+'</td><td class="r num">'+money(tr)+'</td><td class="r num">'+signed(tr-tb)+'</td></tr>'; };
+  b.innerHTML='<div class="kpis">'+kp.map(function(k){ return '<div class="kpi"><div class="l">'+esc(k[0])+'</div><div class="v">'+k[1]+'</div><div class="s">'+esc(k[2])+'</div></div>'; }).join('')+'</div>'+
+    '<div class="bar">'+(rvBase(rec)!=='Tendered'?'<select id="rvCmp"><option value="base"'+(RV.cmp!=='Tendered'?' selected':'')+'>Compare with '+esc(rvBase(rec))+' (its base)</option><option value="Tendered"'+(RV.cmp==='Tendered'?' selected':'')+'>Compare with the tendered BQ</option></select>':'<span class="scope">'+esc(rec.rev)+' compared with the tendered BQ</span>')+
+    '<label class="chkrow" style="margin:0"><input type="checkbox" id="rvOnly"'+(RV.only?' checked':'')+'> Only changed lines</label><input type="search" id="rvQ" placeholder="Filter…" value="'+esc(RV.q)+'"></div>'+
+    '<div class="tbl"><table><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th>Change</th><th class="r">'+esc(baseKey)+' qty</th><th class="r">'+esc(rec.rev)+' qty</th><th class="r">'+esc(baseKey)+' rate</th><th class="r">'+esc(rec.rev)+' rate</th><th class="r">'+esc(baseKey)+' (B$)</th><th class="r">'+esc(rec.rev)+' (B$)</th><th class="r">Diff (B$)</th></tr></thead><tbody>'+
+    rvGrouped(D.rows,function(x){ return '<td class="no">'+esc(x.item_id)+'</td><td class="dsc">'+esc(x.description)+(x.text_changed?' <span class="chip st-none" title="Description or unit differs from '+esc(baseKey)+'">text</span>':'')+'</td><td>'+esc(x.unit)+'</td><td>'+chgChip(x.status)+'</td><td class="r num">'+(x.base_qty==null?'–':qty(x.base_qty))+'</td><td class="r num">'+(x.status==='Omitted'?'0':qty(x.rev_qty))+'</td><td class="r num">'+(x.base_rate==null?'–':money(x.base_rate))+'</td><td class="r num">'+money(x.rev_rate)+'</td><td class="r num">'+(x.base_amount==null?'–':money(x.base_amount))+'</td><td class="r num">'+money(x.rev_amount)+'</td><td class="r num '+(x.diff_amount<0?'neg':x.diff_amount>0?'pos':'')+'">'+(x.diff_amount?signed(x.diff_amount):'')+'</td>'; },11,tot)+
+    '</tbody></table></div>'+(RV.edit&&RV.dirty?'<p class="n">Includes unsaved edits of '+esc(RV.editRev)+'.</p>':'');
+  if($('rvCmp')) $('rvCmp').onchange=function(){ RV.cmp=this.value; drawRV(); };
+  $('rvOnly').onchange=function(){ RV.only=this.checked; drawRV(); };
+  $('rvQ').oninput=function(){ RV.q=this.value; var p=this.selectionStart; drawRV(); var q=$('rvQ'); q.focus(); q.setSelectionRange(p,p); };
+}
+
+/* ----- approval record ----- */
+function drawRVApproval(){
+  var b=$('rvBody'), rec=rvRec(RV.sel), cur=Rev.current(RV.revs);
+  if(!rec){ b.innerHTML='<div class="empty">Pick a revision (R1, R2 …) to see or record its approval.</div>'; return; }
+  var tend=rvSum('Tendered'), s=Number(rec.rev_sum)||0, bs=rvSum(rvBase(rec));
+  var dl=function(rows){ return '<dl class="rec">'+rows.filter(function(r){return r[1]!=='' && r[1]!=null;}).map(function(r){ return '<dt>'+esc(r[0])+'</dt><dd>'+(r[2]?r[1]:esc(r[1]))+'</dd>'; }).join('')+'</dl>'; };
+  var sums=[['Revision',rec.rev+' — '+rec.status],['Description',rec.description],['Based on',rvBase(rec)+' (B$'+money(bs)+')'],['Revision sum','B$'+money(s)+'  ('+signed(s-bs)+' vs '+rvBase(rec)+(rvBase(rec)!=='Tendered'?'; '+signed(s-tend)+' vs tendered':'')+')'],['Lines',rec.lines],['Created',fmtDate(rec.created_at)],['Notes',rec.notes]];
+  if(rec.status==='Draft'){
+    b.innerHTML='<div class="card"><h3>'+esc(rec.rev)+' is a draft — not approved yet</h3>'+dl(sums)+'<p class="n" style="margin-top:10px">Record the approval when both parties have agreed the rationalized BQ (signed BQ, client letter or minutes). '+esc(rec.rev)+' is then locked and becomes the contract BQ for the as-built reports.</p>'+
+      (ro()?'':'<div class="bar" style="margin-top:8px"><button class="btn pri" id="rvApr2">Record approval…</button><button class="btn" id="rvEdit">Edit lines</button></div>')+'</div>';
+    if($('rvApr2')) $('rvApr2').onclick=function(){ showApprove(); };
+    if($('rvEdit')) $('rvEdit').onclick=function(){ RV.tab='lines'; drawRV(); };
+    return;
+  }
+  var apr=[['Approved on',fmtDate(rec.approved_date)],['For ARZA SDN BHD',rec.arza_rep],['For the client',rec.client_rep+(rec.client_org?', '+rec.client_org:'')],['Letter / document ref',rec.letter_ref],
+    ['Document', rec.doc_link?'<a href="'+esc(rec.doc_link)+'" target="_blank" rel="noopener">'+esc(rec.document||'Open')+'</a>':(rec.document||'none attached'), !!rec.doc_link],['Recorded',fmtDate(rec.approved_at)+' by '+APP.user]];
+  if(rec.status==='Void') apr.push(['Voided',(rec.void_reason||'')+' ('+fmtDate(rec.updated_at)+')']);
+  b.innerHTML='<div class="grid2"><div class="card"><h3>Approval record — '+esc(rec.rev)+' '+revChip(rec.status)+(cur&&cur.rev===rec.rev?' <span class="chip st-Won">contract BQ</span>':'')+'</h3>'+dl(apr)+'</div><div class="card"><h3>Revision</h3>'+dl(sums)+'</div></div>'+
+    (!ro() && cur && cur.rev===rec.rev ? '<div class="bar"><span class="scope">Approved revisions are locked. If the approval was recorded by mistake or the agreement was withdrawn, void it (needs a reason; the lines stay on record).</span><span style="flex:1"></span><button class="btn warn" id="rvVoid">Void '+esc(rec.rev)+'…</button></div>' : '');
+  if($('rvVoid')) $('rvVoid').onclick=function(){
+    var r=prompt('Reason for voiding '+rec.rev+' of '+RV.no+' (kept in the log):'); if(r==null) return;
+    if(r.trim().length<5){ toast('Give a reason (at least 5 characters).',true); return; }
+    api('voidRevision',{arza_no:RV.no, rev:rec.rev, reason:r.trim()}).then(function(x){ (x._log||[]).forEach(function(l){S.log.push(l);}); syncTender(x.tender); toast(rec.rev+' voided'); return loadRV(RV.no, rec.rev); }).catch(fail);
+  };
+}
+function showApprove(){
+  var rec=rvRec(RV.editRev||RV.sel); if(!rec || rec.status!=='Draft') return;
+  if(RV.dirty){ toast('Save the draft first.',true); return; }
+  var t=rvTender(), s=Number(rec.rev_sum)||0, bs=rvSum(rvBase(rec)), tend=rvSum('Tendered'), last={}; try{ last=JSON.parse(localStorage.getItem('qscrm.approver')||'{}'); }catch(e){}
+  modal('Record approval — '+RV.no+' '+rec.rev,
+    '<div class="note">'+esc(rec.rev)+': '+rec.lines+' lines, <b>B$'+money(s)+'</b> ('+signed(s-bs)+' vs '+esc(rvBase(rec))+(rvBase(rec)!=='Tendered'?', '+signed(s-tend)+' vs tendered':'')+'). Once approved it is <b>locked</b> and becomes the contract BQ for the as-built reports.</div>'+
+    '<div class="form"><div class="f"><label for="ap_date">Approval date</label><input id="ap_date" type="date" value="'+today()+'"></div>'+
+    '<div class="f"><label for="ap_ref">Letter / document ref</label><input id="ap_ref" placeholder="e.g. JKR/DBS/BM/021/2026 (12)"></div>'+
+    '<div class="f"><label for="ap_arza">For ARZA SDN BHD (name, designation)</label><input id="ap_arza" value="'+esc(last.arza||APP.user+', QS')+'"></div>'+
+    '<div class="f"><label for="ap_cli">For the client (name, designation)</label><input id="ap_cli"></div>'+
+    '<div class="f full"><label for="ap_org">Client organisation</label><input id="ap_org" value="'+esc(t.client||t.client_group||'')+'"></div>'+
+    '<div class="f full"><label for="ap_doc">Approval document (signed BQ, letter or minutes — PDF / image / Excel)</label><input id="ap_doc" type="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xlsm,.docx,.zip"><div class="hint">Saved to the tender\'s Drive folder and linked to the record.</div></div>'+
+    '<div class="f full"><label for="ap_notes">Notes (optional)</label><input id="ap_notes" placeholder="e.g. agreed at tender evaluation meeting"></div></div>',
+    '<button class="btn" id="apC">Cancel</button><button class="btn pri" id="apGo">Approve and lock '+esc(rec.rev)+'</button>');
+  $('apC').onclick=closeModal;
+  $('apGo').onclick=function(){
+    var a={approved_date:$('ap_date').value, letter_ref:$('ap_ref').value.trim(), arza_rep:$('ap_arza').value.trim(), client_rep:$('ap_cli').value.trim(), client_org:$('ap_org').value.trim(), notes:$('ap_notes').value.trim()};
+    var miss=[['approved_date','approval date'],['letter_ref','letter / document ref'],['arza_rep','ARZA representative'],['client_rep','client representative']].filter(function(x){return !a[x[0]];});
+    if(miss.length){ toast('Give the '+miss.map(function(x){return x[1];}).join(', ')+'.',true); return; }
+    var file=$('ap_doc').files[0];
+    if(!file && !confirm('No approval document attached. Approve '+rec.rev+' without it?\n(You can still keep the document in the Drive folder by hand.)')) return;
+    if(file && file.size>MAX_FILE){ toast('Document is larger than 20 MB.',true); return; }
+    if(!confirm('Approve and lock '+rec.rev+' of '+RV.no+' at B$'+money(s)+'?\nIt becomes the contract BQ. This cannot be edited afterwards (only voided with a reason).')) return;
+    try{ localStorage.setItem('qscrm.approver',JSON.stringify({arza:a.arza_rep})); }catch(e){}
+    var btn=$('apGo'); busy(btn,true,'Approving…');
+    (file ? file.arrayBuffer().then(function(buf){ return {name:file.name,type:file.type||'',data:b64(buf)}; }) : Promise.resolve(null))
+      .then(function(doc){ return api('approveRevision',{arza_no:RV.no, rev:rec.rev, approval:a, file:doc}); })
+      .then(function(r){ closeModal(); (r._log||[]).forEach(function(l){S.log.push(l);}); syncTender(r.tender); toast(rec.rev+' approved — contract sum B$'+money(r.tender.contract_sum)); RV.tab='apr'; return loadRV(RV.no, rec.rev); })
+      .catch(function(e){ busy(btn,false); fail(e); });
+  };
+}
+
+/* ----- Excel / print ----- */
+function exportRV(){
+  if(!window.XLSX||!RV.no) return;
+  var t=rvTender(), wb=XLSX.utils.book_new(), rec=rvRec(RV.sel), cur=Rev.current(RV.revs);
+  var info=[{field:'ARZA no.',value:t.arza_no},{field:'Client ref',value:t.tender_ref},{field:'Title',value:t.title_en||t.title},{field:'Tendered (B$)',value:rvSum('Tendered')},{field:'Contract BQ',value:cur?cur.rev:'Tendered'},{field:'Contract sum (B$)',value:cur?Number(cur.rev_sum):rvSum('Tendered')},{field:'Exported',value:today()}];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(info),'Info');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rvHistory().map(function(h){ return {stage:h.stage,status:h.status,date:h.date,based_on:h.base,lines:h.lines,sum:h.sum,change_vs_base:h.chg==null?'':Math.round(h.chg*100)/100,vs_tendered_pct:h.vs==null?'':Math.round(h.vs*10000)/10000,ref:h.ref}; })),'Sum history');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(RV.revs.map(function(r){ return {rev:r.rev,status:r.status,based_on:rvBase(r),description:r.description,lines:r.lines,rev_sum:r.rev_sum,approved_date:r.approved_date,arza_rep:r.arza_rep,client_rep:r.client_rep,client_org:r.client_org,letter_ref:r.letter_ref,document:r.document,doc_link:r.doc_link,void_reason:r.void_reason}; })),'Revisions');
+  var setKey=RV.sel||'Tendered', lines=rvSet(setKey);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(lines.map(function(x){ return {bill:x.bill,item:x.item_id,description:x.description,unit:x.unit,qty:x.qty,rate:x.rate,amount:x.amount}; })),(setKey+' lines').slice(0,31));
+  if(rec){ var bk=rvBase(rec), D=Rev.diff(rvSet(bk), lines);
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(D.rows.map(function(x){ var o={bill:x.bill,item:x.item_id,description:x.description,unit:x.unit,change:x.status}; o[bk+'_qty']=x.base_qty; o[rec.rev+'_qty']=x.rev_qty; o[bk+'_rate']=x.base_rate; o[rec.rev+'_rate']=x.rev_rate; o[bk+'_amount']=x.base_amount; o[rec.rev+'_amount']=x.rev_amount; o.diff_amount=x.diff_amount; return o; })),(rec.rev+' vs '+bk).slice(0,31)); }
+  XLSX.writeFile(wb, t.arza_no+' Rationalized BQ '+(RV.sel||'')+' '+today()+'.xlsx');
+}
+function printRV(){
+  if(!RV.no) return;
+  var t=rvTender(), rec=rvRec(RV.sel), logo=(document.querySelector('.lhead img.only-light')||{}).src||'';
+  var css='@page{size:A4 landscape;margin:12mm}body{font:10px/1.35 Arial,sans-serif;color:#111;margin:0}'+
+    '.hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #120377;padding-bottom:8px;margin-bottom:8px}.hd img{height:34px}'+
+    'h1{font-size:15px;margin:0 0 2px;color:#120377}h2{font-size:12px;margin:12px 0 4px;color:#120377}.meta{font-size:10px;color:#444}.kp{display:flex;gap:18px;margin:6px 0 10px;font-size:10.5px}.kp b{display:block;font-size:12.5px}'+
+    'table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccd;padding:3px 5px;vertical-align:top}th{background:#eef0fa;font-size:9px;text-transform:uppercase}.r{text-align:right;white-space:nowrap}.no{font-family:Consolas,monospace;white-space:nowrap}'+
+    'tr.bh td{background:#f3f4f8;font-weight:bold}tr.bt td{font-weight:bold;background:#fafafa}tr.gt td{font-weight:bold;background:#e8eaf6;font-size:11px}thead{display:table-header-group}tr{page-break-inside:avoid}'+
+    'dl{display:grid;grid-template-columns:150px 1fr;gap:2px 10px;margin:0}dt{color:#555}dd{margin:0}.sig{display:flex;gap:40px;margin-top:22px}.sig div{flex:1;border-top:1px solid #333;padding-top:4px}.ft{margin-top:10px;font-size:9px;color:#666}';
+  var H=rvHistory(), hist='<table><thead><tr><th>Stage</th><th>Status</th><th>Date</th><th>Based on</th><th class="r">Lines</th><th class="r">Sum (B$)</th><th class="r">Change vs base</th><th class="r">vs tendered</th><th>Ref / description</th></tr></thead><tbody>'+
+    H.map(function(h){ return '<tr><td class="no">'+esc(h.stage)+'</td><td>'+esc(h.status)+'</td><td>'+esc(/^\d{4}-/.test(String(h.date))?fmtDate(h.date):h.date||'')+'</td><td>'+esc(h.base)+'</td><td class="r">'+esc(h.lines)+'</td><td class="r">'+money(h.sum)+'</td><td class="r">'+(h.chg==null?'':signed(h.chg))+'</td><td class="r">'+(h.vs==null?'':pct(h.vs))+'</td><td>'+esc(h.ref)+'</td></tr>'; }).join('')+'</tbody></table>';
+  var body, title;
+  if(!rec){ title='Tender sum history'; body='<h2>Tender sum history</h2>'+hist; }
+  else {
+    var bk=rvBase(rec), D=Rev.diff(rvSet(bk), rvSet(rec.rev)), T=D.totals, keepOnly=RV.only, keepQ=RV.q; RV.only=true; RV.q='';
+    var saveTab=RV.tab; RV.tab='chg';
+    var rows=rvGrouped(D.rows,function(x){ return '<td class="no">'+esc(x.item_id)+'</td><td>'+esc(x.description)+'</td><td>'+esc(x.unit)+'</td><td>'+esc(x.status)+'</td><td class="r">'+(x.base_qty==null?'–':qty(x.base_qty))+'</td><td class="r">'+(x.status==='Omitted'?'0':qty(x.rev_qty))+'</td><td class="r">'+(x.base_rate==null?'–':money(x.base_rate))+'</td><td class="r">'+money(x.rev_rate)+'</td><td class="r">'+(x.base_amount==null?'–':money(x.base_amount))+'</td><td class="r">'+money(x.rev_amount)+'</td><td class="r">'+(x.diff_amount?signed(x.diff_amount):'')+'</td>'; },11,
+      function(l,tb,tr,c){ return '<tr class="'+c+'"><td colspan="8">'+esc(l)+'</td><td class="r">'+money(tb)+'</td><td class="r">'+money(tr)+'</td><td class="r">'+signed(tr-tb)+'</td></tr>'; });
+    RV.only=keepOnly; RV.q=keepQ; RV.tab=saveTab;
+    title='Rationalization statement — '+rec.rev;
+    var apr = rec.status==='Approved'||rec.status==='Void' ? '<dl><dt>Approved on</dt><dd>'+esc(fmtDate(rec.approved_date))+'</dd><dt>Letter / document ref</dt><dd>'+esc(rec.letter_ref)+'</dd><dt>For ARZA SDN BHD</dt><dd>'+esc(rec.arza_rep)+'</dd><dt>For the client</dt><dd>'+esc(rec.client_rep+(rec.client_org?', '+rec.client_org:''))+'</dd><dt>Document</dt><dd>'+esc(rec.document||'–')+'</dd>'+(rec.status==='Void'?'<dt>VOID</dt><dd>'+esc(rec.void_reason)+'</dd>':'')+'</dl>' : '<p><b>DRAFT — not approved.</b></p>';
+    body='<div class="kp"><div>'+esc(bk)+'<b>B$ '+money(T.base)+'</b></div><div>'+esc(rec.rev)+'<b>B$ '+money(T.rev)+'</b></div><div>Difference<b>B$ '+signed(T.diff)+(T.base?' ('+pct(T.diff/T.base)+')':'')+'</b></div><div>Lines changed<b>'+T.changed+' of '+D.rows.length+'</b></div>'+(bk!=='Tendered'?'<div>Tendered<b>B$ '+money(rvSum('Tendered'))+'</b></div>':'')+'</div>'+
+      '<h2>Approval</h2>'+apr+'<h2>Changes ('+esc(rec.rev)+' vs '+esc(bk)+') — changed lines only; bill totals include all lines</h2>'+
+      '<table><thead><tr><th>Item</th><th>Description</th><th>Unit</th><th>Change</th><th class="r">'+esc(bk)+' qty</th><th class="r">'+esc(rec.rev)+' qty</th><th class="r">'+esc(bk)+' rate</th><th class="r">'+esc(rec.rev)+' rate</th><th class="r">'+esc(bk)+' (B$)</th><th class="r">'+esc(rec.rev)+' (B$)</th><th class="r">Diff (B$)</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<h2>Tender sum history</h2>'+hist+
+      '<div class="sig"><div>For ARZA SDN BHD — name, signature, date</div><div>For the client — name, signature, date</div></div>';
+  }
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+esc(t.arza_no+' '+title)+'</title><style>'+css+'</style></head><body><div class="hd"><div><h1>'+esc(title)+'</h1><div class="meta"><b>'+esc(t.arza_no)+'</b> · '+esc(t.tender_ref||'')+'<br>'+esc(t.title_en||t.title||'')+'<br>'+esc(t.client||'')+' · printed '+esc(fmtDate(today()))+'</div></div>'+(logo?'<img src="'+logo+'">':'<b>ARZA SDN BHD</b>')+'</div>'+
+    body+'<div class="ft">QS CRM ARZA SDN BHD — rationalized BQ revisions; amounts = qty × rate.</div><script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>';
   var w=window.open('','_blank'); if(!w){ toast('Allow pop-ups to print / save as PDF.',true); return; }
   w.document.open(); w.document.write(html); w.document.close();
 }
@@ -1976,6 +2596,8 @@ $('btnImport').onclick=startImport;
 $('impFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showImport); };
 $('upFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showUpload); };
 $('impClose').onclick=closeModal;
+$('rvFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showRVImport); };
+window.addEventListener('beforeunload',function(e){ if(RV.dirty){ e.preventDefault(); e.returnValue=''; } });
 $('abFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showABImport); };
 $('dFull').onclick=toggleFull;
 $('nav').onclick=function(e){ var a=e.target.closest('a'); if(!a) return; if(a.classList.contains('off')){ toast(a.title); return; } if(a.dataset.v) showView(a.dataset.v); };

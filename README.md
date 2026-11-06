@@ -1,10 +1,13 @@
-# ARZA QS CRM SYSTEM — v1.4.0 (v1 complete)
+# ARZA QS CRM SYSTEM — v2.0.0 (v2: rationalized BQ)
 
-**Updating to v1.4.0:**
-1. GitHub Pages: replace `index.html` **and add `Breakdown_QTY_Template.xlsx` next to it** (the As-built page's Template button downloads it).
+**Updating to v2.0.0:**
+1. GitHub Pages: replace `index.html` (keep `Breakdown_QTY_Template.xlsx` beside it).
 2. Apps Script: paste the new `Code.gs` over the old one, save.
 3. Deploy › Manage deployments › Edit › Version: New version › Deploy (same URL). No new permissions needed.
-4. Drive folder (if not done yet): `setDriveFolder()` — paste your folder link, Run. "An unknown error has occurred" = several Google accounts signed in → use an Incognito window with only the sheet owner's account.
+4. Nothing to add in the sheet: on the first call the script adds the **Revisions** tab and the `contract_sum` / `contract_rev` columns on Tenders.
+5. **Do not keep `QS_CRM_DB.xlsx` in this repo** — the repo is public and that file holds priced BQ lines. Delete it here and keep it in Google Drive (it is only needed for the first setup and the read-only mode).
+
+**Rationalization workflow:** lock the tendered BQ at submission → Rationalized BQ › **+ New revision** (copy of the tendered BQ) or **Import revision workbook** → edit qty / rate, omit or add items (added IDs: `B1.1.X1`, `B4.X1`, `C.X1`) → Save draft → Changes → **Approval record** (date, both parties, letter ref, signed document) → R1 is locked and becomes the contract BQ. As-built Report 2 then shows Tendered | Rationalized | As-Built.
 
 **As-built workflow:** Tenders › import the priced workbook (gives the tendered BQ) → As-built › pick the tender › Import Breakdown QTY (standard template or the old MOE layout) → check Matching check → Report 1 / Report 2 → Excel or PDF / Print.
 
@@ -29,7 +32,9 @@ After changing `Code.gs`: *Deploy › Manage deployments › Edit (pencil) › V
 - Status Prospect → Pricing → Submitted → Won / Lost / Cancelled / No bid.
 - **Lock BQ** at submission: freezes our sum and the ID scheme; unlocking needs a reason (logged).
 - **Bid result**: winner, winning sum, result date, source; % difference (ours vs winner) computed.
-- BQ tab: tendered BQ lines and amount per bill, checked against our sum.
+- BQ tab: tendered BQ lines and amount per bill, checked against our sum, and the tender sum history.
+- Rationalized BQ: revisions R1, R2 … with approval record, changes, sum history, rationalization statement (PDF) and Excel.
+- As-built: Breakdown QTY import, matching check, Report 1 As-Built BQ, Report 2 Tendered vs Rationalized vs As-Built.
 - Every change is written to the **Log** tab.
 - No setup needed to look: *Open QS_CRM_DB.xlsx (read-only)* on the sign-in page reads the file in the browser only.
 
@@ -38,5 +43,5 @@ After changing `Code.gs`: *Deploy › Manage deployments › Edit (pencil) › V
 |---|---|
 | `index.html` | the app (one file; SheetJS from CDN for Excel) |
 | `Code.gs` | API on the Google Sheet |
-| `src/itemid.js`, `src/bq-read.js`, `src/tender-info.js` | BQ Item ID rule, BQ reader, tender info reader (used by the import module next) |
-| `QS_CRM_DB.xlsx` | DB seed: 10 tenders, 386 tendered BQ lines |
+| `src/*.js` | modules embedded in index.html: itemid, bq-read, tender-info, bqty-read (as-built), revision (v2) |
+| `QS_CRM_DB.xlsx` | DB seed (10 tenders, 386 priced BQ lines) — keep it private, not in this repo |
