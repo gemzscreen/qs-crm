@@ -9,6 +9,8 @@
 <script>/* theme before first paint (no flash) */(function(){var m='auto';try{m=localStorage.getItem('qscrm.theme')||'auto';}catch(e){}var d=m==='auto'?(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):(m==='night'?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
 <title>ARZA QS CRM SYSTEM</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
 <style>
 :root{
   --brand:#120377;--brand2:#2a1d9c;--bink:#120377;--bar:#120377;--accent:#c8762b;
@@ -287,6 +289,12 @@ footer.foot a:hover{text-decoration:underline}
 .st-Draft{background:var(--warnbg);color:var(--warn)} .st-Approved{background:var(--okbg);color:var(--ok)} .st-Void{background:var(--mutebg);color:var(--mute);text-decoration:line-through}
 .ch-Added{background:var(--infobg);color:var(--info)} .ch-Omitted{background:var(--badbg);color:var(--bad)} .ch-Qty,.ch-Rate,.ch-Qtyrate,.ch-Amount{background:var(--warnbg);color:var(--warn)}
 td.sub2{font-size:11.5px;color:var(--ink3)}
+#vUS .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+#vUS .card h3{margin:0 0 8px;font-size:14px} #vUS h2{font-size:16px;margin:0 0 4px;color:var(--bink)} #vUS .n{font-size:12px;color:var(--ink3);margin:6px 0}
+#vUS table th{position:static;cursor:default} #vUS tbody tr{cursor:default} #vUS select,#vUS input.nm{padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--field);font:inherit}
+.login .lnk{display:flex;justify-content:space-between;margin-top:10px;font-size:12.5px} .login .lnk a{color:var(--ink2)}
+.login .cfg{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px}
+.hello{cursor:pointer} .rolechip{display:inline-block;margin-left:6px;padding:0 6px;border-radius:9px;font-size:10.5px;background:rgba(255,255,255,.18);text-transform:uppercase;letter-spacing:.04em}
 </style>
 </head>
 <body>
@@ -294,12 +302,12 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
 <header class="top hidden" id="top">
   <div class="brand"><img src="data:image/png;base64,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" alt="ARZA SDN BHD" width="122" height="32"><i></i><span>QS CRM</span></div>
   <nav class="nav" id="nav">
-    <a data-v="tenders" class="on">Tenders</a><a data-v="rev">Rationalized BQ</a><a data-v="asbuilt">As-built</a><a data-v="reports">Reports</a>
+    <a data-v="tenders" class="on">Tenders</a><a data-v="rev">Rationalized BQ</a><a data-v="asbuilt">As-built</a><a data-v="reports">Reports</a><a data-v="users" class="hidden" id="navUsers">Users</a>
   </nav>
   <div class="sp"></div>
   <div class="conn hidden" id="conn"><i></i><span></span></div>
-  <div class="hello" id="hello"></div>
-  <button id="btnVer" class="ver" title="What's new">v2.0.0</button>
+  <div class="hello" id="hello" title="My account" role="button" tabindex="0"></div>
+  <button id="btnVer" class="ver" title="What's new">v2.1.0</button>
   <button id="btnOut" class="hidden">Sign out</button>
   <button id="btnTheme" class="ibtn" aria-label="Theme"></button>
 </header>
@@ -312,12 +320,19 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
     <img class="only-dark" src="data:image/png;base64,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" alt="ARZA SDN BHD" width="270" height="71">
     <h1>ARZA QS CRM SYSTEM</h1><div class="rule"></div>
   </div>
-  <p>The quantity surveying system of ARZA SDN BHD — one record of every tender, priced BQ, bid result and as-built quantity.</p>
-  <div class="f"><label for="inUrl">Web app URL (Apps Script, ends with /exec)</label><input id="inUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div>
+  <p>The quantity surveying system of ARZA SDN BHD — one record of every tender, priced BQ, rationalized revision, bid result and as-built quantity.</p>
+  <div class="f"><label for="inEmail">Email</label><input id="inEmail" type="email" autocomplete="username" placeholder="name@arza…"></div>
   <div class="f"><label for="inPw">Password</label><input id="inPw" type="password" autocomplete="current-password"></div>
+  <div class="cfg hidden" id="cfgBox">
+    <div class="note" style="margin:0 0 8px">Connection (normally set once in <code>config.js</code> on the website).</div>
+    <div class="f"><label for="inSbUrl">Supabase project URL</label><input id="inSbUrl" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off"></div>
+    <div class="f"><label for="inSbKey">Supabase anon public key</label><input id="inSbKey" type="text" autocomplete="off"></div>
+    <div class="f"><label for="inDrive">Drive file service URL (Apps Script /exec)</label><input id="inDrive" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div>
+  </div>
   <label class="chk"><input type="checkbox" id="inRemember"> Keep me signed in on this device</label>
   <div class="err" id="loginErr"></div>
   <button class="btn pri" id="btnLogin" style="width:100%">Sign in</button>
+  <div class="lnk"><a href="#" id="lnkForgot">Forgot password?</a><a href="#" id="lnkCfg">Connection settings</a></div>
   <div class="or">or</div>
   <button class="btn" id="btnFile" style="width:100%">Open QS_CRM_DB.xlsx (read-only, nothing leaves this computer)</button>
   <input type="file" id="inFile" accept=".xlsx" class="hidden">
@@ -354,6 +369,8 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
 
 <main id="vRep" class="hidden rep"></main>
 <main id="vRV" class="hidden"></main>
+<main id="vUS" class="hidden"></main>
+<input type="file" id="migFile" accept=".xlsx" class="hidden">
 <main id="vAB" class="hidden"></main>
 <input type="file" id="rvFile" accept=".xlsx,.xlsm" class="hidden">
 <input type="file" id="abFile" accept=".xlsx,.xlsm" class="hidden">
@@ -1219,8 +1236,15 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'2.0.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'2.1.0', user:'Gemz' };
 var CHANGELOG = [
+  { v:'2.1.0', date:'6 Nov 2026', items:[
+    'Data moved to Supabase (PostgreSQL). Google Drive keeps the files; Google Sheets stays for the pricing and inventory masterlists.',
+    'Own accounts: everyone signs in with email and password. Forgot password sends a reset link; change it under My account (click your name).',
+    'Roles: admin (users + everything), qs (all changes), viewer (read only — for ARZA management). Viewers see every page without edit buttons.',
+    'Users page (admin): add accounts, set role, deactivate; one-time import of the QS CRM DB Google Sheet.',
+    'Every rule is enforced in the database (lock, one draft revision, approved = locked, …); the activity log records who did what.',
+    'Files go to Google Drive through the Apps Script file service, which checks the user\'s sign-in and role first.' ]},
   { v:'2.0.0', date:'6 Nov 2026', items:[
     'v2 starts: Rationalized BQ page (top bar, between Tenders and As-built).',
     'Rationalized revisions R1, R2 … of the locked tendered BQ: start a draft as a copy of the tendered BQ (or the last approved revision), or import a rationalized priced workbook.',
@@ -1278,7 +1302,7 @@ var CHANGELOG = [
 ];
 
 /* ---------- state ---------- */
-var S = { mode:'', url:'', pw:'', tenders:[], lists:{}, log:[], sort:{k:'arza_no',dir:-1}, cur:null, tab:'det', fileDB:null };
+var S = { mode:'', sb:null, me:null, tenders:[], lists:{}, log:[], sort:{k:'arza_no',dir:-1}, cur:null, tab:'det', fileDB:null };
 var DEFAULT_LISTS = { status:['Prospect','Pricing','Submitted','Won','Lost','Cancelled','No bid'], client_group:['JKR','MOE','MOH','Other'],
   tender_type:['Tender','Quotation','Sub-contract quote','Supply quote','Internal estimate'], id_scheme:['PL','NUM','SEC'] };
 var SCHEME_LABEL = { PL:'PL — page + letter (e.g. B1.1.A)', NUM:'NUM — numbered items (e.g. B4.4.1.1)', SEC:'SEC — section + number (e.g. C.3)' };
@@ -1301,12 +1325,16 @@ function days(d){ if(!d) return null; var t=new Date(String(d).slice(0,10)+'T00:
 function fmtDate(d){ if(!d) return ''; var s=String(d); var m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}:\d{2}))?/); if(!m) return s;
   var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m[2]-1]; return (+m[3])+' '+mo+' '+m[1]+(m[4]?' '+m[4]:''); }
 function toast(msg,bad){ var t=document.createElement('div'); t.className='toast'+(bad?' bad':''); t.textContent=msg; document.body.appendChild(t); setTimeout(function(){t.remove();}, bad?5000:2500); }
-function ro(){ return S.mode==='file'; }
+function fileMode(){ return S.mode==='file'; }
+function canWrite(){ return S.mode==='api' && !!S.me && ['admin','qs'].indexOf(S.me.role)>=0; }
+function isAdmin(){ return S.mode==='api' && !!S.me && S.me.role==='admin'; }
+function ro(){ return !canWrite(); }   // read-only: file mode or a viewer account
 function clock(){
   var d=new Date(), h=$('hello'); if(!h) return;
   var ds=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   var ts=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-  h.innerHTML='Welcome, <b>'+esc(APP.user)+'</b><span>'+ds+' · '+ts+'</span>';
+  var nm=S.me?(S.me.full_name||S.me.email):(fileMode()?'read-only file':APP.user);
+  h.innerHTML='Welcome, <b>'+esc(nm)+'</b>'+(S.me?'<i class="rolechip">'+esc(S.me.role)+'</i>':'')+'<span>'+ds+' · '+ts+'</span>';
 }
 function showVersions(){
   $('verTitle').textContent=APP.name+' — change log';
@@ -1325,51 +1353,123 @@ function dirty(){ return S.snap!=null && S.snap!==formSnap(); }
 function formSnap(){ var b=$('dBody'); if(!b) return ''; return Array.prototype.map.call(b.querySelectorAll('input,select,textarea'),function(e){return e.id+'='+e.value;}).join('|'); }
 function cancel(){ if(dirty() && !confirm('Discard the changes you made?')) return; closeDrawer(true); }
 
-/* ---------- API ---------- */
-function api(action, body){
-  body = body || {}; body.action = action; body.password = S.pw;
-  return fetch(S.url, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body), redirect:'follow' })
-    .then(function(r){ if(!r.ok) throw new Error('Server answered '+r.status); return r.json(); })
-    .then(function(j){ if(!j.ok){ var e=new Error(j.error||'Error'); e.auth=j.auth===false; throw e; } return j.data; });
-}
+/* ---------- connection: Supabase (data, sign-in) + Apps Script (Drive files) ---------- */
+function cfg(){ var c=window.QSCRM_CONFIG||{}, o={}; ['supabaseUrl','supabaseKey','driveUrl'].forEach(function(k){ o[k]=String(c[k]||load('cfg.'+k)||'').trim(); }); return o; }
+function cfgOk(){ var c=cfg(); return /^https:\/\/.+/.test(c.supabaseUrl) && c.supabaseKey.length>20; }
 function store(k,v,persist){ try{ (persist?localStorage:sessionStorage).setItem('qscrm.'+k,v); }catch(e){} }
 function load(k){ try{ return sessionStorage.getItem('qscrm.'+k) || localStorage.getItem('qscrm.'+k) || ''; }catch(e){ return ''; } }
-function forget(){ try{ ['pw'].forEach(function(k){ sessionStorage.removeItem('qscrm.'+k); localStorage.removeItem('qscrm.'+k); }); }catch(e){} }
+function sbClient(remember){
+  if(!window.supabase){ throw new Error('Supabase library not loaded (offline?)'); }
+  var c=cfg(), st; try{ st = remember ? window.localStorage : window.sessionStorage; }catch(e){ st=undefined; }
+  return window.supabase.createClient(c.supabaseUrl, c.supabaseKey, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storage:st, storageKey:'qscrm.auth' } });
+}
+function api(action, body){
+  if(!S.sb) { var e0=new Error('Not signed in'); e0.auth=true; return Promise.reject(e0); }
+  return S.sb.rpc('crm_'+String(action).toLowerCase(), { p: body||{} }).then(function(r){
+    if(r.error){ var m=String(r.error.message||r.error.hint||'Error'); var e=new Error(m.replace(/^AUTH:\s*/,'')); e.auth=/^AUTH:|JWT|not authenticated/i.test(m); throw e; }
+    return r.data;
+  }, function(err){ throw new Error(/fetch|network/i.test(String(err&&err.message))?'Cannot reach Supabase - check the internet connection':String(err&&err.message||err)); });
+}
+/* store a file in Google Drive through the Apps Script file service -> {folder_link, url, name} */
+function driveUp(file, t){
+  var url=cfg().driveUrl;
+  if(!url) return Promise.reject(new Error('Drive file service not set (driveUrl in config.js)'));
+  return S.sb.auth.getSession().then(function(r){
+    var tok=r.data&&r.data.session&&r.data.session.access_token; if(!tok) throw new Error('Session expired - sign in again');
+    return fetch(url,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, redirect:'follow',
+      body:JSON.stringify({ action:'upload', token:tok, arza_no:t.arza_no, tender_ref:t.tender_ref||'', folder_link:t.folder_link||'', file:{name:file.name,type:file.type||'',data:file.data} }) });
+  }).then(function(r){ if(!r.ok) throw new Error('Drive service answered '+r.status); return r.json(); })
+    .then(function(j){ if(!j.ok) throw new Error(j.error||'Drive error'); return j.data; });
+}
+function driveCall(action, extra){
+  var url=cfg().driveUrl; if(!url) return Promise.reject(new Error('Drive file service not set (driveUrl in config.js)'));
+  return S.sb.auth.getSession().then(function(r){ var tok=r.data&&r.data.session&&r.data.session.access_token;
+    return fetch(url,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, redirect:'follow', body:JSON.stringify(Object.assign({action:action, token:tok}, extra||{})) }); })
+    .then(function(r){ return r.json(); }).then(function(j){ if(!j.ok) throw new Error(j.error||'Error'); return j.data; });
+}
+/* API call that carries a file: file to Drive first, then the record with the link (new tender: record first) */
+function apiF(action, body){
+  var f=body&&body.file; if(!f||!f.data) return api(action, body);
+  var b=Object.assign({},body); delete b.file;
+  if(action==='importTender'){
+    b.file_name=f.name;
+    return api(action, b).then(function(row){
+      return driveUp(f,row).then(function(d){ return api('setFile',{arza_no:row.arza_no, folder_link:d.folder_link, workbook_file:f.name}); })
+        .then(function(r){ var logs=(row._log||[]).concat(r._log||[]); var n=row._bq_lines; Object.assign(row,r); row._log=logs; row._bq_lines=n; return row; })
+        .catch(function(e){ toast('Saved as '+row.arza_no+', but the workbook was not stored in Drive: '+e.message,true); return row; });
+    });
+  }
+  var t=S.tenders.filter(function(x){return x.arza_no===b.arza_no;})[0]||{arza_no:b.arza_no};
+  return driveUp(f,t).then(function(d){ b.file={name:f.name, folder_link:d.folder_link, url:d.url}; return api(action,b); },
+    function(e){ if(!confirm('The file could not be stored in Google Drive:\n'+e.message+'\n\nSave the record without the file?')) throw e; return api(action,b); });
+}
 
 /* ---------- login ---------- */
 function showLogin(err){
-  $('vLogin').classList.remove('hidden'); $('vMain').classList.add('hidden'); $('vRep').classList.add('hidden'); $('vAB').classList.add('hidden'); $('vRV').classList.add('hidden'); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
-  $('inUrl').value = load('url'); $('loginErr').textContent = err||''; closeDrawer();
-  setTimeout(function(){ ($('inUrl').value? $('inPw') : $('inUrl')).focus(); }, 30);
+  $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS'].forEach(function(id){ $(id).classList.add('hidden'); }); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
+  $('inEmail').value = load('email'); $('loginErr').textContent = err||''; closeDrawer();
+  var c=cfg(); $('inSbUrl').value=c.supabaseUrl; $('inSbKey').value=c.supabaseKey; $('inDrive').value=c.driveUrl;
+  $('cfgBox').classList.toggle('hidden', cfgOk());
+  $('inRemember').checked = load('remember')==='1';
+  setTimeout(function(){ ($('inEmail').value? $('inPw') : $('inEmail')).focus(); }, 30);
+}
+function saveCfgFromForm(){
+  if($('cfgBox').classList.contains('hidden')) return;
+  var c=window.QSCRM_CONFIG||{};
+  [['supabaseUrl','inSbUrl'],['supabaseKey','inSbKey'],['driveUrl','inDrive']].forEach(function(x){ if(!c[x[0]]) store('cfg.'+x[0], $(x[1]).value.trim().replace(/\/$/,''), true); });
 }
 function signIn(){
-  var url=$('inUrl').value.trim(), pw=$('inPw').value;
-  if(!/^https:\/\/script\.google(usercontent)?\.com\/.+/.test(url)){ $('loginErr').textContent='Paste the Apps Script web app URL (https://script.google.com/…/exec).'; return; }
+  saveCfgFromForm();
+  if(!cfgOk()){ $('cfgBox').classList.remove('hidden'); $('loginErr').textContent='Fill the Supabase project URL and anon key (or put them in config.js).'; return; }
+  var email=$('inEmail').value.trim(), pw=$('inPw').value, keep=$('inRemember').checked;
+  if(!/^[^@\s]+@[^@\s]+$/.test(email)){ $('loginErr').textContent='Enter your email.'; return; }
   if(!pw){ $('loginErr').textContent='Enter the password.'; return; }
-  S.url=url; S.pw=pw; S.mode='api';
-  $('btnLogin').disabled=true; $('btnLogin').innerHTML='<span class="spin"></span> Connecting…';
-  refresh().then(function(){
-    var keep=$('inRemember').checked; store('url',url,true); store('pw',pw,keep); $('inPw').value='';
-    enter();
+  store('remember', keep?'1':'0', true); store('email', email, true);
+  try{ S.sb=sbClient(keep); }catch(e){ $('loginErr').textContent=e.message; return; }
+  $('btnLogin').disabled=true; $('btnLogin').innerHTML='<span class="spin"></span> Signing in…';
+  S.sb.auth.signInWithPassword({email:email, password:pw}).then(function(r){
+    if(r.error) throw new Error(/invalid login/i.test(r.error.message)?'Wrong email or password.':r.error.message);
+    S.mode='api'; $('inPw').value='';
+    return refresh().then(enter);
   }).catch(function(e){
-      if(e.auth) $('loginErr').textContent='Wrong password.';
-      else if(/failed to fetch|networkerror|load failed/i.test(e.message)) $('loginErr').innerHTML='Could not reach the web app. Open <a href="'+esc(url)+'" target="_blank" rel="noopener">the URL in a new tab</a>: it must show {"ok":true,"app":"QS CRM API"…}. A Google sign-in page means the deployment access is not "Anyone"; "Script function not found" means a new version must be deployed.';
-      else $('loginErr').textContent='Could not connect: '+e.message;
-      S.mode=''; })
-    .then(function(){ $('btnLogin').disabled=false; $('btnLogin').textContent='Sign in'; });
+    S.mode=''; $('loginErr').textContent = /fetch|network/i.test(e.message) ? 'Cannot reach Supabase. Check the internet connection and the project URL (Connection settings).' : e.message;
+    if(S.sb){ try{ S.sb.auth.signOut(); }catch(x){} }
+  }).then(function(){ $('btnLogin').disabled=false; $('btnLogin').textContent='Sign in'; });
 }
+function forgot(e){
+  e.preventDefault(); saveCfgFromForm();
+  var email=$('inEmail').value.trim(); if(!email){ $('loginErr').textContent='Type your email first, then click Forgot password.'; return; }
+  if(!cfgOk()){ $('cfgBox').classList.remove('hidden'); return; }
+  try{ S.sb=S.sb||sbClient(load('remember')==='1'); }catch(x){ $('loginErr').textContent=x.message; return; }
+  S.sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname}).then(function(r){
+    $('loginErr').textContent = r.error ? r.error.message : 'If '+email+' has an account, a reset link is on its way. Open it on this device.'; });
+}
+function signOut(){ var sb=S.sb; S.sb=null; S.me=null; S.mode=''; S.tenders=[]; if(sb){ try{ sb.auth.signOut(); }catch(e){} } showLogin(); }
 function enter(){
   $('vLogin').classList.add('hidden'); $('vMain').classList.remove('hidden'); $('top').classList.remove('hidden'); $('btnOut').classList.remove('hidden'); clock();
   var c=$('conn'); c.classList.remove('hidden'); c.classList.toggle('ro', ro());
-  c.querySelector('span').textContent = ro() ? 'Read-only: '+S.fileName : 'Google Sheet: QS CRM DB';
+  c.querySelector('span').textContent = fileMode() ? 'Read-only: '+S.fileName : 'Supabase · QS CRM'+(canWrite()?'':' · read only');
   $('btnNew').classList.toggle('hidden', ro()); $('btnImport').classList.toggle('hidden', ro());
+  $('navUsers').classList.toggle('hidden', !isAdmin());
   fillFilters(); showView('tenders'); openFromHash();
 }
 function refresh(){
-  if(ro()) return Promise.resolve();
-  return api('list').then(function(d){ S.tenders=d.tenders||[]; S.lists=d.lists||{}; S.log=d.log||[]; S.drive=d.drive||''; });
+  if(fileMode()) return Promise.resolve();
+  return api('list').then(function(d){ S.tenders=d.tenders||[]; S.lists=d.lists||{}; S.log=d.log||[]; S.drive=d.drive||''; S.me=d.me||null; });
 }
-
+function account(){
+  if(!S.me){ return; }
+  modal('My account', '<div class="note">'+esc(S.me.email)+' · role <b>'+esc(S.me.role)+'</b>'+(canWrite()?'':' (read only)')+'</div>'+
+    '<div class="form"><div class="f"><label for="pw1">New password</label><input id="pw1" type="password" autocomplete="new-password"></div><div class="f"><label for="pw2">Repeat new password</label><input id="pw2" type="password" autocomplete="new-password"></div></div>',
+    '<button class="btn warn" id="acOut">Sign out</button><span style="flex:1"></span><button class="btn" id="acC">Close</button><button class="btn pri" id="acGo">Change password</button>');
+  $('acC').onclick=closeModal; $('acOut').onclick=function(){ closeModal(); signOut(); };
+  $('acGo').onclick=function(){ changePw($('pw1').value,$('pw2').value,$('acGo')); };
+}
+function changePw(a,b,btn){
+  if(a.length<8){ toast('Use at least 8 characters.',true); return; } if(a!==b){ toast('The two passwords differ.',true); return; }
+  busy(btn,true);
+  S.sb.auth.updateUser({password:a}).then(function(r){ busy(btn,false); if(r.error){ toast(r.error.message,true); return; } closeModal(); toast('Password changed'); });
+}
 /* ---------- read-only file mode (SheetJS) ---------- */
 function openFile(f){
   var rd=new FileReader();
@@ -1534,7 +1634,7 @@ function drawTab(){
   var t=S.cur, b=$('dBody'), f=$('dFoot');
   if(S.tab==='det'){
     var locked=t.locked==='Y';
-    b.innerHTML=(ro()?'<div class="note w">Read-only file mode: changes cannot be saved. Sign in with the web app URL to edit.</div>':'')+
+    b.innerHTML=(fileMode()?'<div class="note w">Read-only file mode: changes cannot be saved. Sign in to edit.</div>':ro()?'<div class="note">Read-only account: you can view everything; changes are made by the QS.</div>':'')+
       '<div class="form">'+FIELDS.map(function(x){
       if(x[0]==='sec') return '<div class="sec">'+x[1]+'</div>';
       var k=x[0], lab=x[1], type=x[2], opt=(typeof x[3]==='object'?x[3]:x[4])||{}, v=t[k]==null?'':t[k];
@@ -1620,7 +1720,7 @@ function drawTab(){
   }
 }
 function getDetail(no){
-  if(ro()){ var bills={},order=[]; S.fileDB.bq.forEach(function(r){ if(r.arza_no!==no||r.bq_set!=='Tendered') return; var k=r.bill||'-'; if(!bills[k]){bills[k]={bill:k,lines:0,amount:0};order.push(k);} bills[k].lines++; bills[k].amount+=Number(r.amount)||0; });
+  if(fileMode()){ var bills={},order=[]; S.fileDB.bq.forEach(function(r){ if(r.arza_no!==no||r.bq_set!=='Tendered') return; var k=r.bill||'-'; if(!bills[k]){bills[k]={bill:k,lines:0,amount:0};order.push(k);} bills[k].lines++; bills[k].amount+=Number(r.amount)||0; });
     return Promise.resolve({bills:order.map(function(k){return bills[k];}), revisions:(S.fileDB.rev||[]).filter(function(r){return r.arza_no===no;})}); }
   return api('get',{arza_no:no});
 }
@@ -1640,7 +1740,7 @@ function afterSave(row, msg){
   S.log=S.log.concat(logs); S.cur=row; toast(msg);
   fillFilters(); drawHead(); drawTab(); render();
 }
-function fail(e){ if(e.auth){ forget(); showLogin('Session expired or password changed. Sign in again.'); return; } toast(e.message,true); }
+function fail(e){ if(e.auth){ signOut(); $('loginErr').textContent=e.message||'Session expired. Sign in again.'; return; } toast(e.message,true); }
 function save(){
   var f=collect(), t=S.cur;
   if(!f.title && !f.tender_ref){ toast('Give at least a title or the client tender ref.',true); return; }
@@ -1757,7 +1857,7 @@ function showImport(f){
     if(!fields.title && !fields.tender_ref){ toast('Give at least a title or the client ref.',true); return; }
     var items = fields.id_scheme===bq.scheme ? cleanItems(bq) : cleanItems(BQRead.readBQ(f.wb,{XLSX:XLSX,scheme:fields.id_scheme}));
     var btn=$('iGo'); busy(btn,true,'Importing…');
-    api('importTender',{ arza_no:$('i_no').value, fields:fields, items:items, file:$('i_drive').checked?{name:f.name,type:f.type,data:f.data}:null })
+    apiF('importTender',{ arza_no:$('i_no').value, fields:fields, items:items, file:$('i_drive').checked?{name:f.name,type:f.type,data:f.data}:null })
       .then(function(row){ closeModal(); var n=row._bq_lines; afterSave(row,'Imported as '+row.arza_no); S.cur._bq_lines=n; openDrawer(row.arza_no); })
       .catch(function(e){ busy(btn,false); fail(e); });
   };
@@ -1781,7 +1881,7 @@ function showUpload(f){
   $('uGo').onclick=function(){
     var rep = canBQ && $('u_bq') && $('u_bq').checked;
     var btn=$('uGo'); busy(btn,true,'Uploading…');
-    api('uploadFile',{ arza_no:t.arza_no, file:{name:f.name,type:f.type,data:f.data}, replaceBQ:!!rep, items:rep?cleanItems(f.bq):null, our_sum:rep?f.bq.total:null, id_scheme:rep?f.bq.scheme:null })
+    apiF('uploadFile',{ arza_no:t.arza_no, file:{name:f.name,type:f.type,data:f.data}, replaceBQ:!!rep, items:rep?cleanItems(f.bq):null, our_sum:rep?f.bq.total:null, id_scheme:rep?f.bq.scheme:null })
       .then(function(row){ closeModal(); var n=row._bq_lines; afterSave(row, rep?'File saved and BQ replaced':'File saved to Drive'); if(n!=null){ S.cur._bq_lines=n; render(); } })
       .catch(function(e){ busy(btn,false); fail(e); });
   };
@@ -1794,8 +1894,8 @@ function showView(v){
   if(v!=='rev'){ RV.dirty=false; RV.edit=null; }
   S.view=v;
   document.querySelectorAll('#nav a[data-v]').forEach(function(a){ a.classList.toggle('on', a.dataset.v===v); });
-  $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports'); $('vAB').classList.toggle('hidden', v!=='asbuilt'); $('vRV').classList.toggle('hidden', v!=='rev');
-  if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else if(v==='rev') renderRV(); else render();
+  $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports'); $('vAB').classList.toggle('hidden', v!=='asbuilt'); $('vRV').classList.toggle('hidden', v!=='rev'); $('vUS').classList.toggle('hidden', v!=='users');
+  if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else if(v==='rev') renderRV(); else if(v==='users') renderUsers(); else render();
 }
 function repRows(){
   var by=function(key,vals){ return vals.map(function(v){ var arr=S.tenders.filter(function(t){ return key==='status'&&v==='(not set)' ? !t.status : t[key]===v; }); return {k:v, st:stats(arr)}; }).filter(function(r){return r.st.n;}); };
@@ -1918,7 +2018,7 @@ function exportReports(){
 var AB = { no:'', items:[], tend:[], rev:null, rows:[], set:'', tab:'sum', only:false, cache:{} };   // items = contract BQ (latest approved revision, else tendered)
 function abTenders(){ return S.tenders.filter(function(t){ return (t._bq_lines||0)>0; }).sort(function(a,b){ return String(b.arza_no).localeCompare(String(a.arza_no)); }); }
 function getAsBuilt(no){
-  if(ro()){
+  if(fileMode()){
     var items=(S.fileDB.bq||[]).filter(function(r){return r.arza_no===no && r.bq_set==='Tendered';});
     var rows=(S.fileDB.ab||[]).filter(function(r){return r.arza_no===no;});
     var cur=Rev.current((S.fileDB.rev||[]).filter(function(r){return r.arza_no===no;}));
@@ -1968,6 +2068,7 @@ function drawAB(){
   ['abExport','abPrint','abDel'].forEach(function(id){ if($(id)) $(id).disabled=!AB.set; });
   var b=$('abBody'), t=abTender();
   if(!AB.no){ b.innerHTML='<div class="empty">Import a priced tender workbook first (Tenders › Import), then come back to measure it.</div>'; return; }
+  if(!AB.set && ro()){ b.innerHTML='<div class="card"><h3>No as-built measurement for '+esc(AB.no)+' yet</h3><p class="n" style="font-size:12px;color:var(--ink3);margin:0">'+esc(abBasis())+': '+AB.items.length+' lines.</p></div>'; return; }
   if(!AB.set){ b.innerHTML='<div class="card"><h3>No as-built measurement for '+esc(AB.no)+' yet</h3><p style="color:var(--ink2);margin:0 0 10px">1. Download the <a href="Breakdown_QTY_Template.xlsx" download>Breakdown QTY template</a> and measure on site (one BQ item per row).<br>2. Click <b>Import Breakdown QTY</b>. The old MOE Block D layout (SL NO / LOCATION / DESCRIPTION / TOTAL QUANTITY) is read too.<br>3. Check the matching, then save it as a measure set (e.g. "As-built", "Interim 1").</p><p class="n" style="font-size:12px;color:var(--ink3);margin:0">'+esc(abBasis())+': '+AB.items.length+' lines · ID scheme '+esc(t.id_scheme||'–')+'.</p></div>'; return; }
   var C=BQTY.compare(AB.items, abRows()), T=C.totals, st=countStatus(abRows());
   if(AB.tab==='sum'){
@@ -2064,7 +2165,7 @@ function showABImport(f){
     if(sets.some(function(x){return x.k===set;}) && !confirm('Replace the existing measure set "'+set+'"?')) return;
     var rows=m.rows.map(function(x){ return {item_ref_raw:x.item_ref_raw,item_id:x.item_id,match_status:x.match_status,level:x.level,location:x.location,description:x.description,unit:x.unit,nos:x.nos,l:x.l,w:x.w,h:x.h,qty:x.qty,remark:[x.remark,x.match_note].filter(Boolean).join(' | '),measured_by:x.measured_by,measured_date:x.measured_date,source_row:x.sheet+'!'+x.row}; });
     var btn=$('abGo'); busy(btn,true,'Saving…');
-    api('importAsBuilt',{arza_no:t.arza_no, measure_set:set, rows:rows, stats:s, file:$('ab_drive').checked?{name:f.name,type:f.type,data:f.data}:null})
+    apiF('importAsBuilt',{arza_no:t.arza_no, measure_set:set, rows:rows, stats:s, file:$('ab_drive').checked?{name:f.name,type:f.type,data:f.data}:null})
       .then(function(res){
         closeModal(); (res._log||[]).forEach(function(l){ S.log.push(l); });
         var tt=S.tenders.filter(function(x){return x.arza_no===t.arza_no;})[0]; if(tt){ if(res.folder_link) tt.folder_link=res.folder_link; }
@@ -2118,7 +2219,7 @@ function printAB(){
 /* ---------- v2: rationalized BQ revisions ---------- */
 var RV = { no:'', items:[], lines:[], revs:[], tender:null, sel:'', tab:'sum', only:true, q:'', cmp:'base', edit:null, editRev:'', desc:'', dirty:false };
 function getRevData(no){
-  if(ro()){
+  if(fileMode()){
     var bq=S.fileDB.bq||[];
     return Promise.resolve({ tender:S.tenders.filter(function(t){return t.arza_no===no;})[0]||null,
       items:bq.filter(function(r){return r.arza_no===no && r.bq_set==='Tendered';}),
@@ -2355,7 +2456,7 @@ function rvClean(lines){ return lines.map(function(x){ return {item_id:x.item_id
 function saveDraft(){
   if(!RV.desc.trim()){ toast('Describe the revision (reason / basis) first.',true); $('rvDesc').focus(); return; }
   var btn=$('rvSave'); busy(btn,true);
-  api('saveRevision',{arza_no:RV.no, rev:RV.editRev, meta:{description:RV.desc.trim()}, items:rvClean(RV.edit)})
+  apiF('saveRevision',{arza_no:RV.no, rev:RV.editRev, meta:{description:RV.desc.trim()}, items:rvClean(RV.edit)})
     .then(function(r){ (r._log||[]).forEach(function(l){S.log.push(l);}); toast(r.revision.rev+' saved — B$'+money(r.revision.rev_sum)); RV.dirty=false; return loadRV(RV.no, r.revision.rev); })
     .catch(function(e){ busy(btn,false); fail(e); });
 }
@@ -2415,7 +2516,7 @@ function newRevision(){
   $('nrGo').onclick=function(){
     var d=$('nr_desc').value.trim(); if(!d){ toast('Give a description.',true); return; }
     var btn=$('nrGo'); busy(btn,true,'Creating…');
-    api('saveRevision',{arza_no:RV.no, rev:'', meta:{description:d}, items:rvClean(lines)})
+    apiF('saveRevision',{arza_no:RV.no, rev:'', meta:{description:d}, items:rvClean(lines)})
       .then(function(r){ closeModal(); (r._log||[]).forEach(function(l){S.log.push(l);}); toast('Draft '+r.revision.rev+' created'); RV.tab='lines'; return loadRV(RV.no, r.revision.rev); })
       .catch(function(e){ busy(btn,false); fail(e); });
   };
@@ -2441,7 +2542,7 @@ function showRVImport(f){
   $('riGo').onclick=function(){
     var d=$('ri_desc').value.trim(); if(!d){ toast('Give a description.',true); return; }
     var btn=$('riGo'); busy(btn,true,'Saving…');
-    api('saveRevision',{arza_no:RV.no, rev:dr?dr.rev:'', meta:{description:d}, items:items, file:$('ri_drive').checked?{name:f.name,type:f.type,data:f.data}:null})
+    apiF('saveRevision',{arza_no:RV.no, rev:dr?dr.rev:'', meta:{description:d}, items:items, file:$('ri_drive').checked?{name:f.name,type:f.type,data:f.data}:null})
       .then(function(r){ closeModal(); (r._log||[]).forEach(function(l){S.log.push(l);}); if(r.tender) syncTender(r.tender); toast(r.revision.rev+' saved from '+f.name); RV.tab='chg'; return loadRV(RV.no, r.revision.rev); })
       .catch(function(e){ busy(btn,false); fail(e); });
   };
@@ -2481,7 +2582,7 @@ function drawRVApproval(){
     return;
   }
   var apr=[['Approved on',fmtDate(rec.approved_date)],['For ARZA SDN BHD',rec.arza_rep],['For the client',rec.client_rep+(rec.client_org?', '+rec.client_org:'')],['Letter / document ref',rec.letter_ref],
-    ['Document', rec.doc_link?'<a href="'+esc(rec.doc_link)+'" target="_blank" rel="noopener">'+esc(rec.document||'Open')+'</a>':(rec.document||'none attached'), !!rec.doc_link],['Recorded',fmtDate(rec.approved_at)+' by '+APP.user]];
+    ['Document', rec.doc_link?'<a href="'+esc(rec.doc_link)+'" target="_blank" rel="noopener">'+esc(rec.document||'Open')+'</a>':(rec.document||'none attached'), !!rec.doc_link],['Recorded',fmtDate(rec.approved_at)]];
   if(rec.status==='Void') apr.push(['Voided',(rec.void_reason||'')+' ('+fmtDate(rec.updated_at)+')']);
   b.innerHTML='<div class="grid2"><div class="card"><h3>Approval record — '+esc(rec.rev)+' '+revChip(rec.status)+(cur&&cur.rev===rec.rev?' <span class="chip st-Won">contract BQ</span>':'')+'</h3>'+dl(apr)+'</div><div class="card"><h3>Revision</h3>'+dl(sums)+'</div></div>'+
     (!ro() && cur && cur.rev===rec.rev ? '<div class="bar"><span class="scope">Approved revisions are locked. If the approval was recorded by mistake or the agreement was withdrawn, void it (needs a reason; the lines stay on record).</span><span style="flex:1"></span><button class="btn warn" id="rvVoid">Void '+esc(rec.rev)+'…</button></div>' : '');
@@ -2499,7 +2600,7 @@ function showApprove(){
     '<div class="note">'+esc(rec.rev)+': '+rec.lines+' lines, <b>B$'+money(s)+'</b> ('+signed(s-bs)+' vs '+esc(rvBase(rec))+(rvBase(rec)!=='Tendered'?', '+signed(s-tend)+' vs tendered':'')+'). Once approved it is <b>locked</b> and becomes the contract BQ for the as-built reports.</div>'+
     '<div class="form"><div class="f"><label for="ap_date">Approval date</label><input id="ap_date" type="date" value="'+today()+'"></div>'+
     '<div class="f"><label for="ap_ref">Letter / document ref</label><input id="ap_ref" placeholder="e.g. JKR/DBS/BM/021/2026 (12)"></div>'+
-    '<div class="f"><label for="ap_arza">For ARZA SDN BHD (name, designation)</label><input id="ap_arza" value="'+esc(last.arza||APP.user+', QS')+'"></div>'+
+    '<div class="f"><label for="ap_arza">For ARZA SDN BHD (name, designation)</label><input id="ap_arza" value="'+esc(last.arza||((S.me&&(S.me.full_name||S.me.email))||APP.user)+', QS')+'"></div>'+
     '<div class="f"><label for="ap_cli">For the client (name, designation)</label><input id="ap_cli"></div>'+
     '<div class="f full"><label for="ap_org">Client organisation</label><input id="ap_org" value="'+esc(t.client||t.client_group||'')+'"></div>'+
     '<div class="f full"><label for="ap_doc">Approval document (signed BQ, letter or minutes — PDF / image / Excel)</label><input id="ap_doc" type="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xlsm,.docx,.zip"><div class="hint">Saved to the tender\'s Drive folder and linked to the record.</div></div>'+
@@ -2517,7 +2618,7 @@ function showApprove(){
     try{ localStorage.setItem('qscrm.approver',JSON.stringify({arza:a.arza_rep})); }catch(e){}
     var btn=$('apGo'); busy(btn,true,'Approving…');
     (file ? file.arrayBuffer().then(function(buf){ return {name:file.name,type:file.type||'',data:b64(buf)}; }) : Promise.resolve(null))
-      .then(function(doc){ return api('approveRevision',{arza_no:RV.no, rev:rec.rev, approval:a, file:doc}); })
+      .then(function(doc){ return apiF('approveRevision',{arza_no:RV.no, rev:rec.rev, approval:a, file:doc}); })
       .then(function(r){ closeModal(); (r._log||[]).forEach(function(l){S.log.push(l);}); syncTender(r.tender); toast(rec.rev+' approved — contract sum B$'+money(r.tender.contract_sum)); RV.tab='apr'; return loadRV(RV.no, rec.rev); })
       .catch(function(e){ busy(btn,false); fail(e); });
   };
@@ -2570,6 +2671,90 @@ function printRV(){
   w.document.open(); w.document.write(html); w.document.close();
 }
 
+/* ---------- users & setup (admin) ---------- */
+var ROLE_HELP={ admin:'everything + users', qs:'all changes (tenders, BQ, revisions, as-built)', viewer:'read only (management, client)', pm:'read only for now (site modules in v7)', site:'read only for now (site modules in v7)' };
+function renderUsers(){
+  if(!isAdmin()){ $('vUS').innerHTML='<div class="empty">Only the admin can manage users.</div>'; return; }
+  $('vUS').innerHTML='<div class="bar"><div><h2>Users</h2><div class="scope">Who can sign in to QS CRM. Roles: admin — '+ROLE_HELP.admin+' · qs — '+ROLE_HELP.qs+' · viewer — '+ROLE_HELP.viewer+'.</div></div><span style="flex:1"></span><button class="btn pri" id="usAdd">+ Add user</button></div>'+
+    '<div class="card"><div id="usList"><div class="empty"><span class="spin"></span> Loading…</div></div><p class="n">Changes apply at the person\'s next action. A deactivated account cannot sign in to the data. There must always be one active admin.</p></div>'+
+    '<div class="card"><h3>Move data from the Google Sheet (one time)</h3><p style="margin:0 0 8px;color:var(--ink2)">1. Open the Google Sheet <b>QS CRM DB</b> › File › Download › Microsoft Excel (.xlsx).<br>2. Choose that file here: tenders, BQ lines, revisions, as-built lines, the log and lists are copied into Supabase. Drive links stay as they are.</p>'+
+    '<button class="btn imp" id="usMig">Choose QS CRM DB.xlsx…</button></div>'+
+    '<div class="card"><h3>Connection</h3><div id="usConn" class="n">Checking the Drive file service…</div></div>';
+  $('usAdd').onclick=addUser; $('usMig').onclick=function(){ $('migFile').click(); };
+  loadUsers();
+  var c=cfg();
+  (c.driveUrl ? driveCall('ping') : Promise.reject(new Error('driveUrl is empty in config.js'))).then(function(d){
+    $('usConn').innerHTML='Supabase: '+esc(c.supabaseUrl)+'<br>Drive file service: OK (signed in as '+esc(d.email)+', Drive folder '+(d.drive?'set':'<b>not set — run setDriveFolder()</b>')+').';
+  }).catch(function(e){ $('usConn').innerHTML='Supabase: '+esc(c.supabaseUrl)+'<br><b style="color:var(--bad)">Drive file service: '+esc(e.message)+'</b> — files cannot be stored until it works.'; });
+}
+function loadUsers(){
+  return api('users').then(function(U){
+    S.users=U;
+    $('usList').innerHTML='<div class="tbl"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th>Added</th></tr></thead><tbody>'+
+      U.map(function(u){ var me=S.me&&u.id===S.me.id; return '<tr data-id="'+esc(u.id)+'"><td><input class="nm" data-k="full_name" value="'+esc(u.full_name||'')+'" placeholder="name"></td><td>'+esc(u.email)+(me?' <span class="chip st-Won">you</span>':'')+'</td>'+
+        '<td><select data-k="role">'+['admin','qs','viewer','pm','site'].map(function(r){ return '<option value="'+r+'"'+(r===u.role?' selected':'')+'>'+r+'</option>'; }).join('')+'</select> <span class="n">'+esc(ROLE_HELP[u.role]||'')+'</span></td>'+
+        '<td><label class="chkrow" style="margin:0"><input type="checkbox" data-k="active"'+(u.active?' checked':'')+'> active</label></td><td class="dt">'+esc(fmtDate(String(u.created_at||'').slice(0,10)))+'</td></tr>'; }).join('')+'</tbody></table></div>';
+    $('usList').onchange=function(e){
+      var el=e.target, tr=el.closest('tr[data-id]'); if(!tr||!el.dataset.k) return;
+      var b={id:tr.dataset.id}; b[el.dataset.k] = el.type==='checkbox' ? el.checked : el.value.trim();
+      api('setUser',b).then(function(u){ (u._log||[]).forEach(function(l){S.log.push(l);}); toast('Saved '+u.email); if(S.me&&u.id===S.me.id){ S.me.full_name=u.full_name; S.me.role=u.role; clock(); } loadUsers(); })
+        .catch(function(err){ fail(err); loadUsers(); });
+    };
+  }).catch(function(e){ $('usList').innerHTML='<div class="note w">'+esc(e.message)+'</div>'; });
+}
+function tempPw(){ var a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', s=''; var r=new Uint32Array(12); (window.crypto||{getRandomValues:function(x){ for(var i=0;i<x.length;i++) x[i]=Math.random()*1e9; return x; }}).getRandomValues(r); for(var i=0;i<12;i++) s+=a[r[i]%a.length]; return s; }
+function addUser(){
+  modal('Add user', '<div class="form"><div class="f"><label for="nu_email">Email</label><input id="nu_email" type="email"></div><div class="f"><label for="nu_name">Full name</label><input id="nu_name"></div>'+
+    '<div class="f"><label for="nu_role">Role</label><select id="nu_role">'+['viewer','qs','admin'].map(function(r){ return '<option value="'+r+'">'+r+' — '+esc(ROLE_HELP[r])+'</option>'; }).join('')+'</select></div>'+
+    '<div class="f"><label for="nu_pw">Temporary password</label><input id="nu_pw" value="'+tempPw()+'"><div class="hint">Give it to the person (not by email); they change it under My account (click their name, top right).</div></div></div>'+
+    '<p class="n" style="font-size:12px;color:var(--ink3)">Needs the service key in the Drive file service (setSupabase). Without it: Supabase › Authentication › Users › Add user (tick Auto Confirm), then set the role here.</p>',
+    '<button class="btn" id="nuC">Cancel</button><button class="btn pri" id="nuGo">Create account</button>');
+  $('nuC').onclick=closeModal;
+  $('nuGo').onclick=function(){
+    var u={email:$('nu_email').value.trim(), full_name:$('nu_name').value.trim(), role:$('nu_role').value, password:$('nu_pw').value};
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(u.email)){ toast('Give a valid email.',true); return; }
+    if(u.password.length<8){ toast('Password: at least 8 characters.',true); return; }
+    var btn=$('nuGo'); busy(btn,true,'Creating…');
+    driveCall('createUser',{user:u}).then(function(r){ closeModal(); toast('Account created: '+r.email+' ('+r.role+')'); loadUsers(); })
+      .catch(function(e){ busy(btn,false); toast(e.message,true); });
+  };
+}
+/* one-time import of the Google Sheet (downloaded as .xlsx) */
+function migVal(v){
+  if(v instanceof Date){ var d=new Date(Math.round(v.getTime()/60000)*60000), p=function(n){ return String(n).padStart(2,'0'); };
+    var dt=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()), hm=p(d.getHours())+':'+p(d.getMinutes()); return hm==='00:00'?dt:dt+' '+hm; }
+  if(typeof v==='string'){ v=v.trim(); return v===''?null:v; }
+  return v==null?null:v;
+}
+function migPayload(sheets){
+  var rows=function(name){ var a=sheets[name]||[]; if(!a.length) return []; var h=a[0].map(function(x){ return x==null?'':String(x).trim(); });
+    return a.slice(1).filter(function(r){ return r.some(function(c){ return c!==null&&c!==''; }); }).map(function(r){ var o={}; h.forEach(function(k,i){ if(k) o[k]=r[i]==null?null:r[i]; }); return o; }); };
+  var lists={}, L=sheets.Lists||[];
+  (L[0]||[]).forEach(function(h,c){ if(!h) return; lists[h]=[]; for(var i=1;i<L.length;i++){ var v=L[i][c]; if(v!==null&&v!=='') lists[h].push(String(v)); } });
+  var T=rows('Tenders').filter(function(t){ return /^T\d+$/.test(String(t.arza_no||'')); }).map(function(t){ t.locked = t.locked==='Y'?'Y':'N'; return t; });
+  return { tenders:T, bq:rows('BQ_Items').filter(function(r){ return r.arza_no&&r.item_id; }), asbuilt:rows('AsBuilt_Items').filter(function(r){ return r.arza_no; }), revisions:rows('Revisions').filter(function(r){ return r.arza_no&&r.rev; }),
+    log:rows('Log').map(function(l){ return {ts:l.timestamp, action:l.action, arza_no:l.arza_no, detail:l.detail, user_name:l.user}; }), lists:lists };
+}
+function showMigrate(file){
+  file.arrayBuffer().then(function(buf){
+    var wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true}), sheets={};
+    wb.SheetNames.forEach(function(n){ sheets[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null}).map(function(r){ return r.map(migVal); }); });
+    if(!sheets.Tenders) throw new Error('No "Tenders" tab — is this the QS CRM DB download?');
+    var P=migPayload(sheets); P.file_name=file.name;
+    var existing=S.tenders.length;
+    modal('Import data — '+file.name, '<div class="kpis" style="grid-template-columns:repeat(5,1fr)">'+[['Tenders',P.tenders.length],['BQ lines',P.bq.length],['As-built lines',P.asbuilt.length],['Revisions',P.revisions.length],['Log lines',P.log.length]].map(function(k){ return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'; }).join('')+'</div>'+
+      (existing?'<div class="note w">Supabase already has '+existing+' tenders. Importing again <b>deletes all tenders, BQ lines, revisions, as-built lines and the log</b> in Supabase and replaces them with this file. Users are kept.</div><label class="chkrow"><input type="checkbox" id="mg_rep"> Yes, replace the data in Supabase</label>':'<div class="note">The data is copied into Supabase. The Google Sheet is not changed — keep it as an archive.</div>'),
+      '<button class="btn" id="mgC">Cancel</button><button class="btn pri" id="mgGo">Import into Supabase</button>');
+    $('mgC').onclick=closeModal;
+    $('mgGo').onclick=function(){
+      if(existing && !$('mg_rep').checked){ toast('Tick "replace" to import again.',true); return; }
+      P.replace=!!existing; var btn=$('mgGo'); busy(btn,true,'Importing…');
+      api('migrate',P).then(function(r){ closeModal(); toast('Imported '+r.tenders+' tenders, '+r.bq+' BQ lines, '+r.revisions+' revisions'); return refresh().then(function(){ fillFilters(); }); })
+        .catch(function(e){ busy(btn,false); fail(e); });
+    };
+  }).catch(function(e){ toast('Could not read the file: '+e.message,true); });
+}
+
 /* ---------- export ---------- */
 function exportXlsx(){
   if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
@@ -2582,9 +2767,12 @@ function exportXlsx(){
 /* ---------- events ---------- */
 $('btnLogin').onclick=signIn;
 $('inPw').addEventListener('keydown',function(e){ if(e.key==='Enter') signIn(); });
+$('lnkForgot').onclick=forgot;
+$('lnkCfg').onclick=function(e){ e.preventDefault(); $('cfgBox').classList.toggle('hidden'); };
+$('hello').onclick=account; $('hello').onkeydown=function(e){ if(e.key==='Enter') account(); };
 $('btnFile').onclick=function(){ $('inFile').click(); };
 $('inFile').onchange=function(){ if(this.files[0]) openFile(this.files[0]); this.value=''; };
-$('btnOut').onclick=function(){ forget(); S.pw=''; S.mode=''; S.tenders=[]; showLogin(); };
+$('btnOut').onclick=signOut;
 ['q','fStatus','fGroup','fType','fYear'].forEach(function(id){ $(id).addEventListener('input',render); });
 document.querySelectorAll('th[data-k]').forEach(function(th){ th.onclick=function(){ var k=th.dataset.k; S.sort = S.sort.k===k ? {k:k,dir:-S.sort.dir} : {k:k,dir:(k==='our_sum'||k==='closing_date'||k==='arza_no')?-1:1}; render(); }; });
 $('rows').onclick=function(e){ var tr=e.target.closest('tr[data-no]'); if(tr) openDrawer(tr.dataset.no); };
@@ -2596,6 +2784,7 @@ $('btnImport').onclick=startImport;
 $('impFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showImport); };
 $('upFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showUpload); };
 $('impClose').onclick=closeModal;
+$('migFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) showMigrate(f); };
 $('rvFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showRVImport); };
 window.addEventListener('beforeunload',function(e){ if(RV.dirty){ e.preventDefault(); e.returnValue=''; } });
 $('abFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) readWorkbook(f).then(showABImport); };
@@ -2613,10 +2802,17 @@ $('dTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a||S.cu
 $('btnVer').textContent='v'+APP.version; $('lver').textContent=APP.name+' · v'+APP.version;
 document.title=APP.name+' · v'+APP.version;
 clock(); setInterval(clock, 20000); applyTheme();
-S.url=load('url'); S.pw=load('pw');
-if(S.url && S.pw){ S.mode='api'; $('conn').classList.remove('hidden'); $('conn').querySelector('span').textContent='Connecting…';
-  refresh().then(enter).catch(function(e){ S.mode=''; if(e.auth) forget(); showLogin(e.auth?'Password changed - sign in again.':'Could not connect: '+e.message); }); }
-else showLogin();
+if(cfgOk() && window.supabase){
+  try{ S.sb=sbClient(load('remember')==='1'); }catch(e){ S.sb=null; }
+  if(S.sb){
+    S.sb.auth.onAuthStateChange(function(ev){ if(ev==='PASSWORD_RECOVERY'){ setTimeout(function(){ modal('Set a new password','<div class="form"><div class="f"><label for="rp1">New password</label><input id="rp1" type="password" autocomplete="new-password"></div><div class="f"><label for="rp2">Repeat</label><input id="rp2" type="password" autocomplete="new-password"></div></div>','<button class="btn pri" id="rpGo">Save password</button>'); $('rpGo').onclick=function(){ changePw($('rp1').value,$('rp2').value,$('rpGo')); }; },300); } });
+    $('conn').classList.remove('hidden'); $('conn').querySelector('span').textContent='Connecting…';
+    S.sb.auth.getSession().then(function(r){
+      if(!(r.data&&r.data.session)){ showLogin(); return; }
+      S.mode='api'; return refresh().then(enter);
+    }).catch(function(e){ S.mode=''; showLogin(e.auth?e.message:'Could not connect: '+e.message); });
+  } else showLogin();
+} else showLogin();
 })();
 </script>
 </body>

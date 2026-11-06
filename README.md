@@ -1,47 +1,56 @@
-# ARZA QS CRM SYSTEM — v2.0.0 (v2: rationalized BQ)
+# ARZA QS CRM SYSTEM — v2.1.0 (Supabase)
 
-**Updating to v2.0.0:**
-1. GitHub Pages: replace `index.html` (keep `Breakdown_QTY_Template.xlsx` beside it).
-2. Apps Script: paste the new `Code.gs` over the old one, save.
-3. Deploy › Manage deployments › Edit › Version: New version › Deploy (same URL). No new permissions needed.
-4. Nothing to add in the sheet: on the first call the script adds the **Revisions** tab and the `contract_sum` / `contract_rev` columns on Tenders.
-5. **Do not keep `QS_CRM_DB.xlsx` in this repo** — the repo is public and that file holds priced BQ lines. Delete it here and keep it in Google Drive (it is only needed for the first setup and the read-only mode).
+Tender register, priced BQs, rationalized revisions, bid results and as-built reports for ARZA SDN BHD.
+**Data:** Supabase (PostgreSQL, sign-in, roles). **Files:** Google Drive (Apps Script file service). **Masterlists:** Google Sheets (pricing, inventory).
 
-**Rationalization workflow:** lock the tendered BQ at submission → Rationalized BQ › **+ New revision** (copy of the tendered BQ) or **Import revision workbook** → edit qty / rate, omit or add items (added IDs: `B1.1.X1`, `B4.X1`, `C.X1`) → Save draft → Changes → **Approval record** (date, both parties, letter ref, signed document) → R1 is locked and becomes the contract BQ. As-built Report 2 then shows Tendered | Rationalized | As-Built.
+## Move to Supabase (about 30 minutes, once)
 
-**As-built workflow:** Tenders › import the priced workbook (gives the tendered BQ) → As-built › pick the tender › Import Breakdown QTY (standard template or the old MOE layout) → check Matching check → Report 1 / Report 2 → Excel or PDF / Print.
+### 1. Supabase project
+1. https://supabase.com › sign in with Google › **New project**. Name `qs-crm`, a strong database password (keep it), **Region: Southeast Asia (Singapore)**. Free plan.
+2. **SQL Editor › New query** › paste all of `supabase/schema.sql` › **Run**. (Safe to run again after updates.)
+3. **Authentication › Sign In / Providers › Email**: keep Email on; turn **"Allow new users to sign up" OFF** (only the admin adds people).
+4. **Authentication › URL Configuration › Site URL**: your app address (e.g. `https://qs.yourdomain.com`) — used by the password-reset link.
+5. **Authentication › Users › Add user › Create new user**: your email + password, tick **Auto Confirm User**. The first account becomes **admin** automatically.
+6. **Project Settings › API**: copy the **Project URL** and the **anon public** key (and, only for step 2, the **service_role** key — keep it secret).
 
-**Workbook file name (recommended):** `Priced BQ Estimate - <client ref> Tender <n> - <Mon YYYY> rev<k>.xlsx`
-e.g. `Priced BQ Estimate - JKR-DBSBM021-2026 Tender 11 - Nov 2026 rev0.xlsx`. "Tender 11" becomes T11 when that number is free; everything else is read from the workbook (Tender Info + B-sheets).
+### 2. Drive file service (Apps Script)
+1. Open your existing Apps Script project (or script.google.com › New project), replace all code with `Code.gs`.
+2. In `setSupabase()` paste the Project URL, anon key and (optional, to add users from the app) the service_role key › Run › allow permissions › put the `PASTE-…` texts back › Save.
+3. Run `setDriveFolder()` (paste your Drive folder link, or leave it to create "QS CRM - Tenders"). Same folder as before = existing tender folders are reused.
+4. **Deploy › Manage deployments › Edit › Version: New version › Deploy** (or New deployment › Web app › Execute as Me › Anyone). Copy the `/exec` URL.
 
-## Setup (about 10 minutes, once)
+### 3. Website (GitHub Pages)
+1. Fill `config.js`: `supabaseUrl`, `supabaseKey` (anon), `driveUrl` (/exec). **Never put the service_role key in config.js.**
+2. Upload `index.html`, `config.js`, `Breakdown_QTY_Template.xlsx` to the repo (replace the old files).
+3. **Delete `QS_CRM_DB.xlsx` from the public repo** (it holds priced BQ lines).
 
-1. **Make the Google Sheet.** Upload `QS_CRM_DB.xlsx` to Google Drive → open it → *File › Save as Google Sheets*. Rename the new file **QS CRM DB**. Keep it private (do not share).
-2. **Time zone.** In the sheet: *File › Settings › Time zone* = (GMT+08:00) Brunei.
-3. **Add the API.** *Extensions › Apps Script*. Delete the sample code, paste all of `Code.gs`, save. In *Project Settings* (gear) set the time zone to Asia/Brunei too.
-4. **Set your password.** In `setPassword()` replace `CHANGE-ME` with your own password (8+ characters). Select `setPassword` in the toolbar and click *Run* (allow the permissions — it is your own script). Then put `CHANGE-ME` back and save. The password is kept as a hash in Script Properties.
-5. **Deploy.** *Deploy › New deployment › Web app* — Execute as **Me**, Who has access **Anyone** → *Deploy*. Copy the URL ending in `/exec`.
-   "Anyone" is needed so the page can call it; every call still needs your password.
-6. **Publish the page.** Put `index.html` in a GitHub repo (e.g. `qs-crm`) → *Settings › Pages* → deploy from `main` / root. Open the Pages URL, paste the `/exec` URL and password → *Sign in*.
+### 4. Move the data
+1. Google Sheet **QS CRM DB** › File › Download › Microsoft Excel (.xlsx).
+2. Sign in to the app as admin › **Users** › *Choose QS CRM DB.xlsx…* › Import. Check the register shows all tenders.
+3. Keep the Google Sheet as an archive (it is no longer updated).
 
-After changing `Code.gs`: *Deploy › Manage deployments › Edit (pencil) › Version: New version › Deploy* (URL stays the same).
+### 5. Add people
+**Users › + Add user** (email, name, role, temporary password) — needs the service key in step 2; otherwise add them in Supabase › Authentication › Users (Auto Confirm) and set the role on the Users page.
+Roles: **admin** — users + everything · **qs** — all changes · **viewer** — read only (ARZA management, client). pm / site are for the v7 site modules (read only until then).
+Everyone can change their password by clicking their name (top right). Forgot password sends a reset link by email.
 
-## What it does
-- Register of all tenders (T01, T02 … = primary key), search, filters (status, client group, type, year), sort, export to Excel.
-- Add / edit tenders; next T number is assigned on save.
-- Status Prospect → Pricing → Submitted → Won / Lost / Cancelled / No bid.
-- **Lock BQ** at submission: freezes our sum and the ID scheme; unlocking needs a reason (logged).
-- **Bid result**: winner, winning sum, result date, source; % difference (ours vs winner) computed.
-- BQ tab: tendered BQ lines and amount per bill, checked against our sum, and the tender sum history.
-- Rationalized BQ: revisions R1, R2 … with approval record, changes, sum history, rationalization statement (PDF) and Excel.
-- As-built: Breakdown QTY import, matching check, Report 1 As-Built BQ, Report 2 Tendered vs Rationalized vs As-Built.
-- Every change is written to the **Log** tab.
-- No setup needed to look: *Open QS_CRM_DB.xlsx (read-only)* on the sign-in page reads the file in the browser only.
+## Free plan notes
+- Free projects **pause after 7 days without use** (data kept; restore with one click in the Supabase dashboard). Normal weekly use keeps it awake.
+- No automatic daily backups on Free: export the register / reports to Excel regularly, or move to **Pro (US$25/month)** for daily backups and no pausing once ARZA relies on it.
 
 ## Files
 | File | Purpose |
 |---|---|
-| `index.html` | the app (one file; SheetJS from CDN for Excel) |
-| `Code.gs` | API on the Google Sheet |
-| `src/*.js` | modules embedded in index.html: itemid, bq-read, tender-info, bqty-read (as-built), revision (v2) |
-| `QS_CRM_DB.xlsx` | DB seed (10 tenders, 386 priced BQ lines) — keep it private, not in this repo |
+| `index.html` | the app (one file; SheetJS + supabase-js from CDN) |
+| `config.js` | Supabase URL + anon key + Drive service URL |
+| `supabase/schema.sql` | tables, row-level security, roles, all business rules (crm_* functions) |
+| `Code.gs` | Apps Script: Google Drive file service (+ add users) |
+| `src/*.js` | modules embedded in index.html: itemid, bq-read, tender-info, bqty-read (as-built), revision |
+| `Breakdown_QTY_Template.xlsx` | standard site measurement template |
+
+## What it does
+- Register of all tenders (T01…), search, filters, Excel export; add / edit; status; **Lock BQ** at submission; bid results.
+- Import a priced workbook as a tender (file stored in Drive).
+- **Rationalized BQ**: revisions R1, R2 … (draft editor or workbook import), changes, approval record (both parties, letter ref, signed document), void with reason, tender sum history, rationalization statement PDF.
+- **As-built**: Breakdown QTY import, matching check, Report 1 As-Built BQ, Report 2 Tendered vs Rationalized vs As-Built, Excel / PDF.
+- Reports and charts; activity log with the user's name; read-only mode from an .xlsx copy.
