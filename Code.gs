@@ -18,8 +18,8 @@
 
 function setSupabase() {
   var url = 'PASTE-PROJECT-URL';          // e.g. https://abcdefgh.supabase.co
-  var anon = 'PASTE-ANON-KEY';            // anon public key
-  var service = 'PASTE-SERVICE-KEY';      // optional: service_role key (keep secret) - leave as is to add users in the Supabase dashboard instead
+  var anon = 'PASTE-ANON-KEY';            // publishable key (sb_publishable_…) or legacy anon key
+  var service = 'PASTE-SERVICE-KEY';      // optional: secret key (sb_secret_…) or legacy service_role key - keep secret; leave as is to add users in the Supabase dashboard instead
   var p = PropertiesService.getScriptProperties();
   if (!/^https:\/\/.+\.supabase\.co\/?$/.test(url)) throw new Error('Paste the Supabase Project URL first (https://….supabase.co).');
   if (anon.indexOf('PASTE') === 0 || anon.length < 30) throw new Error('Paste the anon public key first.');
@@ -91,7 +91,7 @@ var ACTIONS = {
     if (String(u.password || '').length < 8) throw new Error('Password must have at least 8 characters');
     var res = UrlFetchApp.fetch(p.getProperty('SUPABASE_URL') + '/auth/v1/admin/users', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
-      headers: { apikey: service, Authorization: 'Bearer ' + service },
+      headers: adminHeaders_(service),
       payload: JSON.stringify({ email: u.email, password: u.password, email_confirm: true, user_metadata: { full_name: u.full_name || '' } })
     });
     var body = JSON.parse(res.getContentText() || '{}');
@@ -103,6 +103,8 @@ var ACTIONS = {
 };
 
 /* ---------- Supabase ---------- */
+/* new secret keys (sb_secret_…) go only in the apikey header; legacy service_role JWTs also as Bearer */
+function adminHeaders_(key) { var h = { apikey: key }; if (/^eyJ/.test(key)) h.Authorization = 'Bearer ' + key; return h; }
 function whoIs_(token) {
   if (!token) throw new Error('AUTH: Not signed in');
   return rpc_(token, 'crm_me', {});

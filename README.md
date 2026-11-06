@@ -11,16 +11,16 @@ Tender register, priced BQs, rationalized revisions, bid results and as-built re
 3. **Authentication › Sign In / Providers › Email**: keep Email on; turn **"Allow new users to sign up" OFF** (only the admin adds people).
 4. **Authentication › URL Configuration › Site URL**: your app address (e.g. `https://qs.yourdomain.com`) — used by the password-reset link.
 5. **Authentication › Users › Add user › Create new user**: your email + password, tick **Auto Confirm User**. The first account becomes **admin** automatically.
-6. **Project Settings › API**: copy the **Project URL** and the **anon public** key (and, only for step 2, the **service_role** key — keep it secret).
+6. Click **Connect** (top of the project page) or **Project Settings › Data API** for the **Project URL** (`https://xxxx.supabase.co`). **Project Settings › API Keys** for the **publishable** key (`sb_publishable_…`) and, only for step 2, a **secret** key (`sb_secret_…` — keep it secret). The legacy `anon` / `service_role` keys also work but Supabase retires them at the end of 2026.
 
 ### 2. Drive file service (Apps Script)
 1. Open your existing Apps Script project (or script.google.com › New project), replace all code with `Code.gs`.
-2. In `setSupabase()` paste the Project URL, anon key and (optional, to add users from the app) the service_role key › Run › allow permissions › put the `PASTE-…` texts back › Save.
+2. In `setSupabase()` paste the Project URL, the publishable key and (optional, to add users from the app) the secret key › Run › allow permissions › put the `PASTE-…` texts back › Save.
 3. Run `setDriveFolder()` (paste your Drive folder link, or leave it to create "QS CRM - Tenders"). Same folder as before = existing tender folders are reused.
 4. **Deploy › Manage deployments › Edit › Version: New version › Deploy** (or New deployment › Web app › Execute as Me › Anyone). Copy the `/exec` URL.
 
 ### 3. Website (GitHub Pages)
-1. Fill `config.js`: `supabaseUrl`, `supabaseKey` (anon), `driveUrl` (/exec). **Never put the service_role key in config.js.**
+1. Fill `config.js`: `supabaseUrl`, `supabaseKey` (publishable key), `driveUrl` (/exec). **Never put the secret key in config.js.**
 2. Upload `index.html`, `config.js`, `Breakdown_QTY_Template.xlsx` to the repo (replace the old files).
 3. **Delete `QS_CRM_DB.xlsx` from the public repo** (it holds priced BQ lines).
 
