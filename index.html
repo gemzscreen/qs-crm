@@ -183,23 +183,23 @@ td.dt{white-space:nowrap;font-size:13px}
 .barc i{display:block;height:8px;border-radius:4px;background:var(--brand2);min-width:2px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .abtabs{margin:4px 0 12px;border-bottom:1px solid var(--line)}
-#vAB .card,#vRV .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
-#vAB .card h3,#vRV .card h3{margin:0 0 8px;font-size:14px}
-#vAB .n,#vRV .n{font-size:12px;color:var(--ink3);margin:4px 0 8px}
-#vAB h2,#vRV h2{font-size:16px;margin:0 0 4px;color:var(--bink)}
-#vAB table th,#vRV table th{position:static;cursor:default}
-#vAB tbody tr,#vRV tbody tr{cursor:default}
-#vAB td.dsc,#vRV td.dsc{max-width:440px;font-size:12.5px}
-#vAB td.nt,#vRV td.nt{font-size:12px;color:var(--ink3)}
-#vAB tr.bh td,#vRV tr.bh td{background:var(--th);font-weight:600;color:var(--bink)}
-#vAB tr.bt td,#vRV tr.bt td{font-weight:600;border-bottom:2px solid var(--line)}
-#vAB tr.gt td,#vRV tr.gt td{font-weight:700;background:var(--sel)}
-#vAB td.neg,#vRV td.neg{color:var(--bad)} #vAB td.pos,#vRV td.pos{color:var(--ok)}
-#vAB .ok,#vRV .ok{color:var(--ok);margin:4px 0}
-#vAB ul.plain,#vRV ul.plain{margin:0;padding-left:18px;font-size:13px}
-#vAB code,#vRV code{font-family:var(--mono);color:var(--bink)}
-#vAB select,#vRV select{padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--field)}
-#vAB a.btn,#vRV a.btn{text-decoration:none;color:inherit}
+#vAB .card,#vRV .card,#vDB .card,#vLB .card,#vML .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+#vAB .card h3,#vRV .card h3,#vDB .card h3,#vLB .card h3,#vML .card h3{margin:0 0 8px;font-size:14px}
+#vAB .n,#vRV .n,#vDB .n,#vLB .n,#vML .n{font-size:12px;color:var(--ink3);margin:4px 0 8px}
+#vAB h2,#vRV h2,#vDB h2,#vLB h2,#vML h2{font-size:16px;margin:0 0 4px;color:var(--bink)}
+#vAB table th,#vRV table th,#vDB table th,#vLB table th,#vML table th{position:static;cursor:default}
+#vAB tbody tr,#vRV tbody tr,#vDB tbody tr,#vLB tbody tr,#vML tbody tr{cursor:default}
+#vAB td.dsc,#vRV td.dsc,#vDB td.dsc,#vLB td.dsc,#vML td.dsc{max-width:440px;font-size:12.5px}
+#vAB td.nt,#vRV td.nt,#vDB td.nt,#vLB td.nt,#vML td.nt{font-size:12px;color:var(--ink3)}
+#vAB tr.bh td,#vRV tr.bh td,#vDB tr.bh td,#vLB tr.bh td,#vML tr.bh td{background:var(--th);font-weight:600;color:var(--bink)}
+#vAB tr.bt td,#vRV tr.bt td,#vDB tr.bt td,#vLB tr.bt td,#vML tr.bt td{font-weight:600;border-bottom:2px solid var(--line)}
+#vAB tr.gt td,#vRV tr.gt td,#vDB tr.gt td,#vLB tr.gt td,#vML tr.gt td{font-weight:700;background:var(--sel)}
+#vAB td.neg,#vRV td.neg,#vDB td.neg,#vLB td.neg,#vML td.neg{color:var(--bad)}#vAB td.pos,#vRV td.pos,#vDB td.pos,#vLB td.pos,#vML td.pos{color:var(--ok)}
+#vAB .ok,#vRV .ok,#vDB .ok,#vLB .ok,#vML .ok{color:var(--ok);margin:4px 0}
+#vAB ul.plain,#vRV ul.plain,#vDB ul.plain,#vLB ul.plain,#vML ul.plain{margin:0;padding-left:18px;font-size:13px}
+#vAB code,#vRV code,#vDB code,#vLB code,#vML code{font-family:var(--mono);color:var(--bink)}
+#vAB select,#vRV select,#vDB select,#vLB select,#vML select{padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--field)}
+#vAB a.btn,#vRV a.btn,#vDB a.btn,#vLB a.btn,#vML a.btn{text-decoration:none;color:inherit}
 .tabs{display:flex;gap:2px}
 .tabs a{padding:8px 12px;font-size:13px;color:var(--ink2);text-decoration:none;border-bottom:2px solid transparent;cursor:pointer}
 .tabs a.on{color:var(--bink);border-color:var(--bink);font-weight:600}
@@ -276,16 +276,16 @@ footer.foot a:hover{text-decoration:underline}
 @media (max-width:1100px){.types{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}.types{grid-template-columns:repeat(2,1fr)}.hello{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.res-sum{grid-template-columns:1fr}td.ttl{min-width:200px}.nav{display:none}.brand i,.brand span{display:none}}
 /* v2 rationalized BQ */
-#vRV td input.ed{width:92px;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:var(--field);text-align:right;font:inherit;font-variant-numeric:tabular-nums}
-#vRV td input.ed.txt{width:100%;text-align:left}
-#vRV td input.ed.chg{border-color:var(--warn);background:var(--warnbg)}
-#vRV tr.om td.dsc,#vRV tr.om td.r{text-decoration:line-through;color:var(--ink3)}
-#vRV tr.void td{color:var(--ink3)}
-#vRV .edbar{position:sticky;bottom:0;z-index:2;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-top:10px;box-shadow:0 -4px 12px rgba(0,0,0,.06)}
-#vRV .edbar .tot{font-variant-numeric:tabular-nums;font-size:13px}
-#vRV .edbar .tot b{font-size:14.5px}
-#vRV dl.rec{display:grid;grid-template-columns:190px 1fr;gap:6px 14px;margin:0;font-size:13px}
-#vRV dl.rec dt{color:var(--ink3)} #vRV dl.rec dd{margin:0}
+#vRV td input.ed,#vDB td input.ed,#vLB td input.ed,#vML td input.ed{width:92px;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:var(--field);text-align:right;font:inherit;font-variant-numeric:tabular-nums}
+#vRV td input.ed.txt,#vDB td input.ed.txt,#vLB td input.ed.txt,#vML td input.ed.txt{width:100%;text-align:left}
+#vRV td input.ed.chg,#vDB td input.ed.chg,#vLB td input.ed.chg,#vML td input.ed.chg{border-color:var(--warn);background:var(--warnbg)}
+#vRV tr.om td.dsc,#vRV tr.om td.r,#vDB tr.om td.dsc,#vLB tr.om td.dsc,#vML tr.om td.dsc,#vDB tr.om td.r,#vLB tr.om td.r,#vML tr.om td.r{text-decoration:line-through;color:var(--ink3)}
+#vRV tr.void td,#vDB tr.void td,#vLB tr.void td,#vML tr.void td{color:var(--ink3)}
+#vRV .edbar,#vDB .edbar,#vLB .edbar,#vML .edbar{position:sticky;bottom:0;z-index:2;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-top:10px;box-shadow:0 -4px 12px rgba(0,0,0,.06)}
+#vRV .edbar .tot,#vDB .edbar .tot,#vLB .edbar .tot,#vML .edbar .tot{font-variant-numeric:tabular-nums;font-size:13px}
+#vRV .edbar .tot b,#vDB .edbar .tot b,#vLB .edbar .tot b,#vML .edbar .tot b{font-size:14.5px}
+#vRV dl.rec,#vDB dl.rec,#vLB dl.rec,#vML dl.rec{display:grid;grid-template-columns:190px 1fr;gap:6px 14px;margin:0;font-size:13px}
+#vRV dl.rec dt,#vDB dl.rec dt,#vLB dl.rec dt,#vML dl.rec dt{color:var(--ink3)}#vRV dl.rec dd,#vDB dl.rec dd,#vLB dl.rec dd,#vML dl.rec dd{margin:0}
 .st-Draft{background:var(--warnbg);color:var(--warn)} .st-Approved{background:var(--okbg);color:var(--ok)} .st-Void{background:var(--mutebg);color:var(--mute);text-decoration:line-through}
 .ch-Added{background:var(--infobg);color:var(--info)} .ch-Omitted{background:var(--badbg);color:var(--bad)} .ch-Qty,.ch-Rate,.ch-Qtyrate,.ch-Amount{background:var(--warnbg);color:var(--warn)}
 td.sub2{font-size:11.5px;color:var(--ink3)}
@@ -295,6 +295,7 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
 .login .lnk{display:flex;justify-content:space-between;margin-top:10px;font-size:12.5px} .login .lnk a{color:var(--ink2)}
 .login .cfg{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px}
 .hello{cursor:pointer} .rolechip{display:inline-block;margin-left:6px;padding:0 6px;border-radius:9px;font-size:10.5px;background:rgba(255,255,255,.18);text-transform:uppercase;letter-spacing:.04em}
+#vLB tr.sel td{background:var(--hover,rgba(42,120,214,.10))} #vDB .kpi[data-go]:hover{outline:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -302,12 +303,12 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
 <header class="top hidden" id="top">
   <div class="brand"><img src="data:image/png;base64,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" alt="ARZA SDN BHD" width="122" height="32"><i></i><span>QS CRM</span></div>
   <nav class="nav" id="nav">
-    <a data-v="tenders" class="on">Tenders</a><a data-v="rev">Rationalized BQ</a><a data-v="asbuilt">As-built</a><a data-v="reports">Reports</a><a data-v="users" class="hidden" id="navUsers">Users</a>
+    <a data-v="dash">Dashboard</a><a data-v="tenders" class="on">Tenders</a><a data-v="rev">Rationalized BQ</a><a data-v="asbuilt">As-built</a><a data-v="library">BQ Library</a><a data-v="master">Masterlist</a><a data-v="reports">Reports</a><a data-v="users" class="hidden" id="navUsers">Users</a>
   </nav>
   <div class="sp"></div>
   <div class="conn hidden" id="conn"><i></i><span></span></div>
   <div class="hello" id="hello" title="My account" role="button" tabindex="0"></div>
-  <button id="btnVer" class="ver" title="What's new">v2.1.1</button>
+  <button id="btnVer" class="ver" title="What's new">v2.2.0</button>
   <button id="btnOut" class="hidden">Sign out</button>
   <button id="btnTheme" class="ibtn" aria-label="Theme"></button>
 </header>
@@ -370,6 +371,9 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
 <main id="vRep" class="hidden rep"></main>
 <main id="vRV" class="hidden"></main>
 <main id="vUS" class="hidden"></main>
+<main id="vDB" class="hidden"></main>
+<main id="vLB" class="hidden"></main>
+<main id="vML" class="hidden"></main>
 <input type="file" id="migFile" accept=".xlsx" class="hidden">
 <main id="vAB" class="hidden"></main>
 <input type="file" id="rvFile" accept=".xlsx,.xlsm" class="hidden">
@@ -1236,8 +1240,16 @@ td.sub2{font-size:11.5px;color:var(--ink3)}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'2.1.1', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'2.2.0', user:'Gemz' };
 var CHANGELOG = [
+  { v:'2.2.0', date:'7 Nov 2026', items:[
+    'v2 complete.',
+    'BQ Library (new page): search every priced BQ line of every tender — tendered BQ and the approved contract revision — by words (-word excludes), unit, client, type, status, year and source.',
+    'Rate history per unit: lines, tenders, min, median, average, max, latest (which tender, when), won average and contract (rationalized) average; by client; rate-over-time chart with won / lost / contract points; Excel export.',
+    'Masterlist (new page): the ARZA Tender Pricing Masterlist Google Sheet, read only — Rates (build-ups, net and all-in) and Resources (prices with confidence grade A / B / C); search and filter by trade; History opens the BQ Library for similar items.',
+    'Dashboard (new page): open and submitted pipeline, won value after rationalization, win rate, tenders closing in 30 days, revisions awaiting approval, tendered vs contract by client, won projects with their as-built position.',
+    'Apps Script changed: paste the new Code.gs, run setMasterlist() once with the masterlist link, then Deploy › Manage deployments › Edit › New version.',
+    'Database: run automatically by the Database workflow (new crm_library and crm_dashboard functions).' ]},
   { v:'2.1.1', date:'6 Nov 2026', items:[
     'Supabase new API keys: publishable key (sb_publishable_…) in config.js; secret key (sb_secret_…) in the Apps Script file service (legacy anon / service_role keys still work).',
     'Project URL pasted with /rest/v1/ at the end is corrected automatically (app and setSupabase()).',
@@ -1413,7 +1425,7 @@ function apiF(action, body){
 
 /* ---------- login ---------- */
 function showLogin(err){
-  $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS'].forEach(function(id){ $(id).classList.add('hidden'); }); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
+  $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS','vDB','vLB','vML'].forEach(function(id){ $(id).classList.add('hidden'); }); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); $('btnOut').classList.add('hidden');
   $('inEmail').value = load('email'); $('loginErr').textContent = err||''; closeDrawer();
   var c=cfg(); $('inSbUrl').value=c.supabaseUrl; $('inSbKey').value=c.supabaseKey; $('inDrive').value=c.driveUrl;
   $('cfgBox').classList.toggle('hidden', cfgOk());
@@ -1451,7 +1463,8 @@ function forgot(e){
   S.sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname}).then(function(r){
     $('loginErr').textContent = r.error ? r.error.message : 'If '+email+' has an account, a reset link is on its way. Open it on this device.'; });
 }
-function signOut(){ var sb=S.sb; S.sb=null; S.me=null; S.mode=''; S.tenders=[]; if(sb){ try{ sb.auth.signOut(); }catch(e){} } showLogin(); }
+function signOut(){ var sb=S.sb; S.sb=null; S.me=null; S.mode=''; S.tenders=[];
+  if(typeof ML!=='undefined'){ ML.data=null; ML.q=''; ML.grp=''; ML.tab='rates'; } if(typeof LB!=='undefined'){ LB.data=null; } if(typeof RV!=='undefined'){ RV.no=''; RV.dirty=false; RV.edit=null; } if(sb){ try{ sb.auth.signOut(); }catch(e){} } showLogin(); }
 function enter(){
   $('vLogin').classList.add('hidden'); $('vMain').classList.remove('hidden'); $('top').classList.remove('hidden'); $('btnOut').classList.remove('hidden'); clock();
   var c=$('conn'); c.classList.remove('hidden'); c.classList.toggle('ro', ro());
@@ -1902,7 +1915,9 @@ function showView(v){
   S.view=v;
   document.querySelectorAll('#nav a[data-v]').forEach(function(a){ a.classList.toggle('on', a.dataset.v===v); });
   $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports'); $('vAB').classList.toggle('hidden', v!=='asbuilt'); $('vRV').classList.toggle('hidden', v!=='rev'); $('vUS').classList.toggle('hidden', v!=='users');
-  if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else if(v==='rev') renderRV(); else if(v==='users') renderUsers(); else render();
+  $('vDB').classList.toggle('hidden', v!=='dash'); $('vLB').classList.toggle('hidden', v!=='library'); $('vML').classList.toggle('hidden', v!=='master');
+  if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else if(v==='rev') renderRV(); else if(v==='users') renderUsers();
+  else if(v==='dash') renderDash(); else if(v==='library') renderLib(); else if(v==='master') renderMaster(); else render();
 }
 function repRows(){
   var by=function(key,vals){ return vals.map(function(v){ var arr=S.tenders.filter(function(t){ return key==='status'&&v==='(not set)' ? !t.status : t[key]===v; }); return {k:v, st:stats(arr)}; }).filter(function(r){return r.st.n;}); };
@@ -2760,6 +2775,179 @@ function showMigrate(file){
         .catch(function(e){ busy(btn,false); fail(e); });
     };
   }).catch(function(e){ toast('Could not read the file: '+e.message,true); });
+}
+
+/* ---------- v2.2.0: dashboard, BQ library + rate history, masterlist (read only) ---------- */
+function needLive(el, what){ if(!fileMode()) return false; el.innerHTML='<div class="empty">'+esc(what)+' needs the live database — sign in (not available in read-only file mode).</div>'; return true; }
+function kpiRow(kp){ return '<div class="kpis">'+kp.map(function(k){ return '<div class="kpi"'+(k[3]?' style="cursor:pointer" data-go="'+esc(k[3])+'"':'')+'><div class="l">'+esc(k[0])+'</div><div class="v">'+k[1]+'</div><div class="s">'+esc(k[2]||'')+'</div></div>'; }).join('')+'</div>'; }
+
+/* ----- dashboard ----- */
+function renderDash(){
+  var el=$('vDB'); if(needLive(el,'The dashboard')) return;
+  el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">Money view across all tenders: pipeline, contract value after rationalization, revisions waiting, won projects and their as-built position. Register charts are on Reports.</div></div><span style="flex:1"></span><button class="btn" id="dbRef">Refresh</button></div><div id="dbBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
+  $('dbRef').onclick=renderDash;
+  api('dashboard').then(function(D){
+    var k=D.kpi||{}, m0=function(v){return money0(v);};
+    var wonDiff=(Number(k.won_contract)||0)-(Number(k.won_tendered)||0);
+    var html=kpiRow([
+      ['Open / pricing', (k.open||0)+' · B$'+m0(k.open_value), 'prospect + pricing (our sum)', 'tenders'],
+      ['Submitted, waiting', (k.submitted||0)+' · B$'+m0(k.submitted_value), 'awaiting the result', 'tenders'],
+      ['Won (contract B$)', (k.won||0)+' · B$'+m0(k.won_contract), 'tendered B$'+m0(k.won_tendered)+(wonDiff?' · '+signed(wonDiff)+' after rationalization':''), 'tenders'],
+      ['Win rate', k.win_rate==null?'–':(Number(k.win_rate)*100).toFixed(0)+'%', (k.won||0)+' won · '+(k.lost||0)+' lost'+(k.avg_gap_lost!=null?' · lost by avg '+pct(k.avg_gap_lost):''), 'reports'],
+      ['Revisions', (k.approved_revs||0)+' approved', (k.drafts||0)+' draft'+(k.drafts==1?'':'s')+' awaiting approval', 'rev']]);
+    var tbl=function(head, rows, empty){ return rows.length ? '<div class="tbl"><table><thead><tr>'+head.map(function(h){ return '<th'+(h[1]?' class="r"':'')+'>'+esc(h[0])+'</th>'; }).join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>' : '<div class="empty" style="padding:18px">'+esc(empty)+'</div>'; };
+    html+='<div class="grid2"><div class="card"><h3>Closing in the next 30 days</h3>'+tbl([['No.'],['Title'],['Client'],['Closing'],['Status'],['Our sum (B$)',1]],
+        (D.closing||[]).map(function(t){ return '<tr data-no="'+esc(t.arza_no)+'" data-to="tender"><td class="no">'+esc(t.arza_no)+'</td><td>'+esc(String(t.title||'').slice(0,70))+'</td><td>'+esc(t.client_group||'')+'</td><td class="dt">'+esc(fmtDate(t.closing_date))+'</td><td>'+chip(t.status)+'</td><td class="r num">'+money(t.our_sum)+'</td></tr>'; }),'Nothing closing in the next 30 days.')+'</div>'+
+      '<div class="card"><h3>Revisions awaiting approval</h3>'+tbl([['No.'],['Rev'],['Description'],['Sum (B$)',1],['vs base',1]],
+        (D.drafts||[]).map(function(r){ return '<tr data-no="'+esc(r.arza_no)+'" data-rev="'+esc(r.rev)+'" data-to="rev"><td class="no">'+esc(r.arza_no)+'</td><td>'+esc(r.rev)+'</td><td>'+esc(String(r.description||'').slice(0,60))+'</td><td class="r num">'+money(r.rev_sum)+'</td><td class="r num">'+signed((Number(r.rev_sum)||0)-(Number(r.base_sum)||0))+'</td></tr>'; }),'No draft revisions.')+'</div></div>';
+    var ra=D.rationalization||[];
+    html+='<div class="card"><h3>Rationalization: tendered vs contract, by client</h3>'+tbl([['Client'],['Tenders',1],['Tendered (B$)',1],['Contract (B$)',1],['Difference (B$)',1],['%',1]],
+        ra.map(function(x){ return '<tr><td>'+esc(x.client_group)+'</td><td class="r num">'+x.n+'</td><td class="r num">'+money(x.tendered)+'</td><td class="r num">'+money(x.contract)+'</td><td class="r num '+(x.diff<0?'neg':x.diff>0?'pos':'')+'">'+signed(x.diff)+'</td><td class="r num">'+(Number(x.tendered)?pct(x.diff/x.tendered):'–')+'</td></tr>'; }),'No approved rationalized revision yet.')+
+      ((D.revised||[]).length?'<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12.5px;color:var(--ink2)">Per tender ('+D.revised.length+')</summary>'+tbl([['No.'],['Title'],['Contract BQ'],['Tendered (B$)',1],['Contract (B$)',1],['Difference',1]],
+        D.revised.map(function(t){ var d=(Number(t.contract)||0)-(Number(t.tendered)||0); return '<tr data-no="'+esc(t.arza_no)+'" data-to="rev"><td class="no">'+esc(t.arza_no)+'</td><td>'+esc(String(t.title||'').slice(0,60))+'</td><td>'+esc(t.rev)+'</td><td class="r num">'+money(t.tendered)+'</td><td class="r num">'+money(t.contract)+'</td><td class="r num">'+signed(d)+' ('+(Number(t.tendered)?pct(d/t.tendered):'–')+')</td></tr>'; }),'')+'</details>':'')+'</div>';
+    html+='<div class="card"><h3>Won projects: contract vs as-built</h3>'+tbl([['No.'],['Title'],['Contract BQ'],['Contract (B$)',1],['As-built (B$)',1],['Difference (B$)',1],['Measured',1],['Latest measure set']],
+        (D.won_projects||[]).map(function(w){ var d=w.asbuilt==null?null:(Number(w.asbuilt)||0)-(Number(w.contract)||0);
+          return '<tr data-no="'+esc(w.arza_no)+'" data-to="asbuilt"><td class="no">'+esc(w.arza_no)+'</td><td>'+esc(String(w.title||'').slice(0,60))+'</td><td>'+esc(w.rev)+'</td><td class="r num">'+money(w.contract)+'</td><td class="r num">'+(w.asbuilt==null?'–':money(w.asbuilt))+'</td><td class="r num '+(d<0?'neg':d>0?'pos':'')+'">'+(d==null?'–':signed(d))+'</td><td class="r num">'+(w.measure_set?(w.measured||0)+' / '+(w.items||0):'–')+'</td><td>'+esc(w.measure_set?w.measure_set+' · '+fmtDate(w.measured_on):'not measured yet')+'</td></tr>'; }),
+        'No won tender yet. Record a bid result (Won) on a tender and it shows here.')+'<p class="n">As-built = the latest measure set priced at the contract BQ rates (unmeasured lump sums carried at the contract amount), same as As-built Report 1. Click a row for the full reports.</p></div>';
+    $('dbBody').innerHTML=html;
+    $('dbBody').onclick=function(e){
+      var kp=e.target.closest('[data-go]'); if(kp){ showView(kp.dataset.go); return; }
+      var tr=e.target.closest('tr[data-to]'); if(!tr) return; var no=tr.dataset.no;
+      if(tr.dataset.to==='rev'){ RV.no=no; RV.sel=tr.dataset.rev||''; RV.tab=tr.dataset.rev?'chg':'sum'; showView('rev'); }
+      else if(tr.dataset.to==='asbuilt') openAsBuilt(no); else { showView('tenders'); openDrawer(no); }
+    };
+  }).catch(function(e){ $('dbBody').innerHTML='<div class="note w">'+esc(e.message)+'</div>'; if(e.auth) fail(e); });
+}
+
+/* ----- BQ library + rate history ----- */
+var LB={ f:{q:'',unit:'',client_group:'',tender_type:'',status:'',year:'',source:'all'}, data:null, unit:'', t:0 };
+function renderLib(){
+  var el=$('vLB'); if(needLive(el,'The BQ library')) return;
+  var f=LB.f, opt=function(list,v,blank){ return '<option value="">'+esc(blank)+'</option>'+list.map(function(x){ return '<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>'; }).join(''); };
+  var yr=new Date().getFullYear(), years=[]; for(var y=yr;y>=yr-5;y--) years.push(String(y));
+  el.innerHTML='<div class="bar"><div><h2>BQ Library</h2><div class="scope">Every priced BQ line of every tender (tendered BQ + the approved contract revision), with rate history: min, median, average, max and latest per unit, and won vs lost. Search words must all appear; <code>-word</code> excludes.</div></div><span style="flex:1"></span><button class="btn exp" id="lbExp">Excel</button></div>'+
+    '<div class="bar"><input type="search" id="lbQ" style="flex:1 1 320px" placeholder="e.g. concrete grade 35 · homogeneous tile 300x600 · paint -roof" value="'+esc(f.q)+'">'+
+    '<input id="lbUnit" list="lbUnits" placeholder="unit" style="width:90px" value="'+esc(f.unit)+'"><datalist id="lbUnits">'+['m','m2','m3','no','kg','t','sum','item','lot','set'].map(function(u){return '<option value="'+u+'">';}).join('')+'</datalist>'+
+    '<select id="lbCg">'+opt(L('client_group'),f.client_group,'All clients')+'</select><select id="lbTy">'+opt(L('tender_type'),f.tender_type,'All types')+'</select>'+
+    '<select id="lbSt">'+opt(L('status'),f.status,'Any status')+'</select><select id="lbYr">'+opt(years,f.year,'Any year')+'</select>'+
+    '<select id="lbSrc"><option value="all"'+(f.source==='all'?' selected':'')+'>Tendered + contract</option><option value="tendered"'+(f.source==='tendered'?' selected':'')+'>Tendered only</option><option value="contract"'+(f.source==='contract'?' selected':'')+'>Contract (rationalized) only</option></select>'+
+    '<button class="btn pri" id="lbGo">Search</button></div><div id="lbBody"></div>';
+  var go=function(){ LB.f={q:$('lbQ').value.trim(),unit:$('lbUnit').value.trim(),client_group:$('lbCg').value,tender_type:$('lbTy').value,status:$('lbSt').value,year:$('lbYr').value,source:$('lbSrc').value}; libSearch(); };
+  $('lbGo').onclick=go; $('lbQ').onkeydown=function(e){ if(e.key==='Enter') go(); };
+  $('lbQ').oninput=function(){ clearTimeout(LB.t); LB.t=setTimeout(go,450); };
+  ['lbUnit','lbCg','lbTy','lbSt','lbYr','lbSrc'].forEach(function(id){ $(id).onchange=go; });
+  $('lbExp').onclick=exportLib;
+  libSearch();
+}
+function libSearch(){
+  var b=$('lbBody'); if(!b) return; b.innerHTML='<div class="empty"><span class="spin"></span> Searching…</div>';
+  var mine=JSON.stringify(LB.f);
+  api('library', Object.assign({limit:300}, LB.f)).then(function(d){
+    if(JSON.stringify(LB.f)!==mine) return;
+    LB.data=d; if(!d.by_unit.some(function(u){return u.unit===LB.unit;})) LB.unit=d.by_unit.length?d.by_unit[0].unit:'';
+    drawLib();
+  }).catch(function(e){ b.innerHTML='<div class="note w">'+esc(e.message)+'</div>'; if(e.auth) fail(e); });
+}
+function drawLib(){
+  var d=LB.data, b=$('lbBody'); if(!d||!b) return;
+  if(!d.total){ b.innerHTML='<div class="empty">No priced BQ line matches. Try fewer words, or another unit / filter.</div>'; return; }
+  var U=d.by_unit, u=U.filter(function(x){return x.unit===LB.unit;})[0]||U[0];
+  var stats='<div class="tbl"><table><thead><tr><th>Unit</th><th class="r">Lines</th><th class="r">Tenders</th><th class="r">Min</th><th class="r">Median</th><th class="r">Average</th><th class="r">Max</th><th class="r">Latest</th><th class="r">Won avg</th><th class="r">Contract avg</th></tr></thead><tbody>'+
+    U.map(function(x){ return '<tr data-unit="'+esc(x.unit)+'"'+(x.unit===u.unit?' class="sel"':'')+' style="cursor:pointer"><td><b>'+esc(x.unit||'(no unit)')+'</b></td><td class="r num">'+x.n+'</td><td class="r num">'+x.tenders+'</td><td class="r num">'+money(x.min)+'</td><td class="r num"><b>'+money(x.median)+'</b></td><td class="r num">'+money(x.avg)+'</td><td class="r num">'+money(x.max)+'</td><td class="r num"'+tipAttr(x.latest_no+' · '+fmtDate(x.latest_date))+'>'+money(x.latest)+' <span class="sub2">'+esc(x.latest_no)+'</span></td><td class="r num">'+(x.won_n?money(x.won_avg)+' <span class="sub2">('+x.won_n+')</span>':'–')+'</td><td class="r num">'+(x.contract_avg==null?'–':money(x.contract_avg))+'</td></tr>'; }).join('')+'</tbody></table></div>';
+  var bc=d.by_client.filter(function(c){return c.unit===u.unit;});
+  var pts=d.points.filter(function(p){return p.unit===u.unit;});
+  b.innerHTML=kpiRow([['Matching lines',d.total,d.tenders+' tender'+(d.tenders==1?'':'s')],['Units',U.length,'rates are compared per unit'],[ (u.unit||'(no unit)')+' median (B$)', money(u.median), u.n+' lines · range '+money(u.min)+' – '+money(u.max)],[ (u.unit||'')+' latest (B$)', money(u.latest), u.latest_no+' · '+fmtDate(u.latest_date)]])+
+    '<div class="card"><h3>Rate history by unit</h3>'+stats+'<p class="n">Click a unit to chart it. Won avg = lines of tenders ARZA won; contract avg = approved rationalized rates. Compare like with like — check the description before using a rate.</p></div>'+
+    '<div class="grid2"><div class="card"><h3>Rate over time — '+esc(u.unit||'(no unit)')+'</h3>'+rateChart(pts)+'</div>'+
+    '<div class="card"><h3>By client — '+esc(u.unit||'(no unit)')+'</h3><div class="tbl"><table><thead><tr><th>Client</th><th class="r">Lines</th><th class="r">Min</th><th class="r">Average</th><th class="r">Max</th></tr></thead><tbody>'+
+      bc.map(function(c){ return '<tr><td>'+esc(c.client_group)+'</td><td class="r num">'+c.n+'</td><td class="r num">'+money(c.min)+'</td><td class="r num">'+money(c.avg)+'</td><td class="r num">'+money(c.max)+'</td></tr>'; }).join('')+'</tbody></table></div></div></div>'+
+    '<div class="card"><h3>Lines'+(d.rows.length<d.total?' (newest '+d.rows.length+' of '+d.total+' — narrow the search or export)':'')+'</h3><div class="tbl"><table><thead><tr><th>Date</th><th>Tender</th><th>Client</th><th>Status</th><th>Source</th><th>Item</th><th>Description</th><th>Unit</th><th class="r">Qty</th><th class="r">Rate (B$)</th></tr></thead><tbody>'+
+      d.rows.map(function(r){ return '<tr data-no="'+esc(r.arza_no)+'" style="cursor:pointer"><td class="dt">'+esc(fmtDate(r.tdate))+'</td><td class="no"'+tipAttr(r.title||'')+'>'+esc(r.arza_no)+'</td><td>'+esc(r.client_group||'')+'</td><td>'+chip(r.status)+'</td><td>'+esc(r.source)+'</td><td class="no">'+esc(r.item_id)+'</td><td class="dsc">'+esc(r.description)+'</td><td>'+esc(r.unit)+'</td><td class="r num">'+qty(r.qty)+'</td><td class="r num"><b>'+money(r.rate)+'</b></td></tr>'; }).join('')+'</tbody></table></div></div>';
+  b.onclick=function(e){ var ur=e.target.closest('tr[data-unit]'); if(ur){ LB.unit=ur.dataset.unit; drawLib(); return; }
+    var tr=e.target.closest('tr[data-no]'); if(tr){ showView('tenders'); openDrawer(tr.dataset.no); } };
+  bindTips(b);
+}
+/* scatter: x = date, y = rate; won = good, lost = crit, others = muted; contract rates as diamonds */
+function rateChart(pts){
+  if(!pts.length) return '<div class="empty">No points.</div>';
+  var W=520, H=220, L0=56, B0=H-28, T0=10, R0=W-12;
+  var ts=pts.map(function(p){ return new Date((p.d||'2000-01-01')+'T00:00:00').getTime(); }), ys=pts.map(function(p){ return Number(p.rate)||0; });
+  var x0=Math.min.apply(null,ts), x1=Math.max.apply(null,ts); if(x1===x0){ x0-=15*864e5; x1+=15*864e5; }
+  var ymax=Math.max.apply(null,ys)*1.08||1;
+  var X=function(t){ return L0+(t-x0)/(x1-x0)*(R0-L0); }, Y=function(v){ return B0-v/ymax*(B0-T0); };
+  var grid=[0,0.25,0.5,0.75,1].map(function(f){ var y=Y(ymax*f); return '<line x1="'+L0+'" x2="'+R0+'" y1="'+y+'" y2="'+y+'" class="grid"/><text x="'+(L0-6)+'" y="'+(y+4)+'" text-anchor="end" class="ax">'+money0(ymax*f)+'</text>'; }).join('');
+  var fmtM=function(t){ return new Date(t).toLocaleDateString('en-GB',{month:'short',year:'2-digit'}); };
+  var xl='<text x="'+L0+'" y="'+(B0+16)+'" class="ax">'+fmtM(x0)+'</text><text x="'+R0+'" y="'+(B0+16)+'" text-anchor="end" class="ax">'+fmtM(x1)+'</text>';
+  var dots=pts.map(function(p,i){ var x=X(ts[i]).toFixed(1), y=Y(ys[i]).toFixed(1), c=p.status==='Won'?'var(--good)':p.status==='Lost'?'var(--crit)':'var(--s1)';
+    var tip=tipAttr(p.no+' '+p.item+' · B$'+money(p.rate)+' · '+(p.status||'no status')+' · '+p.source+' · '+fmtDate(p.d));
+    return /contract/.test(p.source) ? '<path d="M'+x+' '+(y-6)+' L'+(+x+6)+' '+y+' L'+x+' '+(+y+6)+' L'+(x-6)+' '+y+' Z" fill="none" stroke="'+c+'" stroke-width="2"'+tip+'/>' : '<circle cx="'+x+'" cy="'+y+'" r="5" fill="'+c+'" fill-opacity=".8"'+tip+'/>'; }).join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'" class="vbar" role="img" aria-label="rate over time">'+grid+'<line x1="'+L0+'" x2="'+R0+'" y1="'+B0+'" y2="'+B0+'" class="axis"/>'+xl+dots+'</svg>'+
+    legend([{k:'Won',color:'var(--good)'},{k:'Lost',color:'var(--crit)'},{k:'Other / pending',color:'var(--s1)'},{k:'◇ contract (rationalized)',color:'transparent'}]);
+}
+function exportLib(){
+  var d=LB.data; if(!d||!window.XLSX) return;
+  api('library', Object.assign({limit:1000}, LB.f)).then(function(all){
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{search:LB.f.q,unit:LB.f.unit,client:LB.f.client_group,type:LB.f.tender_type,status:LB.f.status,year:LB.f.year,source:LB.f.source,lines:all.total,exported:today()}]),'Search');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(all.by_unit.map(function(u){ return {unit:u.unit,lines:u.n,tenders:u.tenders,min:u.min,median:u.median,avg:u.avg,max:u.max,latest:u.latest,latest_tender:u.latest_no,latest_date:u.latest_date,won_avg:u.won_avg,won_lines:u.won_n,contract_avg:u.contract_avg}; })),'Rate history');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(all.by_client),'By client');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(all.rows.map(function(r){ return {date:r.tdate,tender:r.arza_no,ref:r.tender_ref,client:r.client_group,type:r.tender_type,status:r.status,source:r.source,item:r.item_id,description:r.description,unit:r.unit,qty:r.qty,rate:r.rate,amount:r.amount}; })),'Lines');
+    XLSX.writeFile(wb,'QS CRM BQ library '+(LB.f.q||'all').replace(/[^\w -]+/g,'').slice(0,30)+' '+today()+'.xlsx');
+  }).catch(fail);
+}
+/* open the library on a description (from the masterlist) */
+var STOP=' and the with for incl c/w to of in on or a an by at as from per each all any existing new approx mm m2 m3 nos lot sum ';
+function libFor(desc, unit){
+  var w=String(desc||'').toLowerCase().replace(/\([^)]*\)/g,' ').replace(/[^a-z0-9\s-]/g,' ').split(/\s+/).filter(function(x){ return x.length>2 && STOP.indexOf(' '+x+' ')<0 && !/^\d+$/.test(x); });
+  LB.f={q:w.slice(0,3).join(' '),unit:unit||'',client_group:'',tender_type:'',status:'',year:'',source:'all'}; LB.unit=''; showView('library');
+}
+
+/* ----- masterlist (Google Sheet, read only via the Drive file service) ----- */
+var ML={ data:null, tab:'rates', q:'', grp:'', at:'' };
+function renderMaster(force){
+  var el=$('vML'); if(needLive(el,'The masterlist')) return;
+  el.innerHTML='<div class="bar"><div><h2>Pricing Masterlist</h2><div class="scope" id="mlScope">Read only from the Google Sheet. Prices are changed in the sheet (Res tab), never here.</div></div><span style="flex:1"></span><button class="btn" id="mlRef">Refresh</button></div>'+
+    '<div class="tabs abtabs" id="mlTabs"><a data-t="rates">Rates (build-ups)</a><a data-t="res">Resources (prices)</a></div><div id="mlBody"><div class="empty"><span class="spin"></span> Reading the masterlist…</div></div>';
+  $('mlRef').onclick=function(){ ML.data=null; renderMaster(true); };
+  $('mlTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a) return; ML.tab=a.dataset.t; ML.grp=''; drawMaster(); };
+  if(ML.data && !force){ drawMaster(); return; }
+  driveCall('masterlist').then(function(d){ ML.data=d; ML.at=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); drawMaster(); })
+    .catch(function(e){ $('mlBody').innerHTML='<div class="note w">'+esc(e.message)+'</div><p class="n" style="font-size:12.5px;color:var(--ink3)">The masterlist is read by the Apps Script file service: in Apps Script paste the v2.2.0 Code.gs, run <code>setMasterlist()</code> with the sheet link, then Deploy › Manage deployments › Edit › New version.</p>'; });
+}
+function mlRows(t){
+  var h=t.head||[], ci=function(re){ for(var i=0;i<h.length;i++) if(re.test(h[i])) return i; return -1; }, grp='', out=[];
+  (t.rows||[]).forEach(function(r){ var filled=r.filter(function(x){return x!==''&&x!=null;}).length;
+    if(filled===1 && r[0]!=='' && !/^[A-Z]{1,3}-?\d/.test(String(r[0]))){ grp=String(r[0]); return; }
+    out.push({r:r, grp:grp}); });
+  return {h:h, ci:ci, rows:out};
+}
+function drawMaster(){
+  var d=ML.data, b=$('mlBody'); if(!d||!b) return;
+  document.querySelectorAll('#mlTabs a').forEach(function(a){ a.classList.toggle('on', a.dataset.t===ML.tab); });
+  $('mlScope').innerHTML='Read only from <b>'+esc(d.name)+'</b> (sheet updated '+esc(fmtDate(d.updated))+', loaded '+esc(ML.at)+'). Prices are changed in the sheet, never here.'+(canWrite()&&d.url?' <a href="'+esc(d.url)+'" target="_blank" rel="noopener">Open the sheet</a>':'');
+  var isR=ML.tab==='rates', M=mlRows(isR?d.rates:d.res), h=M.h, ci=M.ci;
+  if(!h.length){ b.innerHTML='<div class="empty">Tab not found or no "Code" header row.</div>'; return; }
+  var cTr=isR?ci(/^Trade/i):-1, cDesc=ci(isR?/^Description/i:/^Resource/i), cUnit=ci(/^Unit/i), cConf=ci(/^Conf/i);
+  var groups=[]; M.rows.forEach(function(x){ var g=isR?String(x.r[cTr]||''):x.grp; if(g&&groups.indexOf(g)<0) groups.push(g); });
+  var q=ML.q.toLowerCase().split(/\s+/).filter(Boolean);
+  var rows=M.rows.filter(function(x){ var g=isR?String(x.r[cTr]||''):x.grp; if(ML.grp && g!==ML.grp) return false; var hay=x.r.join(' ').toLowerCase(); return q.every(function(w){ return hay.indexOf(w)>=0; }); });
+  var show=h.map(function(x,i){ return i; }).filter(function(i){ return !(isR && i===cTr) && !/^search$/i.test(h[i]); });
+  var num=function(i){ return /B\$|price|cost|all-in|used in/i.test(h[i]); };
+  b.innerHTML='<div class="bar"><input type="search" id="mlQ" placeholder="Search code, description, keywords…" value="'+esc(ML.q)+'" style="flex:1 1 320px">'+
+    '<select id="mlGrp"><option value="">'+(isR?'All trades':'All groups')+'</option>'+groups.map(function(g){ return '<option'+(g===ML.grp?' selected':'')+'>'+esc(g)+'</option>'; }).join('')+'</select><span class="count">'+rows.length+' of '+M.rows.length+'</span></div>'+
+    '<div class="tbl"><table><thead><tr>'+show.map(function(i){ return '<th'+(num(i)?' class="r"':'')+'>'+esc(h[i])+'</th>'; }).join('')+(isR?'<th>History</th>':'')+'</tr></thead><tbody>'+
+    rows.slice(0,800).map(function(x,k){ return '<tr>'+show.map(function(i){ var v=x.r[i]==null?'':x.r[i];
+        if(i===cConf&&v) return '<td><span class="chip '+(v==='A'?'st-Won':v==='C'?'st-Lost':'st-Pricing')+'"'+tipAttr(v==='A'?'A: from a quote / survey':v==='C'?'C: low confidence — get a quote':'B: market estimate')+'>'+esc(v)+'</span></td>';
+        if(i===0) return '<td class="no">'+esc(v)+'</td>';
+        if(i===cDesc) return '<td class="dsc">'+esc(v)+'</td>';
+        return '<td'+(num(i)?' class="r num"':'')+'>'+esc(typeof v==='number'?money(v):v)+'</td>'; }).join('')+
+      (isR?'<td><button class="btn" data-lib="'+k+'" title="Rates ARZA tendered for similar items">History</button></td>':'')+'</tr>'; }).join('')+'</tbody></table></div>'+
+    (rows.length>800?'<p class="n">First 800 shown — search to narrow.</p>':'')+
+    '<p class="n">'+(isR?'Net cost and all-in rate come live from the RA build-ups in the sheet. <b>History</b> opens the BQ Library with similar tendered rates.':'Conf.: A = from a quote / survey · B = market estimate · C = low confidence, get a quote.')+'</p>';
+  $('mlQ').oninput=function(){ ML.q=this.value; var p=this.selectionStart; drawMaster(); var e=$('mlQ'); e.focus(); e.setSelectionRange(p,p); };
+  $('mlGrp').onchange=function(){ ML.grp=this.value; drawMaster(); };
+  b.onclick=function(e){ var bt=e.target.closest('button[data-lib]'); if(!bt) return; var x=rows[+bt.dataset.lib]; libFor(x.r[cDesc], x.r[cUnit]); };
+  bindTips(b);
 }
 
 /* ---------- export ---------- */

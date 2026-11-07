@@ -1,8 +1,9 @@
 /**
- * QS CRM — Google Drive file service (Apps Script), v2.1.1
+ * QS CRM — Google Drive file service (Apps Script), v2.2.0
  * From v2.1.0 the data lives in Supabase. This script only:
  *   - stores tender files in Google Drive (one sub-folder per tender) and returns the links;
- *   - optionally creates sign-in accounts for the Users page (needs the Supabase service key).
+ *   - optionally creates sign-in accounts for the Users page (needs the Supabase service key);
+ *   - v2.2.0: reads the pricing masterlist (Google Sheet, Rates + Res tabs) for the Masterlist page — read only, signed-in users only.
  * Every call carries the user's Supabase session token; the script asks Supabase who it is (crm_me) and
  * only QS / admin users may upload, only the admin may create users.
  *
@@ -12,6 +13,7 @@
  *     PASTE-… texts back and save (the values stay in Script Properties, not in the code).
  *  2. setDriveFolder(): paste the link of the Drive folder for tender files (or leave it to make "QS CRM - Tenders"). Run it.
  *     "An unknown error has occurred" = several Google accounts signed in -> use an Incognito window with one account.
+ *  2b. setMasterlist(): paste the link of the "ARZA Tender Pricing Masterlist" Google Sheet. Run it (allow Sheets access).
  *  3. Deploy › New deployment › Web app › Execute as: Me › Who has access: Anyone › Deploy. Put the /exec URL in config.js (driveUrl).
  *  After editing this file: Deploy › Manage deployments › Edit › Version: New version.
  */
@@ -49,9 +51,21 @@ function setDriveFolder() {
 }
 function authorizeDrive() { setDriveFolder(); }
 
+/* v2.2.0: which Google Sheet is the pricing masterlist (read only) */
+function setMasterlist() {
+  var link = 'PASTE-MASTERLIST-LINK';   // e.g. https://docs.google.com/spreadsheets/d/1AbC...xyz/edit
+  var m = String(link).match(/\/d\/([\w-]{20,})/) || String(link).match(/^([\w-]{20,})$/);
+  if (!m) throw new Error('Paste the masterlist Google Sheet link first (open the sheet, copy the address bar).');
+  var ss = SpreadsheetApp.openById(m[1]);
+  ['Rates', 'Res'].forEach(function (n) { if (!ss.getSheetByName(n)) throw new Error('Tab "' + n + '" not found in ' + ss.getName()); });
+  PropertiesService.getScriptProperties().setProperty('MASTERLIST_ID', m[1]);
+  Logger.log('Masterlist set: "' + ss.getName() + '". Now put PASTE-MASTERLIST-LINK back and save.');
+}
+
 function doGet() {
   var p = PropertiesService.getScriptProperties();
-  return json_({ ok: true, app: 'QS CRM file service', supabase: !!p.getProperty('SUPABASE_URL'), drive: !!p.getProperty('DRIVE_ROOT_ID'), users: !!p.getProperty('SUPABASE_SERVICE') });
+  return json_({ ok: true, app: 'QS CRM file service', version: '2.2.0', supabase: !!p.getProperty('SUPABASE_URL'), drive: !!p.getProperty('DRIVE_ROOT_ID'),
+    users: !!p.getProperty('SUPABASE_SERVICE'), masterlist: !!p.getProperty('MASTERLIST_ID') });
 }
 
 function doPost(e) {
@@ -68,7 +82,30 @@ function doPost(e) {
 }
 
 var ACTIONS = {
-  ping: function (req, me) { return { email: me.email, role: me.role, drive: !!PropertiesService.getScriptProperties().getProperty('DRIVE_ROOT_ID') }; },
+  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), version: '2.2.0' }; },
+
+  /* v2.2.0: pricing masterlist, read only (any active signed-in user). Tabs Rates + Res, header row = the row starting with "Code" */
+  masterlist: function (req, me) {
+    var id = PropertiesService.getScriptProperties().getProperty('MASTERLIST_ID');
+    if (!id) throw new Error('Masterlist not set - run setMasterlist() in Apps Script');
+    var ss = SpreadsheetApp.openById(id), tz = Session.getScriptTimeZone();
+    function tab(name) {
+      var sh = ss.getSheetByName(name); if (!sh) return { head: [], rows: [] };
+      var v = sh.getDataRange().getValues(), h = -1;
+      for (var i = 0; i < Math.min(v.length, 15); i++) if (String(v[i][0]).trim() === 'Code') { h = i; break; }
+      if (h < 0) return { head: [], rows: [] };
+      var head = v[h].map(function (x) { return String(x).trim(); }), n = head.length; while (n && !head[n - 1]) n--;
+      var rows = [];
+      for (var r = h + 1; r < v.length; r++) {
+        var row = v[r].slice(0, n).map(function (x) { return x instanceof Date ? Utilities.formatDate(x, tz, 'yyyy-MM-dd') : x; });
+        if (row.every(function (x) { return x === '' || x == null; })) continue;
+        rows.push(row);
+      }
+      return { head: head.slice(0, n), rows: rows };
+    }
+    return { name: ss.getName(), url: ss.getUrl(), updated: Utilities.formatDate(DriveApp.getFileById(id).getLastUpdated(), tz, 'yyyy-MM-dd HH:mm'),
+      rates: tab('Rates'), res: tab('Res') };
+  },
 
   /* store one file in the tender's folder: req.arza_no, req.tender_ref, req.folder_link (existing), req.file {name, type, data(base64)} */
   upload: function (req, me) {

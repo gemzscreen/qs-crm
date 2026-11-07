@@ -1,4 +1,4 @@
-# ARZA QS CRM SYSTEM — v2.1.1 (Supabase)
+# ARZA QS CRM SYSTEM — v2.2.0 (Supabase)
 
 ## How updates work (from v2.1.1)
 Claude opens a **pull request** with each change. You review it and click **Merge**. Then, automatically:
@@ -34,8 +34,9 @@ Tender register, priced BQs, rationalized revisions, bid results and as-built re
 ### 2. Drive file service (Apps Script)
 1. Open your existing Apps Script project (or script.google.com › New project), replace all code with `Code.gs`.
 2. In `setSupabase()` paste the Project URL, the publishable key and (optional, to add users from the app) the secret key › Run › allow permissions › put the `PASTE-…` texts back › Save.
-3. Run `setDriveFolder()` (paste your Drive folder link, or leave it to create "QS CRM - Tenders"). Same folder as before = existing tender folders are reused.
-4. **Deploy › Manage deployments › Edit › Version: New version › Deploy** (or New deployment › Web app › Execute as Me › Anyone). Copy the `/exec` URL.
+3. Run `setMasterlist()` with the link of the **ARZA Tender Pricing Masterlist** Google Sheet (v2.2.0: the Masterlist page reads it, read only).
+4. Run `setDriveFolder()` (paste your Drive folder link, or leave it to create "QS CRM - Tenders"). Same folder as before = existing tender folders are reused.
+5. **Deploy › Manage deployments › Edit › Version: New version › Deploy** (or New deployment › Web app › Execute as Me › Anyone). Copy the `/exec` URL.
 
 ### 3. Website (GitHub Pages)
 1. Fill `config.js`: `supabaseUrl`, `supabaseKey` (publishable key), `driveUrl` (/exec). **Never put the secret key in config.js.**
@@ -73,4 +74,7 @@ Everyone can change their password by clicking their name (top right). Forgot pa
 - Import a priced workbook as a tender (file stored in Drive).
 - **Rationalized BQ**: revisions R1, R2 … (draft editor or workbook import), changes, approval record (both parties, letter ref, signed document), void with reason, tender sum history, rationalization statement PDF.
 - **As-built**: Breakdown QTY import, matching check, Report 1 As-Built BQ, Report 2 Tendered vs Rationalized vs As-Built, Excel / PDF.
+- **Dashboard**: pipeline, won value after rationalization, win rate, closing soon, revisions waiting, won projects vs as-built.
+- **BQ Library**: every priced BQ line across tenders with rate history (min / median / avg / max / latest, won vs lost, by client, chart).
+- **Masterlist**: the pricing masterlist Google Sheet, read only (Rates + Resources), with History links into the BQ Library.
 - Reports and charts; activity log with the user's name; read-only mode from an .xlsx copy.

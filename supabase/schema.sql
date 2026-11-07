@@ -1,5 +1,5 @@
 -- =====================================================================================================
--- QS CRM (ARZA SDN BHD) — Supabase database, v2.1.1
+-- QS CRM (ARZA SDN BHD) — Supabase database, v2.2.0
 -- Run the whole file once in Supabase › SQL Editor › New query › Run. Safe to run again (upgrades in place).
 --
 -- Security model
@@ -643,6 +643,130 @@ begin
   return crm_out(jsonb_build_object('tenders', n_t, 'bq', n_b, 'asbuilt', n_a, 'revisions', n_r, 'log', n_l));
 end $$;
 
+-- =====================================================================================================
+-- v2.2.0: BQ library (search every priced BQ line across tenders) + rate history
+-- =====================================================================================================
+/* unit spelling -> one key, so m2 / m² / sq.m are compared together */
+create or replace function public.crm_unit(u text) returns text language sql immutable as $$
+  select case lower(regexp_replace(coalesce(u, ''), '[\s.]', '', 'g'))
+    when '' then '' when 'm²' then 'm2' when 'sqm' then 'm2' when 'm^2' then 'm2' when 'm³' then 'm3' when 'cum' then 'm3' when 'm^3' then 'm3'
+    when 'lm' then 'm' when 'rm' then 'm' when 'mr' then 'm' when 'lin.m' then 'm'
+    when 'nos' then 'no' when 'nr' then 'no' when 'each' then 'no' when 'ea' then 'no' when 'pcs' then 'no' when 'unit' then 'no' when 'units' then 'no'
+    when 'ls' then 'sum' when 'lumpsum' then 'sum' when 'lump' then 'sum'
+    when 'kgs' then 'kg' when 'tonne' then 't' when 'ton' then 't' when 'tonnes' then 't'
+    else lower(regexp_replace(coalesce(u, ''), '[\s.]', '', 'g')) end
+$$;
+/* the date a tender's rates belong to */
+create or replace function public.crm_tdate(t public.tenders) returns date language sql stable as
+$$ select coalesce(t.closing_date::date, t.submitted_date, (t.created_at at time zone 'Asia/Brunei')::date) $$;
+
+/* filtered library lines. p: q (words; -word excludes), unit, client_group, tender_type, status, year, arza_no, source (all|tendered|contract) */
+create or replace function public.crm_lib_rows(p jsonb) returns table (
+  id bigint, arza_no text, tender_ref text, title text, client text, client_group text, tender_type text, status text, tdate date,
+  bq_set text, source text, item_id text, bill text, heading text, description text, unit text, ukey text, qty numeric, rate numeric, amount numeric)
+language plpgsql stable security definer set search_path = public as $$
+declare q text := lower(btrim(coalesce(p ->> 'q', ''))); w text; inc text[] := '{}'; exc text[] := '{}'; src text := coalesce(nullif(p ->> 'source', ''), 'all');
+begin
+  foreach w in array regexp_split_to_array(q, '\s+') loop
+    continue when w = '' or w = '-';
+    w := replace(replace(replace(w, '\', '\\'), '%', '\%'), '_', '\_');
+    if left(w, 1) = '-' then exc := exc || substr(w, 2); else inc := inc || w; end if;
+  end loop;
+  return query
+  select b.id, t.arza_no, t.tender_ref, coalesce(nullif(t.title_en, ''), t.title), t.client, t.client_group, t.tender_type, t.status, crm_tdate(t),
+    b.bq_set, case when b.bq_set = 'Tendered' then 'Tendered' else b.bq_set || ' (contract)' end,
+    b.item_id, b.bill, b.heading, b.description, b.unit, crm_unit(b.unit), b.qty, b.rate, b.amount
+  from bq_items b join tenders t on t.arza_no = b.arza_no
+  where (b.bq_set = 'Tendered' or b.bq_set = t.contract_rev)
+    and b.rate is not null and b.rate > 0
+    and (src = 'all' or (src = 'tendered' and b.bq_set = 'Tendered') or (src = 'contract' and b.bq_set <> 'Tendered'))
+    and (coalesce(p ->> 'unit', '') = '' or crm_unit(b.unit) = crm_unit(p ->> 'unit'))
+    and (coalesce(p ->> 'client_group', '') = '' or t.client_group = p ->> 'client_group')
+    and (coalesce(p ->> 'tender_type', '') = '' or t.tender_type = p ->> 'tender_type')
+    and (coalesce(p ->> 'status', '') = '' or coalesce(t.status, '') = p ->> 'status')
+    and (coalesce(p ->> 'arza_no', '') = '' or t.arza_no = p ->> 'arza_no')
+    and (coalesce(p ->> 'year', '') = '' or extract(year from crm_tdate(t))::text = p ->> 'year')
+    and not exists (select 1 from unnest(inc) x where lower(coalesce(b.description, '') || ' ' || coalesce(b.heading, '') || ' ' || b.item_id) not like '%' || x || '%')
+    and not exists (select 1 from unnest(exc) x where lower(coalesce(b.description, '') || ' ' || coalesce(b.heading, '')) like '%' || x || '%');
+end $$;
+
+/* search + rate history in one call: rows (newest first), stats per unit and per unit + client, points for the chart */
+create or replace function public.crm_library(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare lim int := least(greatest(coalesce((p ->> 'limit')::int, 200), 1), 1000);
+begin
+  perform crm_need(false);
+  return (
+    with r as (select * from crm_lib_rows(p))
+    select jsonb_build_object(
+      'total', (select count(*) from r),
+      'tenders', (select count(distinct arza_no) from r),
+      'rows', coalesce((select jsonb_agg(to_jsonb(x) - 'id' || jsonb_build_object('tdate', crm_fd(x.tdate))) from (select * from r order by tdate desc nulls last, arza_no desc, id limit lim) x), '[]'),
+      'by_unit', coalesce((select jsonb_agg(u order by (u ->> 'n')::int desc) from (
+          select jsonb_build_object('unit', ukey, 'n', count(*), 'tenders', count(distinct arza_no),
+            'min', min(rate), 'max', max(rate), 'avg', round(avg(rate), 2), 'median', round((percentile_cont(0.5) within group (order by rate))::numeric, 2),
+            'won_avg', round(avg(rate) filter (where status = 'Won'), 2), 'won_n', count(*) filter (where status = 'Won'),
+            'contract_avg', round(avg(rate) filter (where bq_set <> 'Tendered'), 2),
+            'latest', (array_agg(rate order by tdate desc nulls last, id desc))[1], 'latest_no', (array_agg(arza_no order by tdate desc nulls last, id desc))[1],
+            'latest_date', crm_fd((array_agg(tdate order by tdate desc nulls last, id desc))[1])) u
+          from r group by ukey) s), '[]'),
+      'by_client', coalesce((select jsonb_agg(jsonb_build_object('unit', ukey, 'client_group', coalesce(client_group, 'Not set'), 'n', n, 'min', mn, 'avg', av, 'max', mx) order by ukey, client_group)
+          from (select ukey, client_group, count(*) n, min(rate) mn, round(avg(rate), 2) av, max(rate) mx from r group by ukey, client_group) c), '[]'),
+      'points', coalesce((select jsonb_agg(jsonb_build_object('d', crm_fd(tdate), 'rate', rate, 'unit', ukey, 'no', arza_no, 'status', status, 'source', source, 'item', item_id))
+          from (select * from r order by tdate limit 1500) pt), '[]'))
+  );
+end $$;
+
+-- =====================================================================================================
+-- v2.3.0: dashboard (money view: tendered vs contract, revisions waiting, won projects + as-built)
+-- =====================================================================================================
+create or replace function public.crm_dashboard(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  perform crm_need(false);
+  return jsonb_build_object(
+    'kpi', (select jsonb_build_object(
+        'tenders', count(*),
+        'open', count(*) filter (where coalesce(status, '') in ('', 'Prospect', 'Pricing')),
+        'open_value', coalesce(sum(our_sum) filter (where coalesce(status, '') in ('', 'Prospect', 'Pricing')), 0),
+        'submitted', count(*) filter (where status = 'Submitted'),
+        'submitted_value', coalesce(sum(our_sum) filter (where status = 'Submitted'), 0),
+        'won', count(*) filter (where status = 'Won'), 'lost', count(*) filter (where status = 'Lost'),
+        'won_tendered', coalesce(sum(our_sum) filter (where status = 'Won'), 0),
+        'won_contract', coalesce(sum(coalesce(contract_sum, our_sum)) filter (where status = 'Won'), 0),
+        'win_rate', case when count(*) filter (where status in ('Won', 'Lost')) > 0
+          then round(count(*) filter (where status = 'Won')::numeric / count(*) filter (where status in ('Won', 'Lost')), 4) end,
+        'avg_gap_lost', round(avg(diff_pct) filter (where status = 'Lost'), 4),
+        'bq_lines', (select count(*) from bq_items where bq_set = 'Tendered'),
+        'drafts', (select count(*) from revisions where status = 'Draft'),
+        'approved_revs', (select count(*) from revisions where status = 'Approved'))
+      from tenders),
+    'rationalization', coalesce((select jsonb_agg(jsonb_build_object('client_group', g, 'n', n, 'tendered', ts, 'contract', cs, 'diff', cs - ts) order by g)
+        from (select coalesce(client_group, 'Not set') g, count(*) n, sum(our_sum) ts, sum(contract_sum) cs from tenders where contract_rev is not null group by 1) x), '[]'),
+    'revised', coalesce((select jsonb_agg(jsonb_build_object('arza_no', arza_no, 'title', coalesce(nullif(title_en, ''), title), 'client_group', client_group, 'status', status,
+          'tendered', our_sum, 'contract', contract_sum, 'rev', contract_rev) order by arza_no) from tenders where contract_rev is not null), '[]'),
+    'drafts', coalesce((select jsonb_agg(jsonb_build_object('arza_no', r.arza_no, 'rev', r.rev, 'title', coalesce(nullif(t.title_en, ''), t.title), 'description', r.description,
+          'rev_sum', r.rev_sum, 'base_sum', r.base_sum, 'based_on', r.based_on, 'updated_at', crm_ftz(r.updated_at)) order by r.updated_at desc)
+        from revisions r join tenders t on t.arza_no = r.arza_no where r.status = 'Draft'), '[]'),
+    'closing', coalesce((select jsonb_agg(jsonb_build_object('arza_no', arza_no, 'title', coalesce(nullif(title_en, ''), title), 'client_group', client_group,
+          'closing_date', crm_ft(closing_date), 'status', status, 'our_sum', our_sum) order by closing_date)
+        from tenders where closing_date >= (now() at time zone 'Asia/Brunei')::date and closing_date < (now() at time zone 'Asia/Brunei')::date + 31
+          and coalesce(status, '') in ('', 'Prospect', 'Pricing', 'Submitted')), '[]'),
+    'won_projects', coalesce((
+      with won as (select * from tenders where status = 'Won'),
+      con as (select w.arza_no, b.item_id, b.unit, coalesce(b.rate, 0) rate, coalesce(b.amount, b.qty * b.rate, 0) amt
+              from won w join bq_items b on b.arza_no = w.arza_no and b.bq_set = coalesce(w.contract_rev, 'Tendered')),
+      lastset as (select distinct on (a.arza_no) a.arza_no, a.measure_set, a.imported_at from asbuilt_items a join won w on w.arza_no = a.arza_no order by a.arza_no, a.imported_at desc),
+      ab as (select a.arza_no, a.item_id, sum(a.qty) q from asbuilt_items a join lastset l on l.arza_no = a.arza_no and l.measure_set = a.measure_set
+             where a.item_id is not null group by 1, 2),
+      agg as (select c.arza_no, count(*) items, count(ab.q) measured,
+                round(sum(case when ab.q is not null then round(ab.q * c.rate, 2) when c.unit ~* '^(LS|PS|PC|Item|Prov|Sum)$' then c.amt else 0 end), 2) ab_value
+              from con c left join ab on ab.arza_no = c.arza_no and ab.item_id = c.item_id group by c.arza_no)
+      select jsonb_agg(jsonb_build_object('arza_no', w.arza_no, 'title', coalesce(nullif(w.title_en, ''), w.title), 'client_group', w.client_group,
+          'tendered', w.our_sum, 'contract', coalesce(w.contract_sum, w.our_sum), 'rev', coalesce(w.contract_rev, 'Tendered'),
+          'measure_set', l.measure_set, 'measured_on', crm_ftz(l.imported_at), 'items', agg.items, 'measured', agg.measured,
+          'asbuilt', case when l.measure_set is not null then agg.ab_value end) order by w.arza_no)
+      from won w left join lastset l on l.arza_no = w.arza_no left join agg on agg.arza_no = w.arza_no), '[]'));
+end $$;
+
 -- ---------- new sign-in accounts -> profile (first account = admin) ----------
 create or replace function public.crm_on_new_user() returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -691,7 +815,8 @@ begin
   for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
            where n.nspname = 'public' and p.proname in ('crm_ping', 'crm_me', 'crm_list', 'crm_get', 'crm_save', 'crm_importtender', 'crm_setfile', 'crm_uploadfile',
              'crm_asbuiltdata', 'crm_importasbuilt', 'crm_deletemeasureset', 'crm_lock', 'crm_unlock', 'crm_result', 'crm_revdata', 'crm_saverevision',
-             'crm_approverevision', 'crm_deleterevision', 'crm_voidrevision', 'crm_users', 'crm_setuser', 'crm_migrate', 'crm_can_read') loop
+             'crm_approverevision', 'crm_deleterevision', 'crm_voidrevision', 'crm_users', 'crm_setuser', 'crm_migrate', 'crm_can_read',
+             'crm_library', 'crm_dashboard') loop
     execute format('grant execute on function %s to authenticated', f.sig);
   end loop;
 end $$;
