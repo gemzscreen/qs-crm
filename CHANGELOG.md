@@ -2,6 +2,21 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v2.3.0 — 7 Nov 2026
+
+- New header: one line, grouped menus — Dashboard · Tenders · Contract (Rationalized BQ, As-built) · Pricing (BQ Library, Masterlist) · Reports. On small screens the menu folds into a ☰ button.
+- Profile menu (top right): your initials, "Welcome, <name>" and your role. It holds My profile, Team & access (admin), What's new and Sign out.
+- My profile: full name, display name (shown in "Welcome, …"), designation (pre-fills approvals), phone, change password. Email, role and member-since are shown.
+- "Users" renamed Team & access, now with a Designation column, so it is not confused with your own account settings.
+- Footer: connection status (● Connected · Supabase / read only / read-only file), date and time, and the version button — more room in the header.
+- Sign-in reliability: the Supabase and Excel libraries are now served from this site (vendor/), with the public CDN only as a fallback. If they still cannot load, the sign-in page says what to do instead of "Supabase library not loaded".
+- Reports: status pipeline bars show the value only (B$), the record count moves to the label below (e.g. Won (3)); rounded axis (0, 250k, 500k …); each status and each month has its own colour.
+- Masterlist: short column titles (full sheet header on hover), wider description, compact number columns, long "Priced in" / keywords / source cut to one line with the full text on hover.
+- Dashboard: titles and descriptions on one line (full text on hover). BQ Library: compact client, source and unit columns.
+- Polish: larger page titles, coloured KPI accents, row hover, focus rings, rounder cards and buttons.
+- Sign-in page simplified: the Connection settings link and the "Open QS_CRM_DB.xlsx" read-only file option are removed (the connection is set in config.js; everyone signs in).
+- Database: new profile fields + crm_setprofile (applied automatically by the Database workflow on merge). No Apps Script change.
+
 ## v2.2.0 — 7 Nov 2026
 
 - v2 complete.

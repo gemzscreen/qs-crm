@@ -1,5 +1,5 @@
 -- =====================================================================================================
--- QS CRM (ARZA SDN BHD) — Supabase database, v2.2.0
+-- QS CRM (ARZA SDN BHD) — Supabase database, v2.3.0
 -- Run the whole file once in Supabase › SQL Editor › New query › Run. Safe to run again (upgrades in place).
 --
 -- Security model
@@ -21,6 +21,10 @@ create table if not exists public.profiles (
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
+-- v2.3.0: profile details each user fills in themselves (My profile)
+alter table public.profiles add column if not exists display_name text default '';
+alter table public.profiles add column if not exists designation text default '';
+alter table public.profiles add column if not exists phone text default '';
 
 create table if not exists public.tenders (
   arza_no text primary key check (arza_no ~ '^T\d+$'),
@@ -175,7 +179,8 @@ $$;
 create or replace function public.crm_lj(l public.activity_log) returns jsonb language sql stable as
 $$ select jsonb_build_object('timestamp', public.crm_ftz(l.ts), 'action', l.action, 'arza_no', l.arza_no, 'detail', l.detail, 'user', l.user_name) $$;
 create or replace function public.crm_pj(p public.profiles) returns jsonb language sql stable as
-$$ select jsonb_build_object('id', p.id, 'email', p.email, 'full_name', p.full_name, 'role', p.role, 'active', p.active, 'created_at', public.crm_ftz(p.created_at)) $$;
+$$ select jsonb_build_object('id', p.id, 'email', p.email, 'full_name', p.full_name, 'display_name', coalesce(p.display_name, ''),
+  'designation', coalesce(p.designation, ''), 'phone', coalesce(p.phone, ''), 'role', p.role, 'active', p.active, 'created_at', public.crm_ftz(p.created_at)) $$;
 
 -- ---------- access, log ----------
 create or replace function public.crm_can_read() returns boolean language sql stable security definer set search_path = public as
@@ -608,6 +613,28 @@ begin
   return crm_out(crm_pj(u));
 end $$;
 
+-- v2.3.0: My profile - any active user edits their own name, display name, designation and phone (not role / active)
+create or replace function public.crm_setprofile(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_need(false); u profiles; ch text[] := '{}'; k text;
+begin
+  foreach k in array array['full_name', 'display_name', 'designation', 'phone'] loop
+    if p ? k and length(btrim(coalesce(p ->> k, ''))) > 120 then raise exception '% is too long (120 characters max)', replace(k, '_', ' '); end if;
+  end loop;
+  if p ? 'full_name' and btrim(coalesce(p ->> 'full_name', '')) = '' then raise exception 'Enter your full name'; end if;
+  foreach k in array array['full_name', 'display_name', 'designation', 'phone'] loop
+    if p ? k and btrim(coalesce(p ->> k, '')) <> coalesce(case k when 'full_name' then me.full_name when 'display_name' then me.display_name
+         when 'designation' then me.designation else me.phone end, '') then ch := ch || replace(k, '_', ' '); end if;
+  end loop;
+  update profiles set
+    full_name = case when p ? 'full_name' then btrim(p ->> 'full_name') else full_name end,
+    display_name = case when p ? 'display_name' then btrim(coalesce(p ->> 'display_name', '')) else display_name end,
+    designation = case when p ? 'designation' then btrim(coalesce(p ->> 'designation', '')) else designation end,
+    phone = case when p ? 'phone' then btrim(coalesce(p ->> 'phone', '')) else phone end
+  where id = me.id returning * into u;
+  if cardinality(ch) > 0 then perform crm_log('profile', null, u.email || ' updated ' || array_to_string(ch, ', ')); end if;
+  return crm_out(crm_pj(u));
+end $$;
+
 -- ---------- one-time data import from the Google Sheet (downloaded as QS CRM DB.xlsx) ----------
 create or replace function public.crm_migrate(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
 declare me profiles := crm_need(false, true); n_t int; n_b int; n_a int; n_r int; n_l int; existing int;
@@ -816,7 +843,7 @@ begin
            where n.nspname = 'public' and p.proname in ('crm_ping', 'crm_me', 'crm_list', 'crm_get', 'crm_save', 'crm_importtender', 'crm_setfile', 'crm_uploadfile',
              'crm_asbuiltdata', 'crm_importasbuilt', 'crm_deletemeasureset', 'crm_lock', 'crm_unlock', 'crm_result', 'crm_revdata', 'crm_saverevision',
              'crm_approverevision', 'crm_deleterevision', 'crm_voidrevision', 'crm_users', 'crm_setuser', 'crm_migrate', 'crm_can_read',
-             'crm_library', 'crm_dashboard') loop
+             'crm_library', 'crm_dashboard', 'crm_setprofile') loop
     execute format('grant execute on function %s to authenticated', f.sig);
   end loop;
 end $$;
