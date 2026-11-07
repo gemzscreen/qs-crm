@@ -14,6 +14,7 @@ Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs change
 - Masterlist: short column titles (full sheet header on hover), wider description, compact number columns, long "Priced in" / keywords / source cut to one line with the full text on hover.
 - Dashboard: titles and descriptions on one line (full text on hover). BQ Library: compact client, source and unit columns.
 - Polish: larger page titles, coloured KPI accents, row hover, focus rings, rounder cards and buttons.
+- Sign-in page simplified: the Connection settings link and the "Open QS_CRM_DB.xlsx" read-only file option are removed (the connection is set in config.js; everyone signs in).
 - Database: new profile fields + crm_setprofile (applied automatically by the Database workflow on merge). No Apps Script change.
 
 ## v2.2.0 — 7 Nov 2026

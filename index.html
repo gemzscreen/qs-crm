@@ -423,10 +423,7 @@ tbody tr:hover td{background:var(--hover)}
   <label class="chk"><input type="checkbox" id="inRemember"> Keep me signed in on this device</label>
   <div class="err" id="loginErr"></div>
   <button class="btn pri" id="btnLogin" style="width:100%">Sign in</button>
-  <div class="lnk"><a href="#" id="lnkForgot">Forgot password?</a><a href="#" id="lnkCfg">Connection settings</a></div>
-  <div class="or">or</div>
-  <button class="btn" id="btnFile" style="width:100%">Open QS_CRM_DB.xlsx (read-only, nothing leaves this computer)</button>
-  <input type="file" id="inFile" accept=".xlsx" class="hidden">
+  <div class="lnk"><a href="#" id="lnkForgot">Forgot password?</a></div>
 </section>
 <div class="lver" id="lver"></div>
 </div></div>
@@ -1347,6 +1344,7 @@ var CHANGELOG = [
     'Masterlist: short column titles (full sheet header on hover), wider description, compact number columns, long "Priced in" / keywords / source cut to one line with the full text on hover.',
     'Dashboard: titles and descriptions on one line (full text on hover). BQ Library: compact client, source and unit columns.',
     'Polish: larger page titles, coloured KPI accents, row hover, focus rings, rounder cards and buttons.',
+    'Sign-in page simplified: the Connection settings link and the "Open QS_CRM_DB.xlsx" read-only file option are removed (the connection is set in config.js; everyone signs in).',
     'Database: new profile fields + crm_setprofile (applied automatically by the Database workflow on merge). No Apps Script change.']},
   { v:'2.2.0', date:'7 Nov 2026', items:[
     'v2 complete.',
@@ -1576,7 +1574,7 @@ function signIn(){
     S.mode='api'; $('inPw').value='';
     return refresh().then(enter);
   }).catch(function(e){
-    S.mode=''; $('loginErr').textContent = /fetch|network/i.test(e.message) ? 'Cannot reach Supabase. Check the internet connection and the project URL (Connection settings).' : e.message;
+    S.mode=''; $('loginErr').textContent = /fetch|network/i.test(e.message) ? 'Cannot reach Supabase. Check the internet connection, then try again.' : e.message;
     if(S.sb){ try{ S.sb.auth.signOut(); }catch(x){} }
   }).then(function(){ $('btnLogin').disabled=false; $('btnLogin').textContent='Sign in'; });
 }
@@ -1635,28 +1633,6 @@ function changePw(a,b,btn){
   busy(btn,true);
   S.sb.auth.updateUser({password:a}).then(function(r){ busy(btn,false); if(r.error){ toast(r.error.message,true); return; } closeModal(); toast('Password changed'); });
 }
-/* ---------- read-only file mode (SheetJS) ---------- */
-function openFile(f){
-  var rd=new FileReader();
-  rd.onload=function(){
-    try{
-      var wb=XLSX.read(new Uint8Array(rd.result),{type:'array'});
-      var get=function(n){ return wb.Sheets[n] ? XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:'',raw:true}) : []; };
-      var t=get('Tenders'); if(!t.length || !('arza_no' in t[0])) throw new Error('No "Tenders" tab with an arza_no column');
-      var bq=get('BQ_Items'), ab=get('AsBuilt_Items'), rv=get('Revisions'), lines={}, asb={}, nrev={};
-      bq.forEach(function(r){ if(r.bq_set==='Tendered') lines[r.arza_no]=(lines[r.arza_no]||0)+1; });
-      ab.forEach(function(r){ asb[r.arza_no]=(asb[r.arza_no]||0)+1; });
-      rv.forEach(function(r){ if(r.status!=='Void') nrev[r.arza_no]=(nrev[r.arza_no]||0)+1; });
-      t.forEach(function(r){ r._bq_lines=lines[r.arza_no]||0; r._asbuilt_lines=asb[r.arza_no]||0; r._revs=nrev[r.arza_no]||0; });
-      var lists={}, lr=wb.Sheets.Lists ? XLSX.utils.sheet_to_json(wb.Sheets.Lists,{header:1,defval:''}) : [];
-      (lr[0]||[]).forEach(function(h,c){ if(!h) return; lists[h]=[]; for(var i=1;i<lr.length;i++) if(lr[i][c]!=='' && String(lr[i][c]).length<30) lists[h].push(String(lr[i][c])); });
-      S.mode='file'; S.fileName=f.name; S.tenders=t; S.lists=lists; S.log=get('Log'); S.fileDB={bq:bq, ab:ab, rev:rv};
-      enter();
-    }catch(e){ $('loginErr').textContent='Could not read that file: '+e.message; }
-  };
-  rd.readAsArrayBuffer(f);
-}
-
 /* ---------- register ---------- */
 function L(k){ var a=(S.lists[k] && S.lists[k].length) ? S.lists[k].slice() : (DEFAULT_LISTS[k]||[]).slice();
   if(k==='tender_type') (DEFAULT_LISTS[k]||[]).forEach(function(x){ if(a.indexOf(x)<0) a.push(x); });
@@ -3127,14 +3103,11 @@ function exportXlsx(){
 $('btnLogin').onclick=signIn;
 $('inPw').addEventListener('keydown',function(e){ if(e.key==='Enter') signIn(); });
 $('lnkForgot').onclick=forgot;
-$('lnkCfg').onclick=function(e){ e.preventDefault(); $('cfgBox').classList.toggle('hidden'); };
 $('hello').onclick=function(e){ e.stopPropagation(); toggleMenu($('me')); };
 $('meMenu').onclick=function(e){ var a=e.target.closest('a'); if(!a) return; closeMenus(); var k=a.dataset.act;
   if(k==='profile') account(); else if(k==='ver') showVersions(); else if(k==='out') signOut(); else if(a.dataset.v) showView(a.dataset.v); };
 $('btnMenu').onclick=function(e){ e.stopPropagation(); closeMenus(); mobileNav(!$('top').classList.contains('mnav')); };
 document.addEventListener('click',function(e){ if(!e.target.closest('.dd,.me')) closeMenus(); if(!e.target.closest('#nav,#btnMenu')) mobileNav(false); });
-$('btnFile').onclick=function(){ $('inFile').click(); };
-$('inFile').onchange=function(){ if(this.files[0]) openFile(this.files[0]); this.value=''; };
 ['q','fStatus','fGroup','fType','fYear'].forEach(function(id){ $(id).addEventListener('input',render); });
 document.querySelectorAll('th[data-k]').forEach(function(th){ th.onclick=function(){ var k=th.dataset.k; S.sort = S.sort.k===k ? {k:k,dir:-S.sort.dir} : {k:k,dir:(k==='our_sum'||k==='closing_date'||k==='arza_no')?-1:1}; render(); }; });
 $('rows').onclick=function(e){ var tr=e.target.closest('tr[data-no]'); if(tr) openDrawer(tr.dataset.no); };
