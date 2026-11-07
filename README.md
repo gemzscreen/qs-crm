@@ -45,11 +45,11 @@ Tender register, priced BQs, rationalized revisions, bid results and as-built re
 
 ### 4. Move the data
 1. Google Sheet **QS CRM DB** › File › Download › Microsoft Excel (.xlsx).
-2. Sign in to the app as admin › **Users** › *Choose QS CRM DB.xlsx…* › Import. Check the register shows all tenders.
+2. Sign in to the app as admin › your name (top right) › **Team & access** › *Choose QS CRM DB.xlsx…* › Import. Check the register shows all tenders.
 3. Keep the Google Sheet as an archive (it is no longer updated).
 
 ### 5. Add people
-**Users › + Add user** (email, name, role, temporary password) — needs the service key in step 2; otherwise add them in Supabase › Authentication › Users (Auto Confirm) and set the role on the Users page.
+**Your name (top right) › Team & access › + Add team member** (email, name, role, temporary password) — needs the service key in step 2; otherwise add them in Supabase › Authentication › Users (Auto Confirm) and set the role on the Team & access page. Everyone fills in their own name, designation and phone under **My profile**.
 Roles: **admin** — users + everything · **qs** — all changes · **viewer** — read only (ARZA management, client). pm / site are for the v7 site modules (read only until then).
 Everyone can change their password by clicking their name (top right). Forgot password sends a reset link by email.
 
@@ -60,7 +60,8 @@ Everyone can change their password by clicking their name (top right). Forgot pa
 ## Files
 | File | Purpose |
 |---|---|
-| `index.html` | the app (one file; SheetJS + supabase-js from CDN) |
+| `index.html` | the app (one file) |
+| `vendor/` | SheetJS 0.18.5 + supabase-js 2.119.0, served from this site (the CDN is only a fallback) — upgrade by replacing the file and its name in index.html |
 | `VERSION`, `CHANGELOG.md`, `scripts/version.mjs` | version number, changelog (generated), version tool |
 | `.github/workflows/` | Check (pull requests), Database (apply schema.sql), Release (tag + notes) |
 | `config.js` | Supabase URL + anon key + Drive service URL |
