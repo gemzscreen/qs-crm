@@ -2,6 +2,16 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v2.2.0 — 7 Nov 2026
+
+- v2 complete.
+- BQ Library (new page): search every priced BQ line of every tender — tendered BQ and the approved contract revision — by words (-word excludes), unit, client, type, status, year and source.
+- Rate history per unit: lines, tenders, min, median, average, max, latest (which tender, when), won average and contract (rationalized) average; by client; rate-over-time chart with won / lost / contract points; Excel export.
+- Masterlist (new page): the ARZA Tender Pricing Masterlist Google Sheet, read only — Rates (build-ups, net and all-in) and Resources (prices with confidence grade A / B / C); search and filter by trade; History opens the BQ Library for similar items.
+- Dashboard (new page): open and submitted pipeline, won value after rationalization, win rate, tenders closing in 30 days, revisions awaiting approval, tendered vs contract by client, won projects with their as-built position.
+- Apps Script changed: paste the new Code.gs, run setMasterlist() once with the masterlist link, then Deploy › Manage deployments › Edit › New version.
+- Database: run automatically by the Database workflow (new crm_library and crm_dashboard functions).
+
 ## v2.1.1 — 6 Nov 2026
 
 - Supabase new API keys: publishable key (sb_publishable_…) in config.js; secret key (sb_secret_…) in the Apps Script file service (legacy anon / service_role keys still work).
