@@ -392,8 +392,13 @@ tbody tr:hover td{background:var(--hover)}
 .modal td input.ed{width:100%;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:var(--field);font:inherit;font-size:12.5px}
 .modal td select{padding:4px;border:1px solid var(--line);border-radius:5px;background:var(--field);font-size:12.5px}
 .modal table.sfc td{padding:4px 5px}
-.catgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 12px;font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--field)}
-.catgrid label{display:flex;gap:6px;align-items:center;font-weight:400;color:var(--ink);margin:0;cursor:pointer} .catgrid b{font-family:var(--mono);font-size:11px;color:var(--bink);width:20px}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px}
+.f .catgrid label{display:flex;align-items:center;gap:8px;margin:0;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--field);font-size:12.5px;font-weight:400;color:var(--ink);line-height:1.2;cursor:pointer;min-width:0;transition:border-color .12s,background .12s}
+.f .catgrid label:hover{border-color:var(--brand2)}
+.f .catgrid input[type=checkbox]{width:15px;height:15px;padding:0;margin:0;flex:0 0 auto;accent-color:var(--brand);border-radius:3px}
+.f .catgrid b{flex:0 0 24px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--bink)}
+.f .catgrid span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f .catgrid label.on{border-color:var(--brand2);background:color-mix(in srgb,var(--brand2) 10%,var(--field));font-weight:500}
 .lh{display:flex;gap:16px;align-items:center;border:1px solid var(--line);border-bottom:3px solid var(--brand);border-radius:6px;padding:12px 14px;background:#fff;color:#111}
 .lh img{max-height:64px;max-width:220px} .lhn{font-size:18px;font-weight:700;color:#120377} .lhs{font-size:11.5px;color:#444}
 @media (max-width:900px){.catgrid{grid-template-columns:1fr 1fr}.modal dl.rec{grid-template-columns:110px 1fr}}
@@ -417,7 +422,7 @@ tbody tr:hover td{background:var(--hover)}
         <a data-v="library"><b>BQ Library</b><span>Every priced line, rate history</span></a>
         <a data-v="master"><b>Masterlist</b><span>Rates and resources from the pricing sheet</span></a>
       </div></div>
-    <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">Procurement<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">RFQ<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="ddm">
         <a data-v="suppliers"><b>Suppliers</b><span>Supplier database: contacts, categories, zones, verification</span></a>
         <a data-v="queue"><b>Review queue <em class="nbadge hidden" id="nbQueue"></em></b><span>AI-found suppliers waiting for approval</span></a>
@@ -511,7 +516,7 @@ tbody tr:hover td{background:var(--hover)}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.1.0</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.1.1</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -1980,8 +1985,12 @@ tbody tr:hover td{background:var(--hover)}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'3.1.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'3.1.1', user:'Gemz' };
 var CHANGELOG = [
+  { v:'3.1.1', date:'8 Nov 2026', items:[
+    'The Procurement menu is now called RFQ (Suppliers, Review queue).',
+    'Material categories on the supplier form: tidy tiles in even columns (code + name, full description on hover); ticked ones are highlighted.'
+  ]},
   { v:'3.1.0', date:'8 Nov 2026', items:[
     'Procurement (QS CRM v3) starts: new Procurement menu with Suppliers and Review queue.',
     'Suppliers: own supplier database with IDs SUP-0001 …, country, city, sourcing zone (1 Brunei · 2 Borneo · 3 MY/SG · 4 China/Vietnam · 5 other), material categories (23, mapped to the masterlist), specialty, contacts and verification (Unverified → Checked → Verified / Failed). Search and filter by category, zone, country, verification and status; Excel export (Suppliers, Contacts and a Discovery sheet that imports again).',
@@ -3766,7 +3775,7 @@ function exportXlsx(){
 var PR={ data:null, f:{q:'',cat:'',zone:'',country:'',ver:'',status:'Active'}, sort:{k:'supplier_id',dir:1}, Q:null, qs:'Pending', sel:{}, set:null, dns:false };
 var ZONE_TXT={1:'1 Brunei',2:'2 Borneo',3:'3 MY/SG',4:'4 China / Vietnam',5:'5 Other countries'};
 function prNeedDb(el,e){ var m=String(e&&e.message||e);
-  if(/crm_procdata|crm_queue|crm_settings|function .* does not exist|schema cache/i.test(m)){ el.innerHTML='<div class="note w">Procurement is not in the database yet. After the v3.1.0 pull request is merged, the <b>Database</b> workflow applies <code>supabase/schema.sql</code> (GitHub › Actions). Reload this page when it is green.</div>'; return true; }
+  if(/crm_procdata|crm_queue|crm_settings|function .* does not exist|schema cache/i.test(m)){ el.innerHTML='<div class="note w">The RFQ module is not in the database yet. After the v3.1.0 pull request is merged, the <b>Database</b> workflow applies <code>supabase/schema.sql</code> (GitHub › Actions). Reload this page when it is green.</div>'; return true; }
   el.innerHTML='<div class="note w">'+esc(m)+'</div>'; if(e&&e.auth) fail(e); return true; }
 function prLoad(){ return api('procdata').then(function(d){ PR.data=d; prBadge(d.pending); return d; }); }
 function prBadge(n){ var b=$('nbQueue'); if(!b) return; b.textContent=n?String(n):''; b.classList.toggle('hidden',!n); }
@@ -3789,7 +3798,7 @@ function supContactsSum(s){ var c=s.contacts||[], e=c.filter(function(x){return 
 
 /* ----- Suppliers ----- */
 function renderSuppliers(){
-  var el=$('vSP'); if(needLive(el,'Procurement')) return;
+  var el=$('vSP'); if(needLive(el,'RFQ')) return;
   if(!PR.data){ el.innerHTML='<div class="empty"><span class="spin"></span> Loading suppliers…</div>'; prLoad().then(renderSuppliers).catch(function(e){ prNeedDb(el,e); }); return; }
   var D=PR.data, all=D.suppliers||[], f=PR.f;
   var countries={}; all.forEach(function(s){ countries[s.country]=1; });
@@ -3906,7 +3915,7 @@ function supForm(s){
     '<div class="f"><label for="sf_found_on">Found on</label><input id="sf_found_on" type="date" value="'+fv('found_on')+'"></div>'+
     '<div class="f full"><label for="sf_source_url">Source <span class="hint">where the details came from</span></label><input id="sf_source_url" maxlength="1000" value="'+fv('source_url')+'"></div>'+
     '<div class="f full"><label>Material categories <span class="hint">tick one or more</span></label><div class="catgrid">'+Procure.CATEGORIES.map(function(c){
-      return '<label title="'+esc(c[2])+'"><input type="checkbox" class="sf_cat" value="'+c[0]+'"'+(c[0] in cats?' checked':'')+' data-sp="'+esc(cats[c[0]]||'')+'"><b>'+c[0]+'</b> '+esc(c[1])+'</label>'; }).join('')+'</div></div>'+
+      return '<label title="'+esc(c[1]+' — '+c[2])+'"'+(c[0] in cats?' class="on"':'')+'><input type="checkbox" class="sf_cat" value="'+c[0]+'"'+(c[0] in cats?' checked':'')+' data-sp="'+esc(cats[c[0]]||'')+'"><b>'+c[0]+'</b><span>'+esc(c[1])+'</span></label>'; }).join('')+'</div></div>'+
     '<div class="f full"><label for="sf_specialty">Specialty <span class="hint">what they actually sell</span></label><input id="sf_specialty" maxlength="1000" value="'+fv('specialty')+'"></div>'+
     '<div class="f full"><label for="sf_notes">Notes</label><textarea id="sf_notes" maxlength="4000">'+fv('notes')+'</textarea></div>'+
     '</div><h4 class="psec">Contacts <span class="hint">phones in any form (+673 …, 0757-…, "WA +86 …"); saved as +country code</span></h4>'+
@@ -3920,6 +3929,7 @@ function conRow(c){ c=c||{}; var v=function(k){ return esc(c[k]||''); };
 function supFormWire(){
   var zone=function(){ var cc=$('sf_country').value; $('sf_zone').value=cc?Procure.zoneLabel(Procure.zoneOf(cc,$('sf_city').value+' '+$('sf_address').value),cc):''; };
   ['sf_country','sf_city','sf_address'].forEach(function(id){ $(id).oninput=zone; }); zone();
+  document.querySelectorAll('.sf_cat').forEach(function(x){ x.onchange=function(){ x.closest('label').classList.toggle('on',x.checked); }; });
   $('sfAdd').onclick=function(){ $('sfCons').insertAdjacentHTML('beforeend',conRow({})); };
   $('sfCons').onclick=function(e){ var b=e.target.closest('.sfDel'); if(b) b.closest('tr').remove(); };
 }
@@ -3981,7 +3991,7 @@ function exportSuppliers(){
 
 /* ----- Review queue: discovery files -> checks -> approve / merge / reject ----- */
 function renderQueue(){
-  var el=$('vRQ'); if(needLive(el,'Procurement')) return;
+  var el=$('vRQ'); if(needLive(el,'RFQ')) return;
   var st=PR.qs, w=canWrite();
   el.innerHTML='<div class="bar"><div><h2>Review queue</h2><div class="scope">Suppliers found by Claude / Gemini / Google wait here as <b>Unverified</b> until you approve them. Automatic checks: format (offline), mail server and website (DNS), duplicates. Nothing is contacted from here.</div></div><span style="flex:1"></span>'+
     (w?'<button class="btn" id="rqDns" title="Look up the mail server (MX) of each email domain and the website domain (A) - free DNS-over-HTTPS">Run DNS checks</button><button class="btn imp" id="rqImp" title="Discovery CSV / sheet (17 columns), RFQ send list (Discovery (import) sheet) or the Gemini supplier directory">Import file…</button>':'')+'</div>'+

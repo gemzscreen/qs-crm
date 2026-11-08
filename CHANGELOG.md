@@ -2,6 +2,11 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v3.1.1 — 8 Nov 2026
+
+- The Procurement menu is now called RFQ (Suppliers, Review queue).
+- Material categories on the supplier form: tidy tiles in even columns (code + name, full description on hover); ticked ones are highlighted.
+
 ## v3.1.0 — 8 Nov 2026
 
 - Procurement (QS CRM v3) starts: new Procurement menu with Suppliers and Review queue.
