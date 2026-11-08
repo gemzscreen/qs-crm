@@ -402,6 +402,18 @@ tbody tr:hover td{background:var(--hover)}
 .lh{display:flex;gap:16px;align-items:center;border:1px solid var(--line);border-bottom:3px solid var(--brand);border-radius:6px;padding:12px 14px;background:#fff;color:#111}
 .lh img{max-height:64px;max-width:220px} .lhn{font-size:18px;font-weight:700;color:#120377} .lhs{font-size:11.5px;color:#444}
 @media (max-width:900px){.catgrid{grid-template-columns:1fr 1fr}.modal dl.rec{grid-template-columns:110px 1fr}}
+.pv .form.f3{grid-template-columns:repeat(3,minmax(0,1fr))} .hrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .pv .crumb{font-size:12px;margin-bottom:2px} .pv .crumb a{color:var(--ink3);text-decoration:none} .pv .crumb a:hover{text-decoration:underline}
+.pv table.grid td{padding:3px 4px} .pv table.grid td.ln{color:var(--ink3);font-size:12px;text-align:right;width:26px}
+.pv table.grid input.ed,.pv table.grid select{width:100%;padding:5px 6px;border:1px solid var(--line);border-radius:5px;background:var(--field);font:inherit;font-size:12.5px}
+.pv table.grid input.ed:focus,.pv table.grid select:focus{outline:none;border-color:var(--brand2);box-shadow:0 0 0 2px rgba(42,29,156,.12)} .pv table.grid input.num{width:80px;text-align:right}
+.pv table.sl td{vertical-align:top} .pv td.btns .btn{text-decoration:none;color:inherit;margin:0 4px 4px 0} .pv td.btns .btn.sl-mail{border-color:var(--brand2);color:var(--brand2)} .pv td.btns .btn.sl-wa{border-color:#128c4a;color:#128c4a}
+.pv td.btns .btn.done{opacity:.6} .pv td.btns .due{background:var(--warnbg,#fff4e0);border-radius:6px;padding:3px 5px} .pv td.btns .due b{color:var(--warn,#b45309);font-size:11.5px;margin-right:4px}
+.pv table.sl select.slSt{padding:4px;border:1px solid var(--line);border-radius:5px;background:var(--field);font-size:12.5px}
+.pv table.sl tr.st-Quoted td{background:color-mix(in srgb,var(--ok) 6%,transparent)} .pv table.sl tr.st-Declined td,.pv table.sl tr.st-No-reply td,.pv table.sl tr.st-Bounced td{color:var(--ink3)}
+.ug-SUPER-URGENT{background:var(--badbg);color:var(--bad)} .ug-URGENT{background:#fdecd8;color:#b45309} .ug-NORMAL{background:var(--infobg);color:var(--info)} .ug-NEEDED-SOON{background:var(--line2);color:var(--bink)} .ug-RESTOCK{background:var(--mutebg);color:var(--mute)}
+.rs-Draft{background:var(--mutebg);color:var(--mute)} .rs-Sent,.rs-Chasing{background:var(--infobg);color:var(--info)} .rs-Comparison,.rs-Awarded{background:var(--okbg);color:var(--ok)} .rs-Short{background:#fdecd8;color:#b45309} .rs-Approval-sent{background:var(--line2);color:var(--bink)} .rs-Cancelled{background:var(--badbg);color:var(--bad)}
+.pv .grid2.rd .card .kpis{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.pv .form.f3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -424,10 +436,15 @@ tbody tr:hover td{background:var(--hover)}
       </div></div>
     <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">RFQ<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="ddm">
+        <a data-v="rfqs"><b>RFQs</b><span>New RFQ, send list with Email / WhatsApp buttons, chase today</span></a>
         <a data-v="suppliers"><b>Suppliers</b><span>Supplier database: contacts, categories, zones, verification</span></a>
         <a data-v="queue"><b>Review queue <em class="nbadge hidden" id="nbQueue"></em></b><span>AI-found suppliers waiting for approval</span></a>
       </div></div>
-    <a data-v="reports">Reports</a>
+    <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">Reports<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="ddm">
+        <a data-v="reports"><b>Tender reports</b><span>Tenders by type, client group, status; win rate and values</span></a>
+        <a data-v="rfqreports"><b>RFQ reports</b><span>Reply rate, quotes, response time by category, zone, country, channel</span></a>
+      </div></div>
   </nav>
   <div class="sp"></div>
   <button id="btnTheme" class="ibtn" aria-label="Theme"></button>
@@ -508,6 +525,12 @@ tbody tr:hover td{background:var(--hover)}
 <main id="vSP" class="hidden pv"></main>
 <main id="vRQ" class="hidden pv"></main>
 <main id="vCS" class="hidden pv"></main>
+<main id="vRF" class="hidden pv"></main>
+<main id="vRD" class="hidden pv"></main>
+<main id="vRE" class="hidden pv"></main>
+<main id="vRR" class="hidden pv"></main>
+<input type="file" id="rfFile" accept=".xlsx,.xlsm,.xls" class="hidden">
+<input type="file" id="itemFile" accept=".xlsx,.xlsm,.xls,.csv" class="hidden">
 <input type="file" id="rqFile" accept=".xlsx,.xlsm,.xls,.csv" class="hidden">
 <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" class="hidden">
 <input type="file" id="rvFile" accept=".xlsx,.xlsm" class="hidden">
@@ -516,7 +539,7 @@ tbody tr:hover td{background:var(--hover)}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.1.1</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.1.2</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -1381,6 +1404,7 @@ tbody tr:hover td{background:var(--hover)}
  * normalisation, de-duplication keys, Brunei working days, Roundcube / WhatsApp links,
  * message templates.
  * v3.1.0: material categories (standards §3), discovery import rows -> supplier records + contacts.
+ * v3.1.2: import templates, item lists (MR), RFQ texts that fit the link, reminders, chase list, discovery prompt, RFQ KPIs.
  * Works in the browser (global Procure) and in Node (module.exports). No dependencies.
  */
 (function (root) {
@@ -1813,7 +1837,7 @@ tbody tr:hover td{background:var(--hover)}
   ];
   // keyword guesses for free-text categories ("Stainless steel - railing tubes & fittings" -> MW); first match wins
   var CAT_WORDS = [
-    ['HV', /\b(hvac|air[\s-]?con|aircond|ducting|duct|refrigera|copper (pipe|tube)|chiller)\w*/i],
+    ['HV', /\b(hvac|air[\s-]?con|aircond|ducting|duct|refrigera|copper (pipe|tube)|chiller|nbr|armaflex|insulation tube)\w*/i],
     ['FP', /\b(fire|extinguisher|hose reel|sprinkler|smoke detector)\w*/i],
     ['RB', /\b(rebar|reinforc|brc|tie wire|y\d{2}\b)\w*/i],
     ['MW', /\b(stainless|ss30[46]|steel|metal ?work|railing|hollow section|grating|beam|channel|angle bar|plate)\w*/i],
@@ -1960,6 +1984,169 @@ tbody tr:hover td{background:var(--hover)}
     return { mx: mx, a: w };
   }
 
+  /* ---------- v3.1.2: import templates, RFQ texts, chase list, discovery prompt, KPIs ---------- */
+  // supplier import template = the 17 discovery columns + 2 optional ones the importer also reads
+  var TEMPLATE_COLS = DISCOVERY_COLS.concat(['alias', 'type']);
+  var TEMPLATE_HELP = {
+    company_name: ['Company name (required)', 'Foshan Vinmay Stainless Steel Co., Ltd.'],
+    country: ['Country name or 2-letter code (required)', 'China'],
+    city: ['City / area - Miri, Limbang, Kota Kinabalu etc. decide zone 2 Borneo', 'Sanshui, Foshan'],
+    address: ['Full address', 'No. 8 Industrial Rd, Sanshui, Foshan, Guangdong'],
+    website: ['Company website (not Alibaba)', 'https://vinssco.com'],
+    category: ['Category code or name (see Categories sheet); several codes as "HV, PL"', 'MW'],
+    specialty: ['What they sell', 'SS304 ornamental tubes + handrail fittings'],
+    contact_person: ['Contact person', 'Ms Lily Chen'],
+    email: ['Email(s), separate with " / "', 'sales@vinssco.com / marketing@vinssco.com'],
+    phone: ['Phone(s) with country code, separate with " / "; mark WhatsApp with "WA"', '+86 757 8543 6751 / WA +86 131 4327 6868'],
+    whatsapp: ['WhatsApp number (optional - else the first mobile is used)', '+86 131 4327 6868'],
+    source_url: ['Where the details came from (page link)', 'https://vinssco.com/contact'],
+    notes: ['Anything useful', 'Exports to 100+ countries'],
+    found_by: ['Claude / Gemini / Google / Referral / Marketplace / Walk-in / Other', 'Google'],
+    found_on: ['Date found (YYYY-MM-DD)', '2026-11-09'],
+    verification: ['Leave blank - always imported as Unverified', ''],
+    zone: ['Leave blank - worked out from country + city', ''],
+    alias: ['Other name / brand (optional)', 'Vinmay'],
+    type: ['Manufacturer / Exporter / Stockist / Dealer / Fabricator / Sub-con / Service (optional)', 'Manufacturer']
+  };
+  // requisition (MR) / item list: one row per item (standards §5)
+  var MR_COLS = ['line', 'description', 'spec_brand', 'qty', 'unit', 'required_date', 'category', 'res_code', 'only_overseas', 'notes'];
+  var MR_HELP = {
+    line: ['Line no. (optional)', 1], description: ['Item (required)', 'SS304 round tube 25.4mm OD x 1.5mm, hairline, 6m'],
+    spec_brand: ['Specification / brand / standard', 'ASTM A554, SS304'], qty: ['Quantity (blank = ask MOQ + price at MOQ)', 120],
+    unit: ['Unit', 'lengths'], required_date: ['Required on site (YYYY-MM-DD)', '2026-12-15'],
+    category: ['Category code (optional - guessed from the description)', 'MW'], res_code: ['Masterlist resource code (optional)', ''],
+    only_overseas: ['Y if only made overseas (e.g. China)', ''], notes: ['Notes', '']
+  };
+  function num(v) { if (v == null || v === '') return null; var n = +String(v).replace(/[, ]/g, ''); return isFinite(n) ? n : null; }
+  function dateIso(v) {
+    if (v == null || v === '') return '';
+    if (v instanceof Date) return iso(v);
+    var s = String(v).trim(), m;
+    if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s))) return m[1] + '-' + pad(m[2], 2) + '-' + pad(m[3], 2);
+    if ((m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/.exec(s))) { var y = +m[3] < 100 ? 2000 + +m[3] : +m[3]; return y + '-' + pad(m[2], 2) + '-' + pad(m[1], 2); } // d/m/y (Brunei)
+    var d = new Date(s); return isNaN(d) ? '' : iso(d);
+  }
+  // one item row from an MR sheet / pasted text -> clean item (category guessed when blank)
+  function mrItem(r) {
+    var o = {}; Object.keys(r || {}).forEach(function (k) { o[String(k).trim().toLowerCase().replace(/[\s\/]+/g, '_')] = r[k]; });
+    var desc = str(o.description || o.item || o.resource || o.material), cat = categoryCode(o.category) || categoryCode(desc + ' ' + str(o.spec_brand));
+    return { line: num(o.line), description: desc, spec_brand: str(o.spec_brand || o.spec || o.brand), qty: num(o.qty || o.quantity), unit: str(o.unit),
+      required_date: dateIso(o.required_date || o.required || o.date), category: cat, res_code: str(o.res_code || o.code),
+      only_overseas: /^(y|yes|true|1)$/i.test(str(o.only_overseas)), notes: str(o.notes) };
+  }
+  // pasted from Excel (tab separated) or typed one per line: description [tab spec] [tab qty] [tab unit] [tab required date]
+  function parsePasted(text) {
+    var rows = String(text || '').replace(/\r/g, '').split('\n').filter(function (l) { return l.trim(); });
+    if (!rows.length) return [];
+    var first = rows[0].toLowerCase(), hasHead = /description|item/.test(first) && /qty|quantity|unit/.test(first);
+    var head = hasHead ? rows.shift().split('\t').map(function (h) { return h.trim(); }) : ['description', 'spec_brand', 'qty', 'unit', 'required_date'];
+    return rows.map(function (l) {
+      var c = l.split('\t'), r = {};
+      if (!hasHead && c.length === 1) { var m = /^(.*?)(?:\s+[-–x×]\s*|\s+)(\d+(?:\.\d+)?)\s*([a-zA-Z.]+)?\s*$/.exec(l.trim()); if (m && m[1].length > 2) { r = { description: m[1], qty: m[2], unit: m[3] || '' }; return mrItem(r); } }
+      head.forEach(function (h, i) { r[h] = c[i]; }); return mrItem(r);
+    }).filter(function (x) { return x.description; });
+  }
+  function shortDesc(items) {
+    var s = items.map(function (it) { return it.short || it.description || it.desc; }).filter(Boolean);
+    var t = s.slice(0, 3).join('; ') + (s.length > 3 ? ' and ' + (s.length - 3) + ' more item' + (s.length > 4 ? 's' : '') : '');
+    return t.length > 160 ? t.slice(0, 157) + '...' : t;
+  }
+  // items as the templates want them: desc = description + spec/brand
+  function rfqItems(items) {
+    return (items || []).map(function (it) {
+      var d = str(it.description || it.desc), sp = str(it.spec_brand);
+      return { desc: sp && d.toLowerCase().indexOf(sp.toLowerCase()) < 0 ? d + ' (' + sp + ')' : d, short: str(it.short) || d, qty: it.qty == null ? '' : it.qty, unit: str(it.unit) };
+    });
+  }
+  // RFQ record (+ items) -> the object buildEmail / buildWhatsApp expect
+  function rfqForTemplates(r, items, sender) {
+    var it = rfqItems(items);
+    return { rfq_no: r.rfq_no, title: r.title, short_desc: r.short_desc || shortDesc(it), items: it,
+      qtyMode: r.qty_mode || (it.some(function (x) { return x.qty === '' || x.qty == null; }) ? 'moq' : 'firm'),
+      deadline: r.deadline, delivery_place: r.delivery_place, certs: r.certs, sender: sender || 'Gemar', sent_date: r.sent_date, close_date: r.close_date };
+  }
+  // email that fits the Roundcube link (≤ 1,600 chars); longer RFQs: short body + attach the RFQ PDF
+  function buildEmailFit(rfq, sup) {
+    var e = buildEmail(rfq, sup);
+    if (!e.tooLong) return e;
+    var a = audienceOf(sup.zone), v = vars(rfq, sup);
+    var body = [fill(T['open_' + a], v).replace(/ for the following(, delivered to [^:]*)?:$/, ' for the items in the attached RFQ ' + rfq.rfq_no + ' (' + rfq.items.length + ' items)$1.'),
+      'Please quote unit prices ' + v.currency + ' for every item, and include ' + (a === 'O' ? 'FOB / CIF Muara, production lead time, packing, payment terms and quote validity.' : 'stock availability, delivery lead time and charges, payment terms and quote validity.'),
+      fill(T.close, v)].join('\n\n') + '\n';
+    var link = sup.email ? composeLink(sup.email, e.subject, body) : '';
+    return { subject: e.subject, body: body, link: link, tooLong: link.length > LINK_MAX, attach: true };
+  }
+  // reminder by email (same channel as the first contact)
+  function buildReminderEmail(kind, rfq, sup, extra) {
+    var w = buildWhatsApp(kind, rfq, sup, extra), subject = (kind === 'reminder2' ? 'Final reminder: ' : 'Reminder: ') + fill(T.subject, vars(rfq, sup));
+    var body = 'Dear ' + (sup.greeting || 'Sir/Madam') + ',\n\n' + w.text.replace(/^Good day, this is [^.]*\. /, 'Good day. ') + '\n';
+    return { subject: subject, body: body, link: sup.email ? composeLink(sup.email, subject, body) : '' };
+  }
+  // what to chase for one recipient now: reminder1 | reminder2 | noreply | '' (and when it was due)
+  var CHASE_OPEN = ['Emailed', 'WhatsApp sent', 'Reminder 1', 'Reminder 2'];
+  function chaseDue(rec, rfq, now, holidays) {
+    if (CHASE_OPEN.indexOf(rec.status) < 0) return { due: '' };
+    var first = [rec.emailed_at, rec.whatsapp_at].filter(Boolean).sort()[0]; if (!first) return { due: '' };
+    var t = timetable(toDate(String(first).replace(' ', 'T')), { urgency: rfq.urgency, holidays: holidays, deadline: rfq.deadline || null });
+    var n = toDate(now || new Date()), at = function (s) { return toDate(/\d{2}:\d{2}/.test(s) ? s.replace(' ', 'T') : s); };
+    var after = function (s) { return /\d{2}:\d{2}/.test(s) ? n >= at(s) : iso(n) >= s; };
+    if (rec.status === 'Reminder 2') return after(t.noReply) ? { due: 'noreply', at: t.noReply, t: t } : { due: '', t: t };
+    if (rec.status === 'Reminder 1') return after(t.reminder2) ? { due: 'reminder2', at: t.reminder2, t: t } : { due: '', t: t };
+    return after(t.reminder1) ? { due: 'reminder1', at: t.reminder1, t: t } : { due: '', t: t };
+  }
+  // prompt for Claude / Gemini to find more suppliers in the template columns
+  function discoveryPrompt(rfq, items, opts) {
+    opts = opts || {};
+    var zones = (opts.zones || []).map(function (z) { return ZONES[z] + (z === 2 ? ' (Miri, Limbang, Lawas, Kota Kinabalu, Labuan)' : z === 4 ? ' (China first, then Vietnam)' : ''); });
+    var cats = []; (items || []).forEach(function (it) { if (it.category && cats.indexOf(it.category) < 0) cats.push(it.category); });
+    return ['Find ' + (opts.count || 10) + ' real suppliers for this request for quotation from ARZA SDN BHD, a construction company in Brunei Darussalam.',
+      '', 'RFQ ' + (rfq.rfq_no || '') + ' - ' + (rfq.title || ''), 'Items:',
+      (items || []).map(function (it, i) { return (i + 1) + '. ' + it.description + (it.spec_brand ? ' (' + it.spec_brand + ')' : '') + (it.qty ? ' - ' + it.qty + ' ' + (it.unit || '') : ''); }).join('\n'),
+      'Material category: ' + cats.map(function (c) { return c + ' ' + categoryName(c); }).join(', '),
+      'Search in: ' + (zones.join('; ') || 'any country') + (rfq.urgency ? ' (urgency ' + rfq.urgency + ')' : '') + '.',
+      (opts.exclude && opts.exclude.length ? 'Leave out these suppliers I already have: ' + opts.exclude.join('; ') + '.' : ''),
+      '', 'Rules: only companies you can find on a real web page; give the page in source_url; never invent emails or phone numbers - leave them blank if not published; phone numbers with country code; mark WhatsApp numbers with "WA".',
+      'Answer as a table (CSV) with exactly these columns, header first:', TEMPLATE_COLS.join(','),
+      'verification and zone: leave blank. found_by: your name (Claude / Gemini). found_on: today\'s date (YYYY-MM-DD). category: ' + (cats[0] || 'the category code') + '.'
+    ].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; }).join('\n');
+  }
+  // read the "RFQ Text" sheet of an Excel send list (RFQ-2611-002 format) -> RFQ header + items
+  function rfqFromTextSheet(t) {
+    var ref = str(t['RFQ ref']), subj = str(t['Email subject']), body = str(t['Email body - China'] || t['Email body - Brunei/Borneo/MY'] || '');
+    var title = subj.replace(ref + ' - ', '').replace(/\s*-\s*ARZA SDN BHD\s*$/, '');
+    var dl = str(t['Quote deadline']), d = /(\d{1,2}) (\w+) (\d{4})/.exec(dl), deadline = d ? d[3] + '-' + pad(MONTHS.indexOf(d[2]) + 1, 2) + '-' + pad(d[1], 2) : '';
+    var items = body.split('\n').filter(function (l) { return /^\d+\.\s/.test(l); }).map(function (l, i) { var x = l.replace(/^\d+\.\s*/, ''); return { line: i + 1, description: x, category: categoryCode(x) }; });
+    var wa = str(t['WhatsApp full RFQ (no email)']).split('\n').filter(function (l) { return /^\d+\)\s/.test(l); }).map(function (l) { return l.replace(/^\d+\)\s*/, ''); });
+    items.forEach(function (it, i) { if (wa[i]) it.short = wa[i]; });
+    var follow = /for (.*?)\. Kindly check/.exec(str(t['WhatsApp follow-up (after email)']));
+    var place = /delivered to ([^:]+):/.exec(str(t['Email body - Brunei/Borneo/MY']));
+    var certs = /validity, and (.*?)\.\s*$/m.exec(body);
+    return { rfq_no: ref, title: title, deadline: deadline, qty_mode: /Minimum Order Quantity/.test(body) ? 'moq' : 'firm', short_desc: follow ? follow[1] : '',
+      delivery_place: place ? place[1] : '', certs: certs ? certs[1] : '', notes: str(t['SOURCING RULE USED']), items: items };
+  }
+  // KPIs over RFQs (standards §9): rfqs [{rfq_no, rfq_date, categories[], recipients:[{status, valid_quote, emailed_at, whatsapp_at, replied_at, zone, country}]}]
+  function rfqKpis(rfqs) {
+    var rec = [], ok = 0, sent = 0;
+    rfqs.forEach(function (r) {
+      var rs = (r.recipients || []).map(function (x) { return Object.assign({}, x, { first_contact: [x.emailed_at, x.whatsapp_at].filter(Boolean).sort()[0] || '', first_reply: x.replied_at || '' }); });
+      rs.forEach(function (x) { rec.push(x); });
+      if (rs.some(function (x) { return x.status !== 'Not contacted'; })) { sent++; if (rs.filter(function (x) { return x.status === 'Quoted' && x.valid_quote; }).length >= 3) ok++; }
+    });
+    var fix = function (a) { return a.map(function (x) { return Object.assign({}, x, { first_contact: x.first_contact ? String(x.first_contact).replace(' ', 'T') : '', first_reply: x.first_reply ? String(x.first_reply).replace(' ', 'T') : '' }); }); };
+    var k = kpis(fix(rec)), hrs = fix(rec).filter(function (x) { return x.first_contact && x.first_reply && RESPONDED.indexOf(x.status) >= 0; })
+      .map(function (x) { return (toDate(x.first_reply) - toDate(x.first_contact)) / 3600000; }).sort(function (a, b) { return a - b; });
+    k.rfqs = rfqs.length; k.rfqsSent = sent; k.rfqSuccess = sent ? ok / sent : 0; k.rfqsOk = ok;
+    k.validRate = k.contacted ? k.valid / k.contacted : 0;
+    k.medianResponseHours = hrs.length ? (hrs.length % 2 ? hrs[(hrs.length - 1) / 2] : (hrs[hrs.length / 2 - 1] + hrs[hrs.length / 2]) / 2) : null;
+    return k;
+  }
+  // match a send-list row to a supplier in the database by the de-dup keys; returns supplier_id or ''
+  function matchSupplier(row, suppliers) {
+    var keys = dedupKeys(row), best = '', n = 0;
+    (suppliers || []).forEach(function (s) { var sk = dedupKeys(supplierAsRow(s)), c = keys.filter(function (k) { return sk.indexOf(k) >= 0; }).length; if (c > n) { n = c; best = s.supplier_id; } });
+    return best;
+  }
+
   var api = {
     rfqNo: rfqNo, mrNo: mrNo, parseDocNo: parseDocNo, nextDocNo: nextDocNo, supplierId: supplierId, parseSupplierId: parseSupplierId,
     COUNTRIES: COUNTRIES, countryCode: countryCode, ZONES: ZONES, zoneOf: zoneOf, zoneLabel: zoneLabel,
@@ -1975,7 +2162,10 @@ tbody tr:hover td{background:var(--hover)}
     CATEGORIES: CATEGORIES, categoryName: categoryName, categoryCode: categoryCode, categoryCodes: categoryCodes, countryName: countryName,
     FOUND_BY: FOUND_BY, foundBy: foundBy, SUPPLIER_TYPES: SUPPLIER_TYPES, supplierType: supplierType,
     DISCOVERY_COLS: DISCOVERY_COLS, discoveryRow: discoveryRow, contactsOf: contactsOf, toSupplier: toSupplier, supplierAsRow: supplierAsRow,
-    autoVerification: autoVerification, dnsTargets: dnsTargets, digits: digits
+    autoVerification: autoVerification, dnsTargets: dnsTargets, digits: digits,
+    TEMPLATE_COLS: TEMPLATE_COLS, TEMPLATE_HELP: TEMPLATE_HELP, MR_COLS: MR_COLS, MR_HELP: MR_HELP, dateIso: dateIso, mrItem: mrItem, parsePasted: parsePasted,
+    shortDesc: shortDesc, rfqItems: rfqItems, rfqForTemplates: rfqForTemplates, buildEmailFit: buildEmailFit, buildReminderEmail: buildReminderEmail,
+    CHASE_OPEN: CHASE_OPEN, chaseDue: chaseDue, discoveryPrompt: discoveryPrompt, rfqFromTextSheet: rfqFromTextSheet, rfqKpis: rfqKpis, matchSupplier: matchSupplier
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Procure = api;
@@ -1985,8 +2175,19 @@ tbody tr:hover td{background:var(--hover)}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'3.1.1', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'3.1.2', user:'Gemz' };
 var CHANGELOG = [
+  { v:'3.1.2', date:'8 Nov 2026', items:[
+    'RFQ › RFQs: the RFQ register with KPIs and a Chase today list (reminders due, per the urgency timetable and Brunei working days).',
+    'New RFQ: type the boss\'s list into a fill-in-the-blanks table (Enter moves down), paste it from Excel, or import an item-list file (template provided). Category is guessed from each item; urgency and the quote deadline follow from the earliest required-on-site date. RFQ numbers RFQ-YYMM-NNN, restarting each month.',
+    'Add suppliers: proposed from your supplier database by category and the zones allowed by the urgency (urgent = Brunei + Borneo first, restock = China first …), ranked by verification and past replies, with a contact target of about 10. Find more suppliers gives a ready prompt for Claude / Gemini in the import-template columns; Quick-add puts a supplier you know straight on the list.',
+    'Send list: per supplier ① Email (Roundcube opens with the RFQ written) and ② WhatsApp (follow-up written, or the full RFQ when there is no email). Every click is recorded with date and time. Long RFQs (link too long) get a short email + "attach the RFQ PDF". Reminder 1 and the final reminder by email or WhatsApp, highlighted when due.',
+    'Status per supplier (Replied, Quoted + valid quote tick, Declined, No reply, Bounced). A reply makes the supplier Verified; a bounced email with no phone on file makes it Failed. RFQ status follows automatically (Draft → Sent → Chasing → Comparison at 3 valid quotes) or is set by hand (Short, Approval sent, Awarded, Cancelled).',
+    'RFQ PDF with the company letterhead (print / save as PDF). Import an existing Excel send list (e.g. RFQ-2611-002) with its statuses and dates.',
+    'Reports is now a menu: Tender reports (as before) and RFQ reports — reply rate, quote rate, valid quotes, RFQs with 3+ valid quotes, response time; by category, zone, country, channel and per RFQ; Excel export.',
+    'Review queue: Download template — Excel with the import columns, help and examples, categories and countries; example rows (starting "e.g." / "Example") are skipped on import.',
+    'Database: new tables rfqs, rfq_items, rfq_recipients, rfq_clicks. Applied by the Database workflow after merge. No Code.gs change.'
+  ]},
   { v:'3.1.1', date:'8 Nov 2026', items:[
     'The Procurement menu is now called RFQ (Suppliers, Review queue).',
     'Material categories on the supplier form: tidy tiles in even columns (code + name, full description on hover); ticked ones are highlighted.'
@@ -2216,7 +2417,7 @@ function apiF(action, body){
 
 /* ---------- login ---------- */
 function showLogin(err){
-  $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS','vDB','vLB','vML','vSP','vRQ','vCS'].forEach(function(id){ $(id).classList.add('hidden'); }); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); closeMenus(); mobileNav(false);
+  $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS','vDB','vLB','vML','vSP','vRQ','vCS','vRF','vRD','vRE','vRR'].forEach(function(id){ $(id).classList.add('hidden'); }); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); closeMenus(); mobileNav(false);
   $('inEmail').value = load('email'); $('loginErr').textContent = err||''; closeDrawer();
   var c=cfg(); $('inSbUrl').value=c.supabaseUrl; $('inSbKey').value=c.supabaseKey; $('inDrive').value=c.driveUrl;
   $('cfgBox').classList.toggle('hidden', cfgOk());
@@ -2255,7 +2456,7 @@ function forgot(e){
     $('loginErr').textContent = r.error ? r.error.message : 'If '+email+' has an account, a reset link is on its way. Open it on this device.'; });
 }
 function signOut(){ var sb=S.sb; S.sb=null; S.me=null; S.mode=''; S.tenders=[];
-  if(typeof ML!=='undefined'){ ML.data=null; ML.q=''; ML.grp=''; ML.tab='rates'; } if(typeof LB!=='undefined'){ LB.data=null; } if(typeof RV!=='undefined'){ RV.no=''; RV.dirty=false; RV.edit=null; } if(typeof PR!=='undefined'){ PR.data=null; PR.Q=null; PR.sel={}; PR.set=null; prBadge(0); } if(sb){ try{ sb.auth.signOut(); }catch(e){} } showLogin(); }
+  if(typeof ML!=='undefined'){ ML.data=null; ML.q=''; ML.grp=''; ML.tab='rates'; } if(typeof LB!=='undefined'){ LB.data=null; } if(typeof RV!=='undefined'){ RV.no=''; RV.dirty=false; RV.edit=null; } if(typeof RF!=='undefined'){ RF.list=null; RF.cur=null; RF.no=''; } if(typeof PR!=='undefined'){ PR.data=null; PR.Q=null; PR.sel={}; PR.set=null; prBadge(0); } if(sb){ try{ sb.auth.signOut(); }catch(e){} } showLogin(); }
 function enter(){
   $('vLogin').classList.add('hidden'); $('vMain').classList.remove('hidden'); $('top').classList.remove('hidden'); drawMe(); clock();
   var c=$('conn'); c.classList.remove('hidden','off'); c.classList.toggle('ro', ro());
@@ -2709,6 +2910,10 @@ function showView(v){
   $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports'); $('vAB').classList.toggle('hidden', v!=='asbuilt'); $('vRV').classList.toggle('hidden', v!=='rev'); $('vUS').classList.toggle('hidden', v!=='users');
   $('vDB').classList.toggle('hidden', v!=='dash'); $('vLB').classList.toggle('hidden', v!=='library'); $('vML').classList.toggle('hidden', v!=='master');
   $('vSP').classList.toggle('hidden', v!=='suppliers'); $('vRQ').classList.toggle('hidden', v!=='queue'); $('vCS').classList.toggle('hidden', v!=='company');
+  $('vRF').classList.toggle('hidden', v!=='rfqs'); $('vRD').classList.toggle('hidden', v!=='rfq'); $('vRE').classList.toggle('hidden', v!=='rfqedit'); $('vRR').classList.toggle('hidden', v!=='rfqreports');
+  if(v==='rfq'||v==='rfqedit') document.querySelectorAll('#nav a[data-v="rfqs"]').forEach(function(a){ a.classList.add('on'); a.closest('.dd').classList.add('on'); });
+  if(v==='rfqs'){ var had2=!!RF.list; renderRfqs(); if(had2) rfLoad().then(function(){ if(S.view==='rfqs') renderRfqs(); }).catch(function(){}); return; }
+  if(v==='rfq'){ RF.cur=null; renderRfq(); return; } if(v==='rfqedit'){ renderRfqEdit(); return; } if(v==='rfqreports'){ RF.list=null; renderRfqReports(); return; }
   if(v==='suppliers'){ var had=!!PR.data; renderSuppliers(); if(had) prLoad().then(function(){ if(S.view==='suppliers') renderSuppliers(); }).catch(function(){}); return; }
   if(v==='queue'){ renderQueue(); return; } if(v==='company'){ renderCompany(); return; }
   if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else if(v==='rev') renderRV(); else if(v==='users') renderUsers();
@@ -3958,18 +4163,18 @@ function supFormRead(){
   return { fields:f, categories:cats, contacts:cons, keys:keys };
 }
 function dupText(d){ return (d||[]).map(function(x){ return x.supplier_id+' '+x.name+' (same '+(x.keys||[]).map(function(k){ return k.split(':')[0].replace('dom','domain').replace('tel','phone'); }).filter(function(v,i,a){ return a.indexOf(v)===i; }).join(', ')+')'; }).join('\n'); }
-function editSupplier(id){
-  var s=id?supById(id):{ found_on:today(), found_by:'', country:'BN' };
+function editSupplier(id, opt){
+  opt=opt||{}; var s=id?supById(id):Object.assign({ found_on:today(), found_by:'', country:'BN' }, opt.prefill||{});
   pmodal(id?'Edit '+id+' — '+s.name:'New supplier', supForm(s)+(id?'':'<p class="n">Saved straight to the database as Unverified (you are adding it yourself). AI-found suppliers should go through the Review queue instead.</p>'),
     '<button class="btn" id="sfC">Cancel</button><button class="btn pri" id="sfGo">'+(id?'Save':'Add supplier')+'</button>');
   supFormWire();
-  $('sfC').onclick=function(){ if(id) openSupplier(id); else closeModal(); };
+  $('sfC').onclick=function(){ if(id) openSupplier(id); else if(opt.cancel) opt.cancel(); else closeModal(); };
   $('sfGo').onclick=function(){
     var d; try{ d=supFormRead(); }catch(e){ toast(e.message,true); return; }
     var btn=$('sfGo'); busy(btn,true);
     var go=function(force){ return api('saveSupplier',Object.assign({supplier_id:id||'', force:!!force},d)).then(function(r){
       if(r.saved===false){ busy(btn,false); if(confirm('This looks like a supplier you already have:\n\n'+dupText(r.dups)+'\n\nAdd it anyway as a separate supplier?')){ busy(btn,true); return go(true); } return; }
-      supReplace(r.supplier); toast((id?'Saved ':'Added ')+r.supplier.supplier_id); openSupplier(r.supplier.supplier_id); drawSuppliers(); }); };
+      supReplace(r.supplier); toast((id?'Saved ':'Added ')+r.supplier.supplier_id); if(opt.after){ opt.after(r.supplier); return; } openSupplier(r.supplier.supplier_id); drawSuppliers(); }); };
     go(false).catch(function(e){ busy(btn,false); fail(e); });
   };
 }
@@ -3994,9 +4199,10 @@ function renderQueue(){
   var el=$('vRQ'); if(needLive(el,'RFQ')) return;
   var st=PR.qs, w=canWrite();
   el.innerHTML='<div class="bar"><div><h2>Review queue</h2><div class="scope">Suppliers found by Claude / Gemini / Google wait here as <b>Unverified</b> until you approve them. Automatic checks: format (offline), mail server and website (DNS), duplicates. Nothing is contacted from here.</div></div><span style="flex:1"></span>'+
-    (w?'<button class="btn" id="rqDns" title="Look up the mail server (MX) of each email domain and the website domain (A) - free DNS-over-HTTPS">Run DNS checks</button><button class="btn imp" id="rqImp" title="Discovery CSV / sheet (17 columns), RFQ send list (Discovery (import) sheet) or the Gemini supplier directory">Import file…</button>':'')+'</div>'+
+    '<button class="btn" id="rqTpl" title="Excel template with the columns the importer reads, help and examples">Download template</button>'+(w?'<button class="btn" id="rqDns" title="Look up the mail server (MX) of each email domain and the website domain (A) - free DNS-over-HTTPS">Run DNS checks</button><button class="btn imp" id="rqImp" title="Discovery CSV / sheet (17 columns), RFQ send list (Discovery (import) sheet) or the Gemini supplier directory">Import file…</button>':'')+'</div>'+
     '<div class="tabs abtabs" id="rqTabs">'+['Pending','Approved','Merged','Rejected','All'].map(function(t){ return '<a data-s="'+t+'"'+(t===st?' class="on"':'')+'>'+t+' <span class="n" data-c="'+t+'"></span></a>'; }).join('')+'</div>'+
     '<div id="rqBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
+  $('rqTpl').onclick=supplierTemplate;
   $('rqTabs').onclick=function(e){ var a=e.target.closest('a[data-s]'); if(!a) return; PR.qs=a.dataset.s; PR.sel={}; renderQueue(); };
   if(w){ $('rqImp').onclick=function(){ $('rqFile').click(); }; $('rqDns').onclick=function(){ queueDns(true); }; }
   var need=PR.data?Promise.resolve(PR.data):prLoad();
@@ -4114,7 +4320,7 @@ function readDiscovery(file){
     if(disc!=null || names.some(function(n){ return find(n)>=0; })){
       var sh=disc!=null&&find(disc)>=0?disc:names.filter(function(n){ return find(n)>=0; })[0];
       out.kind=sh==='Sheet1'||/\.csv$/i.test(file.name)?'Discovery CSV (17 columns)':'Discovery sheet "'+sh+'"';
-      out.rows=json(sh,find(sh)).map(function(r,i){ var o={}; Object.keys(r).forEach(function(k){ o[String(k).trim().toLowerCase()]=r[k]; }); return {row_no:find(sh)+i+2, raw:o}; }).filter(function(x){ return String(x.raw.company_name||'').trim(); });
+      out.rows=json(sh,find(sh)).map(function(r,i){ var o={}; Object.keys(r).forEach(function(k){ o[String(k).trim().toLowerCase()]=r[k]; }); return {row_no:find(sh)+i+2, raw:o}; }).filter(function(x){ var n=String(x.raw.company_name||'').trim(); return n && !/^(e\.g\.|example\b)/i.test(n); });
       out.rows.forEach(function(x){ x.data=Procure.discoveryRow(x.raw,{found_on:today()}); });
     } else if(names.indexOf('All Suppliers')>=0){
       out.kind='Gemini supplier directory';
@@ -4228,6 +4434,349 @@ function printLetterTest(c){
     '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>'); w.document.close();
 }
 $('rqFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return; if(ro()){ toast('Read-only account.',true); return; } showQueueImport(f); };
+
+/* ---------- v3.1.2: RFQs — item list, shortlist, send list with Email / WhatsApp buttons, chase list, RFQ PDF, RFQ reports ---------- */
+var RF={ list:null, cur:null, no:'', f:{q:'',st:'open'}, rep:{month:'',cat:''} };
+var URG_TXT={'SUPER URGENT':'1–2 days','URGENT':'3–7 days','NORMAL':'8–14 days','NEEDED SOON':'15–29 days','RESTOCK':'30+ days / no date'};
+var RFQ_OPEN=['Draft','Sent','Chasing','Comparison','Short','Approval sent'];
+function uChip(u){ return '<span class="chip ug-'+esc(String(u||'RESTOCK').replace(/\s+/g,'-'))+'" title="'+esc(URG_TXT[u]||'')+'">'+esc(u||'RESTOCK')+'</span>'; }
+function rsChip(s){ return '<span class="chip rs-'+esc(String(s||'Draft').replace(/\s+/g,'-'))+'">'+esc(s||'Draft')+'</span>'; }
+function senderName(){ var c=(PR.set&&PR.set.company)||{}, n=c.sender_name||(S.me&&S.me.full_name)||'Gemar'; return String(n).trim().split(/\s+/)[0]; }
+function rfLoad(){ return api('rfqs').then(function(d){ RF.list=d; return d; }); }
+function rfNeedDb(el,e){ var m=String(e&&e.message||e); if(/crm_rfq|function .* does not exist|schema cache/i.test(m)){ el.innerHTML='<div class="note w">RFQs are not in the database yet. After the v3.1.2 pull request is merged, the <b>Database</b> workflow applies <code>supabase/schema.sql</code>. Reload when it is green.</div>'; return true; } return prNeedDb(el,e); }
+function xlsxFrom(sheets, name){ var wb=XLSX.utils.book_new(); sheets.forEach(function(sh){ var ws=sh.aoa?XLSX.utils.aoa_to_sheet(sh.aoa):XLSX.utils.json_to_sheet(sh.rows.length?sh.rows:[{}],sh.header?{header:sh.header}:undefined); if(sh.cols) ws['!cols']=sh.cols.map(function(w){ return {wch:w}; }); XLSX.utils.book_append_sheet(wb,ws,sh.name); }); XLSX.writeFile(wb,name); }
+/* ----- downloadable templates ----- */
+function supplierTemplate(){
+  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  var C=Procure.TEMPLATE_COLS, H=Procure.TEMPLATE_HELP;
+  xlsxFrom([
+    { name:'Discovery (import)', aoa:[C], cols:C.map(function(c){ return ({company_name:38,address:40,specialty:40,email:34,phone:34,source_url:36,notes:36})[c]||16; }) },
+    { name:'How to fill', aoa:[['QS CRM — supplier import template (RFQ › Review queue › Import file…)'],['One row per company in the "Discovery (import)" sheet. Keep the header row as it is. Rows go to the review queue as Unverified; you approve them there.'],[],['Column','What to put','Example']]
+        .concat(C.map(function(c){ return [c, H[c][0], H[c][1]]; })).concat([[],['Tip: ask Claude or Gemini to answer in these columns - RFQ › an RFQ › Find more suppliers gives a ready prompt.']]), cols:[16,70,46] },
+    { name:'Categories', aoa:[['Code','Category','Examples']].concat(Procure.CATEGORIES.map(function(c){ return [c[0],c[1],c[2]]; })), cols:[8,36,60] },
+    { name:'Countries', aoa:[['Country','Code','Zone']].concat(Object.keys(Procure.COUNTRIES).map(function(k){ var z=Procure.zoneOf(k,''); return [Procure.countryName(k),k,k==='MY'?'2 Borneo (Sarawak / Sabah / Labuan cities) or 3 MY/SG':Procure.zoneLabel(z,k)]; })), cols:[18,8,44] }
+  ],'QS CRM supplier import template.xlsx');
+}
+function itemTemplate(){
+  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  var C=Procure.MR_COLS, H=Procure.MR_HELP;
+  xlsxFrom([{ name:'Items', aoa:[C], cols:[6,50,26,10,10,14,10,12,12,30] },
+    { name:'How to fill', aoa:[['QS CRM — RFQ item list (RFQ › New RFQ › Import item list)'],['One row per item. Blank quantity = the RFQ asks for MOQ + unit price at MOQ.'],[],['Column','What to put','Example']].concat(C.map(function(c){ return [c,H[c][0],H[c][1]]; })), cols:[16,60,46] },
+    { name:'Categories', aoa:[['Code','Category','Examples']].concat(Procure.CATEGORIES.map(function(c){ return [c[0],c[1],c[2]]; })), cols:[8,36,60] }],'QS CRM RFQ item list template.xlsx');
+}
+
+/* ----- register + chase today ----- */
+function chaseList(){
+  var out=[], hol=(RF.list&&RF.list.holidays)||[];
+  ((RF.list&&RF.list.rfqs)||[]).filter(function(r){ return RFQ_OPEN.indexOf(r.status)>=0; }).forEach(function(r){
+    (r.recipients||[]).forEach(function(x){ var c=Procure.chaseDue(x,r,new Date(),hol); if(c.due) out.push({rfq:r, rec:x, due:c.due, at:c.at}); }); });
+  return out.sort(function(a,b){ return String(a.at)<String(b.at)?-1:1; });
+}
+function renderRfqs(){
+  var el=$('vRF'); if(needLive(el,'RFQ')) return;
+  if(!RF.list){ el.innerHTML='<div class="empty"><span class="spin"></span> Loading RFQs…</div>'; rfLoad().then(renderRfqs).catch(function(e){ rfNeedDb(el,e); }); return; }
+  var all=RF.list.rfqs||[], open=all.filter(function(r){ return RFQ_OPEN.indexOf(r.status)>=0; }), ch=chaseList(), K=Procure.rfqKpis(all), w=canWrite();
+  var pct=function(x){ return Math.round((x||0)*100)+'%'; };
+  el.innerHTML='<div class="bar"><div><h2>RFQs</h2><div class="scope">From the boss\'s list to 3 valid quotes: New RFQ → add suppliers → click Email, then WhatsApp → chase → record replies.</div></div><span style="flex:1"></span>'+
+    '<button class="btn" id="rfTplI" title="Excel template for an item list">Item-list template</button>'+(w?'<button class="btn imp" id="rfImp" title="Import an Excel send list (RFQ Text + Send List sheets, e.g. RFQ-2611-002) with its statuses">Import RFQ workbook</button><button class="btn pri" id="rfNew">+ New RFQ</button>':'')+'</div>'+
+    kpiRow([['Open RFQs',open.length,all.length+' in total'],['Chase today',ch.length,ch.length?'reminders due':'nothing due'],['Quotes received',K.quoted,K.valid+' valid'],['Reply rate',pct(K.replyRate),K.contacted+' suppliers contacted'],['RFQs with 3+ valid quotes',K.rfqsOk,K.rfqsSent?pct(K.rfqSuccess)+' of sent RFQs':'no RFQ sent yet']])+
+    (ch.length?'<div class="card"><h3>Chase today</h3><div class="tbl"><table class="mlt"><thead><tr><th>RFQ</th><th>Supplier</th><th>Status</th><th>To do</th><th>Due</th></tr></thead><tbody>'+ch.map(function(c){
+      return '<tr data-no="'+esc(c.rfq.rfq_no)+'"><td class="no">'+esc(c.rfq.rfq_no)+'</td><td>'+esc(c.rec.name||c.rec.supplier_id)+' <span class="n">'+esc(c.rec.supplier_id)+'</span></td><td>'+esc(c.rec.status)+'</td><td><b>'+({reminder1:'Send reminder 1',reminder2:'Send final reminder',noreply:'Mark "No reply"'})[c.due]+'</b></td><td class="dt">'+esc(c.at)+'</td></tr>'; }).join('')+'</tbody></table></div></div>':'')+
+    '<div class="bar"><input type="search" id="rfQ" placeholder="Search RFQ no., title, project, supplier…" value="'+esc(RF.f.q)+'"><select id="rfSt"><option value="open">Open RFQs</option><option value="">All RFQs</option>'+['Draft','Sent','Chasing','Comparison','Short','Approval sent','Awarded','Cancelled'].map(function(x){ return '<option'+(RF.f.st===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select><span class="count" id="rfCount"></span></div>'+
+    '<div class="tbl"><table class="mlt"><thead><tr><th>RFQ</th><th>Title</th><th>Date</th><th>Urgency</th><th>Deadline</th><th class="r">Items</th><th class="r">Contacted</th><th class="r">Replies</th><th class="r">Quotes (valid)</th><th>Status</th></tr></thead><tbody id="rfRows"></tbody></table></div>';
+  $('rfSt').value=RF.f.st;
+  var draw=function(){ var q=RF.f.q.toLowerCase(), rows=all.filter(function(r){ if(RF.f.st==='open'&&RFQ_OPEN.indexOf(r.status)<0) return false; if(RF.f.st&&RF.f.st!=='open'&&r.status!==RF.f.st) return false;
+      return !q || [r.rfq_no,r.title,r.project,r.mr_ref,r.arza_no].concat((r.recipients||[]).map(function(x){ return x.name; })).join(' ').toLowerCase().indexOf(q)>=0; });
+    $('rfCount').textContent=rows.length+' of '+all.length;
+    $('rfRows').innerHTML=rows.length?rows.map(function(r){ var x=r.recipients||[], c=x.filter(function(y){ return y.status!=='Not contacted'; }).length, rep=x.filter(function(y){ return Procure.RESPONDED.indexOf(y.status)>=0; }).length, qd=x.filter(function(y){ return y.status==='Quoted'; }), vq=qd.filter(function(y){ return y.valid_quote; }).length;
+      return '<tr data-no="'+esc(r.rfq_no)+'"'+(r.status==='Cancelled'?' class="void"':'')+'><td class="no">'+esc(r.rfq_no)+'</td><td class="dsc"><b>'+esc(r.title)+'</b>'+(r.project||r.mr_ref?'<div class="sub2">'+esc([r.project,r.mr_ref].filter(Boolean).join(' · '))+'</div>':'')+'</td><td class="dt">'+esc(fmtDate(r.rfq_date))+'</td><td>'+uChip(r.urgency)+'</td><td class="dt">'+esc(r.deadline?fmtDate(r.deadline):'—')+'</td>'+
+        '<td class="r">'+r.items_n+'</td><td class="r">'+c+' / '+x.length+'</td><td class="r">'+rep+'</td><td class="r">'+qd.length+' ('+vq+')'+(vq>=3?' ✓':'')+'</td><td>'+rsChip(r.status)+'</td></tr>'; }).join(''):'<tr><td colspan="10" class="empty">'+(all.length?'No RFQ matches.':'No RFQs yet. Click + New RFQ and type in the boss\'s list (or paste it from Excel).')+'</td></tr>'; };
+  $('rfQ').oninput=function(){ RF.f.q=this.value; draw(); }; $('rfSt').onchange=function(){ RF.f.st=this.value; draw(); };
+  el.onclick=function(e){ var tr=e.target.closest('tr[data-no]'); if(tr&&el.contains(tr)){ RF.no=tr.dataset.no; showView('rfq'); } };
+  $('rfTplI').onclick=itemTemplate;
+  if(w){ $('rfNew').onclick=function(){ RF.no=''; showView('rfqedit'); }; $('rfImp').onclick=function(){ $('rfFile').click(); }; }
+  draw();
+}
+
+/* ----- new / edit RFQ: header + fill-in-the-blanks item grid ----- */
+function itemRow(it){ it=it||{}; var v=function(k){ return esc(it[k]==null?'':it[k]); };
+  return '<tr><td class="ln"></td><td><input class="ed" data-k="description" value="'+v('description')+'" placeholder="Item"></td><td><input class="ed" data-k="spec_brand" value="'+v('spec_brand')+'" placeholder="spec / brand"></td>'+
+    '<td><input class="ed num" data-k="qty" value="'+v('qty')+'" inputmode="decimal" placeholder="MOQ"></td><td><input class="ed" data-k="unit" value="'+v('unit')+'" style="width:70px"></td>'+
+    '<td><input class="ed" type="date" data-k="required_date" value="'+v('required_date')+'"></td><td><select data-k="category"><option value="">—</option>'+Procure.CATEGORIES.map(function(c){ return '<option value="'+c[0]+'"'+(it.category===c[0]?' selected':'')+' title="'+esc(c[1])+'">'+c[0]+'</option>'; }).join('')+'</select></td>'+
+    '<td style="text-align:center"><input type="checkbox" data-k="only_overseas"'+(it.only_overseas?' checked':'')+' title="Only made overseas (e.g. China)"></td><td><button class="dbtn idel" type="button" title="Remove">×</button></td></tr>'; }
+function renderRfqEdit(){
+  var el=$('vRE'); if(needLive(el,'RFQ')) return; if(!canWrite()){ el.innerHTML='<div class="empty">Read-only account.</div>'; return; }
+  var edit=RF.no&&RF.cur&&RF.cur.rfq.rfq_no===RF.no ? RF.cur : null, h=edit?edit.rfq:{ rfq_date:today(), delivery_place:'Bandar Seri Begawan, Brunei', certs:'mill certificate / material test report' }, items=edit?edit.items:[];
+  var hol=(RF.list&&RF.list.holidays)||[];
+  el.innerHTML='<div class="bar"><div><h2>'+(edit?'Edit '+esc(h.rfq_no):'New RFQ')+'</h2><div class="scope">Type the boss\'s list into the table (Tab moves to the next box), paste it from Excel, or import an item-list file. Urgency and the quote deadline follow from the earliest required-on-site date.</div></div></div>'+
+    '<div class="card"><div class="form f3">'+
+      '<div class="f full"><label for="re_title">Title <span class="hint">used in the email subject</span></label><input id="re_title" maxlength="160" value="'+esc(h.title||'')+'" placeholder="e.g. SS304 railing tubes & fittings"></div>'+
+      '<div class="f"><label for="re_project">Project</label><input id="re_project" list="re_projects" value="'+esc(h.project||'')+'" placeholder="e.g. MOE Block D"><datalist id="re_projects">'+(S.tenders||[]).slice(0,200).map(function(t){ return '<option value="'+esc(t.arza_no+' '+(t.title||'').slice(0,60))+'">'; }).join('')+'</datalist></div>'+
+      '<div class="f"><label for="re_mr">Requisition / list ref <span class="hint">optional</span></label><input id="re_mr" value="'+esc(h.mr_ref||'')+'" placeholder="e.g. site list 9 Nov"></div>'+
+      '<div class="f"><label for="re_date">RFQ date</label><input id="re_date" type="date" value="'+esc(h.rfq_date||today())+'"></div>'+
+      '<div class="f"><label for="re_place">Deliver to</label><input id="re_place" value="'+esc(h.delivery_place||'')+'"></div>'+
+      '<div class="f"><label for="re_urg">Urgency</label><select id="re_urg"><option value="">Automatic</option>'+Procure.URGENCY.map(function(u){ return '<option value="'+u.code+'">'+u.code+' ('+URG_TXT[u.code]+')</option>'; }).join('')+'</select><div class="hint" id="re_urgH"></div></div>'+
+      '<div class="f"><label for="re_dl">Quote deadline</label><input id="re_dl" type="date" value="'+esc(h.deadline||'')+'"><div class="hint" id="re_dlH"></div></div>'+
+      '<div class="f full"><label for="re_short">Short description <span class="hint">for WhatsApp; blank = made from the items</span></label><input id="re_short" maxlength="200" value="'+esc(h.short_desc||'')+'"></div>'+
+      '<div class="f"><label for="re_certs">Certificates asked from overseas suppliers</label><input id="re_certs" value="'+esc(h.certs||'')+'"></div>'+
+      '<div class="f" style="grid-column:span 2"><label for="re_notes">Notes <span class="hint">internal</span></label><input id="re_notes" value="'+esc(h.notes||'')+'"></div>'+
+    '</div></div>'+
+    '<div class="card"><div class="hrow" style="margin-bottom:8px"><h3 style="margin:0">Items</h3><span class="n" id="re_cnt" style="margin:0 0 0 8px"></span><span style="flex:1"></span>'+
+      '<button class="btn sm" id="re_paste" type="button">Paste from Excel…</button><button class="btn sm" id="re_imp" type="button">Import item list…</button><button class="btn sm" id="re_tpl" type="button">Template</button></div>'+
+      '<div class="tbl"><table class="mini grid"><thead><tr><th>#</th><th style="min-width:260px">Item</th><th style="min-width:150px">Spec / brand</th><th>Qty</th><th>Unit</th><th>Required on site</th><th>Cat.</th><th title="Only made overseas">O/S</th><th></th></tr></thead><tbody id="re_items">'+
+      (items.length?items:[{},{},{},{},{}]).map(itemRow).join('')+'</tbody></table></div><button class="btn sm" id="re_add" type="button" style="margin-top:6px">+ Row</button>'+
+      '<p class="n">Blank quantity = the RFQ asks for MOQ and the unit price at MOQ. Category is guessed from the item when left blank (it decides which suppliers are proposed).</p></div>'+
+    '<div class="pact"><button class="btn" id="re_c">Cancel</button><button class="btn pri" id="re_go">'+(edit?'Save changes':'Create RFQ')+'</button></div>';
+  if(h.urgency && edit) $('re_urg').value=h.urgency;
+  var tb=$('re_items');
+  var rows=function(){ return Array.prototype.map.call(tb.querySelectorAll('tr'),function(tr){ var o={}; tr.querySelectorAll('[data-k]').forEach(function(x){ o[x.dataset.k]=x.type==='checkbox'?x.checked:x.value.trim(); }); return o; }); };
+  var refresh=function(){
+    Array.prototype.forEach.call(tb.querySelectorAll('tr'),function(tr,i){ tr.querySelector('.ln').textContent=i+1; });
+    var its=rows().filter(function(x){ return x.description; }), req=its.map(function(x){ return x.required_date; }).filter(Boolean).sort()[0]||'', d=$('re_date').value||today();
+    var u=$('re_urg').value||Procure.urgencyOf(d,req), tt=Procure.timetable(d,{urgency:u,holidays:hol});
+    $('re_urgH').textContent=($('re_urg').value?'set by hand':'automatic: '+u)+(req?' · earliest needed '+fmtDate(req):' · no required date = RESTOCK');
+    $('re_dlH').textContent='suggested '+fmtDate(String(tt.deadline).slice(0,10))+' ('+u+')';
+    if($('re_dl').dataset.auto==='1') $('re_dl').value=String(tt.deadline).slice(0,10);
+    $('re_cnt').textContent=its.length+' item'+(its.length===1?'':'s')+(its.some(function(x){ return !x.qty; })&&its.length?' · MOQ wording (some quantities blank)':'');
+    return {its:its, u:u, dl:String(tt.deadline).slice(0,10), req:req};
+  };
+  $('re_dl').dataset.auto=$('re_dl').value?'0':'1'; $('re_dl').oninput=function(){ this.dataset.auto='0'; };
+  tb.addEventListener('input',refresh); ['re_date','re_urg'].forEach(function(id){ $(id).onchange=refresh; });
+  tb.addEventListener('change',function(e){ var x=e.target; if(x.dataset.k==='description'&&x.value.trim()){ var sel=x.closest('tr').querySelector('[data-k=category]'); if(!sel.value) sel.value=Procure.categoryCode(x.value)||''; } refresh(); });
+  tb.addEventListener('keydown',function(e){ if(e.key==='Enter'&&e.target.matches('input.ed')){ e.preventDefault(); var tr=e.target.closest('tr'); if(!tr.nextElementSibling){ tb.insertAdjacentHTML('beforeend',itemRow({})); refresh(); } var k=e.target.dataset.k, nx=tr.nextElementSibling.querySelector('[data-k="'+k+'"]'); if(nx) nx.focus(); } });
+  tb.onclick=function(e){ var b=e.target.closest('.idel'); if(b){ b.closest('tr').remove(); if(!tb.children.length) tb.insertAdjacentHTML('beforeend',itemRow({})); refresh(); } };
+  var addItems=function(list){ Array.prototype.forEach.call(tb.querySelectorAll('tr'),function(tr){ if(!tr.querySelector('[data-k=description]').value.trim()) tr.remove(); }); tb.insertAdjacentHTML('beforeend',list.map(itemRow).join('')+itemRow({})); refresh(); toast(list.length+' item'+(list.length===1?'':'s')+' added'); };
+  $('re_add').onclick=function(){ tb.insertAdjacentHTML('beforeend',itemRow({})); refresh(); tb.lastElementChild.querySelector('input').focus(); };
+  $('re_tpl').onclick=itemTemplate;
+  $('re_paste').onclick=function(){
+    var back=closeModal; modal('Paste the item list','<p class="n">Copy the rows from Excel (columns: item · spec/brand · qty · unit · required date, or with a header row) — or type one item per line, e.g. <code>Cement OPC 50kg - 200 bags</code>.</p><textarea id="pzT" style="width:100%;height:220px;font:13px var(--mono)"></textarea>',
+      '<button class="btn" id="pzC">Cancel</button><button class="btn pri" id="pzGo">Add items</button>');
+    $('pzT').focus(); $('pzC').onclick=back; $('pzGo').onclick=function(){ var l=Procure.parsePasted($('pzT').value); if(!l.length){ toast('Nothing to add.',true); return; } closeModal(); addItems(l); };
+  };
+  $('re_imp').onclick=function(){ $('itemFile').click(); };
+  $('itemFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return;
+    f.arrayBuffer().then(function(buf){ var wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true}), got=[];
+      wb.SheetNames.some(function(n){ var a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''}), hi=-1;
+        for(var i=0;i<Math.min(a.length,10);i++){ var low=a[i].map(function(x){ return String(x).trim().toLowerCase(); }); if(low.indexOf('description')>=0||low.indexOf('item')>=0||low.indexOf('resource')>=0){ hi=i; break; } }
+        if(hi<0) return false; got=a.slice(hi+1).map(function(r){ var o={}; a[hi].forEach(function(k,j){ if(k!=='') o[k]=r[j]; }); return Procure.mrItem(o); }).filter(function(x){ return x.description && !/^(e\.g\.|example)/i.test(x.description); }); return got.length>0; });
+      if(!got.length) throw new Error('no sheet with a "description" (or "item") column');
+      addItems(got);
+    }).catch(function(e){ toast('Could not read '+f.name+': '+e.message,true); }); };
+  $('re_c').onclick=function(){ if(RF.no) showView('rfq'); else showView('rfqs'); };
+  $('re_go').onclick=function(){
+    var st=refresh(); if(!$('re_title').value.trim()){ toast('Give the RFQ a title.',true); $('re_title').focus(); return; } if(!st.its.length){ toast('Type at least one item.',true); return; }
+    var bad=st.its.filter(function(x){ return x.qty && !/^\d+(\.\d+)?$/.test(String(x.qty).replace(/,/g,'')); })[0]; if(bad){ toast('Quantity "'+bad.qty+'" is not a number.',true); return; }
+    var its=st.its.map(function(x){ return Object.assign({},x,{ qty:x.qty?String(x.qty).replace(/,/g,''):'', category:x.category||Procure.categoryCode(x.description+' '+x.spec_brand)||'' }); });
+    var proj=$('re_project').value.trim(), m=/^(T\d+)\s/.exec(proj);
+    var header={ title:$('re_title').value.trim(), project:proj, arza_no:m?m[1]:'', mr_ref:$('re_mr').value.trim(), rfq_date:$('re_date').value||today(), delivery_place:$('re_place').value.trim(),
+      urgency:st.u, deadline:$('re_dl').value||st.dl, qty_mode:its.some(function(x){ return !x.qty; })?'moq':'firm', short_desc:$('re_short').value.trim(), certs:$('re_certs').value.trim(), notes:$('re_notes').value.trim() };
+    var btn=this; busy(btn,true);
+    api('saveRfq',{rfq_no:edit?h.rfq_no:'', header:header, items:its}).then(function(r){ toast((edit?'Saved ':'Created ')+r.rfq_no); RF.no=r.rfq_no; RF.list=null; RF.cur=null; showView('rfq'); if(!edit) RF.openShortlist=true; })
+      .catch(function(e){ busy(btn,false); fail(e); });
+  };
+  refresh(); if(!edit) $('re_title').focus();
+}
+
+/* ----- one RFQ: items, send list with the two buttons, chase, statuses ----- */
+function rfqTpl(d){ var r=d.rfq; return Procure.rfqForTemplates(Object.assign({},r,{sent_date:r.sent_at?String(r.sent_at).slice(0,10):r.rfq_date, close_date:r.deadline?Procure.iso(Procure.addWorkdays(r.deadline,1,d.holidays||[])):''}), d.items, senderName()); }
+function renderRfq(){
+  var el=$('vRD'); if(needLive(el,'RFQ')) return;
+  if(!RF.cur||RF.cur.rfq.rfq_no!==RF.no){ el.innerHTML='<div class="empty"><span class="spin"></span> Loading '+esc(RF.no)+'…</div>';
+    Promise.all([api('rfq',{rfq_no:RF.no}), PR.set?Promise.resolve(PR.set):api('settings').then(function(st){ PR.set=st; return st; },function(){ return null; }), PR.data?Promise.resolve(PR.data):prLoad().catch(function(){ return null; })])
+      .then(function(x){ RF.cur=x[0]; renderRfq(); if(RF.openShortlist){ RF.openShortlist=false; shortlist(); } }).catch(function(e){ rfNeedDb(el,e); }); return; }
+  var D=RF.cur, r=D.rfq, its=D.items, rec=D.recipients||[], w=canWrite()&&['Awarded','Cancelled'].indexOf(r.status)<0, T=rfqTpl(D);
+  var plan=Procure.sourcingPlan(r.urgency, its.some(function(x){ return x.only_overseas; }));
+  var K=Procure.rfqKpis([{recipients:rec}]);
+  el.innerHTML='<div class="bar"><div><div class="crumb"><a href="#" id="rdBack">RFQs</a> ›</div><h2>'+esc(r.rfq_no)+' — '+esc(r.title)+'</h2><div class="scope">'+rsChip(r.status)+' '+uChip(r.urgency)+' · RFQ date '+esc(fmtDate(r.rfq_date))+' · quote deadline <b>'+esc(r.deadline?Procure.longDate(r.deadline):'not set')+'</b>'+(r.project?' · '+esc(r.project):'')+(r.mr_ref?' · '+esc(r.mr_ref):'')+(r.status_note?' · <i>'+esc(r.status_note)+'</i>':'')+'</div></div><span style="flex:1"></span>'+
+    '<button class="btn" id="rdPdf" title="RFQ as a PDF (print / save as PDF) - attach it to emails for long lists">RFQ PDF</button>'+(canWrite()?'<button class="btn" id="rdSt">Status…</button>':'')+(w?'<button class="btn" id="rdEdit">Edit items</button>':'')+'</div>'+
+    '<div class="grid2 rd"><div class="card"><h3>Items <span class="n">'+its.length+' · '+(T.qtyMode==='moq'?'asking MOQ + price at MOQ':'firm quantities')+'</span></h3><div class="tbl"><table class="mini"><thead><tr><th>#</th><th>Item</th><th class="r">Qty</th><th>Unit</th><th>Needed</th><th>Cat.</th></tr></thead><tbody>'+its.map(function(x){
+      return '<tr style="cursor:default"><td>'+x.line+'</td><td>'+esc(x.description)+(x.spec_brand?'<div class="sub2">'+esc(x.spec_brand)+'</div>':'')+(x.only_overseas?' <span class="chip st-Prospect">overseas only</span>':'')+'</td><td class="r">'+(x.qty==null?'<span class="n">MOQ</span>':esc(x.qty))+'</td><td>'+esc(x.unit)+'</td><td class="dt">'+esc(x.required_date?fmtDate(x.required_date):'')+'</td><td>'+(x.category?catChips([x.category]):'')+'</td></tr>'; }).join('')+'</tbody></table></div></div>'+
+    '<div class="card"><h3>Goal: 3 valid quotes</h3>'+kpiRow([['On the list',rec.length,'suppliers'],['Contacted',K.contacted,K.contacted?Math.round(K.replyRate*100)+'% replied':'—'],['Quotes',K.quoted,K.valid+' valid'+(K.valid>=3?' ✓':'')]])+
+      '<p class="n"><b>Where to look ('+esc(r.urgency)+'):</b> '+plan.zones.map(function(z){ return ZONE_TXT[z]+(plan.priority[z]===1?' (first)':''); }).join(', ')+'. If short of quotes after the final reminder, widen to '+(plan.widenTo||[]).map(function(z){ return ZONE_TXT[z]; }).join(', ')+'. '+esc(plan.channels)+'.</p></div></div>'+
+    '<div class="card"><div class="hrow" style="margin-bottom:6px"><h3 style="margin:0">Send list</h3><span style="flex:1"></span>'+(w?'<button class="btn sm pri" id="rdAdd">+ Add suppliers</button><button class="btn sm" id="rdMore" title="Ready prompt for Claude / Gemini to find more suppliers in the import-template columns">Find more suppliers</button><button class="btn sm" id="rdQuick">Quick-add a supplier</button>':'')+'</div>'+
+      (rec.length?'<p class="n">For each supplier: click <b>① Email</b> (Roundcube opens with the RFQ written — press Send), then <b>② WhatsApp</b> (follow-up ready — press Send). Each click is recorded. Set the status when they answer.</p>'+
+      '<div class="tbl"><table class="mlt sl"><thead><tr><th>Supplier</th><th>Contact</th><th>Send</th><th>Chase</th><th>Status</th><th>Dates</th></tr></thead><tbody id="rdRows">'+rec.map(slRow).join('')+'</tbody></table></div>':
+      '<div class="empty" style="padding:22px">No suppliers yet. '+(w?'Click <b>+ Add suppliers</b> — the system proposes suppliers from your database by category and the zones allowed by the urgency.':'')+'</div>')+'</div>'+
+    '<div class="card"><h3>History</h3>'+rdHistory(D)+'</div>';
+  $('rdBack').onclick=function(e){ e.preventDefault(); showView('rfqs'); };
+  $('rdPdf').onclick=function(){ printRfq(D); };
+  if($('rdSt')) $('rdSt').onclick=rfqStatusDlg;
+  if(w){ $('rdEdit').onclick=function(){ showView('rfqedit'); }; $('rdAdd').onclick=shortlist; $('rdMore').onclick=findMore; $('rdQuick').onclick=quickAdd; }
+  var tb=$('rdRows'); if(!tb) return;
+  tb.addEventListener('click',function(e){
+    var a=e.target.closest('a[data-act]'); if(a){ if(!canWrite()) return; var tr=a.closest('tr'), sid=tr.dataset.sup, act=a.dataset.act;
+      if(a.dataset.attach) toast('Long RFQ: attach the RFQ PDF in Roundcube before you press Send (RFQ PDF button).');
+      api('rfqClick',{rfq_no:r.rfq_no, supplier_id:sid, action:act}).then(function(x){ var i=D.recipients.findIndex(function(y){ return y.supplier_id===sid; }); if(i>=0){ Object.assign(D.recipients[i],x.recipient); } D.rfq.status=x.rfq_status; RF.list=null; tr.outerHTML=slRow(D.recipients[i]); })
+        .catch(fail); return; }
+    var sup=e.target.closest('.slSup'); if(sup){ e.preventDefault(); if(supById(sup.dataset.sup)) openSupplier(sup.dataset.sup); return; }
+  });
+  tb.addEventListener('change',function(e){
+    var x=e.target, tr=x.closest('tr'); if(!tr) return; var sid=tr.dataset.sup, rc=D.recipients.filter(function(y){ return y.supplier_id===sid; })[0];
+    if(x.classList.contains('slSt')||x.classList.contains('slValid')){ var st=tr.querySelector('.slSt').value, p={rfq_no:r.rfq_no, supplier_id:sid, status:st};
+      if(x.classList.contains('slValid')) p.valid_quote=x.checked;
+      var ask=st==='Quoted'&&rc.status!=='Quoted'?prompt('Quote received from '+(rc.supplier?rc.supplier.name:sid)+'. Short note (price, lead time …) - optional:',''):null; if(ask) p.note=ask;
+      api('setRecipient',p).then(function(res){ Object.assign(rc,res.recipient); D.rfq.status=res.rfq_status; RF.list=null; PR.data=null; (res._log||[]).forEach(function(l){ D.log.push(l); }); renderRfq(); toast(sid+': '+st); }).catch(function(e){ fail(e); renderRfq(); }); }
+  });
+}
+function slRow(x){
+  var D=RF.cur, s=x.supplier||{}, T=rfqTpl(D), w=canWrite()&&['Awarded','Cancelled'].indexOf(D.rfq.status)<0, sup={zone:x.zone||s.zone, email:x.email, whatsapp:x.whatsapp};
+  var em=x.email?Procure.buildEmailFit(T,sup):null, contacted=x.status!=='Not contacted', resp=Procure.RESPONDED.indexOf(x.status)>=0;
+  var wa=x.whatsapp?Procure.buildWhatsApp(x.email?'wa_follow':'wa_full',T,sup):null;
+  var due=Procure.chaseDue(x,D.rfq,new Date(),D.holidays||[]), nextR=x.status==='Reminder 1'||x.reminder1_at?'reminder2':'reminder1';
+  var btn=function(href,act,label,cls,done,extra){ return href?'<a class="btn sm '+cls+(done?' done':'')+'" href="'+esc(href)+'" target="_blank" rel="noopener" data-act="'+act+'"'+(extra||'')+'>'+(done?'✓ ':'')+label+'</a>':''; };
+  var send=w?(em?btn(em.link,'email','① Email','sl-mail',!!x.emailed_at,em.attach?' data-attach="1" title="Long RFQ: short email + attach the RFQ PDF"':' title="Opens Roundcube with the RFQ written"'):'<span class="chip st-Lost" title="no email on file">no email</span>')+
+      (wa?btn(wa.link,'whatsapp','② WhatsApp','sl-wa',!!x.whatsapp_at,' title="'+(x.email?'Follow-up after the email':'Full RFQ by WhatsApp (no email)')+'"'):'')+
+      (!x.whatsapp&&(x.phone||x.whatsapp)?'<a class="btn sm" href="'+esc(telLink(x.phone))+'" data-act="call">Call</a>':''):'';
+  var chase='';
+  if(w&&contacted&&!resp&&['Bounced','No reply'].indexOf(x.status)<0&&!(x.reminder1_at&&x.reminder2_at)){
+    var ex={sent_date:Procure.longDate(String(x.emailed_at||x.whatsapp_at||D.rfq.rfq_date).slice(0,10))}, k=nextR, lab=k==='reminder1'?'Reminder 1':'Final reminder';
+    var re=x.email?Procure.buildReminderEmail(k,T,sup,ex):null, rw=x.whatsapp?Procure.buildWhatsApp(k,T,sup,ex):null, isDue=due.due===k;
+    chase='<div class="'+(isDue?'due':'')+'">'+(isDue?'<b>due</b> ':'<span class="n">'+(due.t?'due '+esc(k==='reminder1'?due.t.reminder1:due.t.reminder2):'')+'</span> ')+btn(re&&re.link,k,'✉ '+lab,'',false)+btn(rw&&rw.link,k,'WA '+lab,'sl-wa',false)+'</div>';
+  } else if(due.due==='noreply') chase='<div class="due"><b>no reply</b> — set the status</div>';
+  var st='<select class="slSt"'+(canWrite()?'':' disabled')+'>'+Procure.RECIPIENT_STATUS.map(function(v){ return '<option'+(v===x.status?' selected':'')+'>'+v+'</option>'; }).join('')+'</select>'+
+    (x.status==='Quoted'?'<label class="chkrow" style="margin:4px 0 0"><input type="checkbox" class="slValid"'+(x.valid_quote?' checked':'')+(canWrite()?'':' disabled')+'> valid quote</label>':'')+(x.note?'<div class="sub2">'+esc(x.note)+'</div>':'');
+  var st2=x.stats||{};
+  return '<tr data-sup="'+esc(x.supplier_id)+'" class="st-'+esc(x.status.replace(/\s+/g,'-'))+'" style="cursor:default"><td class="dsc"><a href="#" class="slSup" data-sup="'+esc(x.supplier_id)+'"><b>'+esc(s.name||x.supplier_id)+'</b></a><div class="sub2">'+esc(x.supplier_id)+' · '+esc(Procure.countryName(s.country))+(s.city?' · '+esc(s.city):'')+'</div><div>'+zChip(x.zone||s.zone,s.country)+' '+vChip(s.verification)+(st2.contacted>1?' <span class="n" title="earlier RFQs">replied '+st2.responded+'/'+st2.contacted+'</span>':'')+'</div></td>'+
+    '<td style="font-size:12px">'+esc(x.email||'')+(x.whatsapp?'<div>WA '+esc(x.whatsapp)+'</div>':'')+(!x.whatsapp&&x.phone?'<div>☎ '+esc(x.phone)+'</div>':'')+'</td>'+
+    '<td class="nw btns">'+send+'</td><td class="nw btns">'+chase+'</td><td>'+st+'</td>'+
+    '<td class="dt" style="font-size:11.5px">'+[x.emailed_at&&'✉ '+x.emailed_at, x.whatsapp_at&&'WA '+x.whatsapp_at, x.reminder1_at&&'R1 '+x.reminder1_at, x.reminder2_at&&'R2 '+x.reminder2_at, x.replied_at&&'reply '+x.replied_at].filter(Boolean).map(esc).join('<br>')+'</td></tr>';
+}
+function rdHistory(D){
+  var ev=(D.log||[]).map(function(l){ return {t:l.timestamp, u:l.user, d:l.detail}; }).concat((D.clicks||[]).map(function(c){ return {t:c.at, u:c.user, d:({email:'① Email opened for',whatsapp:'② WhatsApp opened for',reminder1:'Reminder 1 opened for',reminder2:'Final reminder opened for',call:'Call'})[c.action]+' '+c.supplier_id}; }));
+  ev.sort(function(a,b){ return a.t<b.t?1:-1; });
+  return ev.length?'<ul class="log">'+ev.slice(0,80).map(function(x){ return '<li><span class="t">'+esc(x.t)+'</span><span class="a">'+esc(x.u||'')+'</span><span>'+esc(x.d)+'</span></li>'; }).join('')+'</ul>':'<div class="n">No history yet.</div>';
+}
+/* shortlist: suppliers from the database by category + the zones of the urgency class */
+function shortlist(){
+  var D=RF.cur, r=D.rfq, its=D.items, cats=its.map(function(x){ return x.category; }).filter(Boolean), have={}; (D.recipients||[]).forEach(function(x){ have[x.supplier_id]=1; });
+  var plan=Procure.sourcingPlan(r.urgency, its.some(function(x){ return x.only_overseas; }));
+  var go=function(){
+    var all=$('slAllZ').checked, anyCat=$('slAllC').checked, vr={Verified:0,Checked:1,Unverified:2,Failed:3};
+    var c=(PR.data.suppliers||[]).filter(function(s){ return s.status==='Active' && !have[s.supplier_id] && (anyCat||!cats.length||(s.categories||[]).some(function(x){ return cats.indexOf(x.code)>=0; })) && (all||plan.zones.indexOf(+s.zone)>=0); })
+      .map(function(s){ var st=s.stats||{}; return {s:s, pr:plan.priority[s.zone]||(plan.benchmark.indexOf(+s.zone)>=0?2:3), vr:vr[s.verification]==null?2:vr[s.verification], rate:st.contacted?st.responded/st.contacted:-1}; })
+      .sort(function(a,b){ return a.pr-b.pr || a.vr-b.vr || b.rate-a.rate || (a.s.zone||9)-(b.s.zone||9) || (a.s.name<b.s.name?-1:1); });
+    var target=Procure.contactTarget(0,0), need=Math.max(0,target-(D.recipients||[]).length);
+    $('slList').innerHTML=c.length?'<p class="n">Aim: about <b>'+target+'</b> suppliers for 3 valid quotes (new category: no reply-rate history yet). '+(need?'The first '+Math.min(need,c.length)+' are ticked.':'')+'</p><div class="tbl" style="max-height:52vh"><table class="mini"><thead><tr><th></th><th>Supplier</th><th>Zone</th><th>Categories</th><th>Contacts</th><th>Verification</th><th>History</th></tr></thead><tbody>'+c.map(function(x,i){ var s=x.s, st=s.stats||{}, ce=(s.contacts||[]);
+      return '<tr style="cursor:default"><td><input type="checkbox" class="slPick" value="'+esc(s.supplier_id)+'"'+(i<need?' checked':'')+'></td><td><b>'+esc(s.name)+'</b><div class="sub2">'+esc(s.supplier_id)+' · '+esc(Procure.countryName(s.country))+(s.city?' · '+esc(s.city):'')+'</div></td><td class="nw">'+zChip(s.zone,s.country)+(x.pr===1?' <b class="n">first</b>':'')+'</td><td>'+catChips(s.categories)+'</td>'+
+        '<td class="nw">'+supContactsSum(s)+(ce.some(function(y){ return y.email; })?'':' <span class="chip st-Lost">no email</span>')+'</td><td>'+vChip(s.verification)+'</td><td class="n">'+(st.contacted?'replied '+st.responded+'/'+st.contacted:'new')+'</td></tr>'; }).join('')+'</tbody></table></div>'
+      :'<div class="note w">No supplier in the database matches '+(cats.length?'category '+cats.filter(function(v,i,a){ return a.indexOf(v)===i; }).join(', '):'')+(all?'':' in '+plan.zones.map(function(z){ return ZONE_TXT[z]; }).join(', '))+'. Tick "all zones" / "all categories", use <b>Find more suppliers</b>, or <b>Quick-add</b> one you know.</div>';
+  };
+  pmodal('Add suppliers to '+r.rfq_no,'<div class="hrow" style="gap:16px;margin-bottom:6px"><span class="n" style="margin:0">Proposed from your supplier database: category '+(cats.filter(function(v,i,a){ return a.indexOf(v)===i; }).join(', ')||'any')+' · '+esc(r.urgency)+' → '+plan.zones.map(function(z){ return ZONE_TXT[z]; }).join(', ')+'</span><span style="flex:1"></span>'+
+      '<label class="chkrow" style="margin:0"><input type="checkbox" id="slAllZ"> all zones</label><label class="chkrow" style="margin:0"><input type="checkbox" id="slAllC"> all categories</label></div><div id="slList"></div>',
+    '<button class="btn" id="slMore">Find more suppliers…</button><span style="flex:1"></span><button class="btn" id="slC">Cancel</button><button class="btn pri" id="slGo">Add ticked suppliers</button>');
+  $('slAllZ').onchange=go; $('slAllC').onchange=go; $('slC').onclick=closeModal; $('slMore').onclick=findMore;
+  $('slGo').onclick=function(){ var ids=Array.prototype.map.call(document.querySelectorAll('.slPick:checked'),function(x){ return x.value; }); if(!ids.length){ toast('Tick at least one supplier.',true); return; }
+    var add=ids.map(function(id){ var s=supById(id), ce=s.contacts||[], pick=function(k){ var p=ce.filter(function(c){ return c[k]&&c.preferred===(k==='email'?'email':'whatsapp'); })[0]||ce.filter(function(c){ return c[k]; })[0]; return p?p[k]:''; };
+      return {supplier_id:id, zone:s.zone, priority:plan.priority[s.zone]||(plan.benchmark.indexOf(+s.zone)>=0?2:3), email:pick('email'), whatsapp:pick('whatsapp'), phone:pick('phone')}; });
+    var btn=this; busy(btn,true); api('setRecipients',{rfq_no:r.rfq_no, add:add}).then(function(d){ RF.cur=Object.assign(d,{}); RF.list=null; closeModal(); renderRfq(); toast(ids.length+' supplier'+(ids.length>1?'s':'')+' added'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+  if(!PR.data){ $('slList').innerHTML='<span class="spin"></span>'; prLoad().then(go).catch(fail); } else go();
+}
+function findMore(){
+  var D=RF.cur, r=D.rfq, plan=Procure.sourcingPlan(r.urgency, D.items.some(function(x){ return x.only_overseas; }));
+  var txt=Procure.discoveryPrompt(r, D.items, {zones:plan.zones, count:10, exclude:(D.recipients||[]).map(function(x){ return x.supplier?x.supplier.name:x.supplier_id; })});
+  pmodal('Find more suppliers — '+r.rfq_no,'<p class="n">The app cannot search the internet itself (free tools only). Copy this prompt into Claude or Gemini; save the answer as Excel/CSV (or fill the supplier template), then <b>RFQ › Review queue › Import file…</b>, approve the good ones, and come back to <b>+ Add suppliers</b>.</p><textarea id="fmT" style="width:100%;height:300px;font:12.5px var(--mono)" readonly>'+esc(txt)+'</textarea>',
+    '<button class="btn" id="fmTpl">Download supplier template</button><button class="btn" id="fmQ">Open Review queue</button><span style="flex:1"></span><button class="btn" id="fmC">Close</button><button class="btn pri" id="fmCopy">Copy prompt</button>');
+  $('fmC').onclick=function(){ closeModal(); }; $('fmTpl').onclick=supplierTemplate; $('fmQ').onclick=function(){ closeModal(); showView('queue'); };
+  $('fmCopy').onclick=function(){ var t=$('fmT'); t.select(); (navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(function(){ toast('Prompt copied'); },function(){ document.execCommand('copy'); toast('Prompt copied'); }); };
+}
+function quickAdd(){
+  var D=RF.cur, r=D.rfq, cats=D.items.map(function(x){ return x.category; }).filter(function(v,i,a){ return v&&a.indexOf(v)===i; });
+  var add=function(s){ var ce=s.contacts||[], g=function(k){ var c=ce.filter(function(y){ return y[k]; })[0]; return c?c[k]:''; };
+    api('setRecipients',{rfq_no:r.rfq_no, add:[{supplier_id:s.supplier_id, zone:s.zone, priority:Procure.sourcingPlan(r.urgency).priority[s.zone]||3, email:g('email'), whatsapp:g('whatsapp'), phone:g('phone')}]})
+      .then(function(d){ RF.cur=d; RF.list=null; closeModal(); renderRfq(); toast(s.supplier_id+' added to the send list'); }).catch(fail); };
+  if(!PR.data){ prLoad().then(quickAdd).catch(fail); return; }
+  editSupplier(null,{prefill:{categories:cats.map(function(c){ return {code:c}; }), found_by:'Other', notes:'added from '+r.rfq_no}, after:add, cancel:closeModal});
+}
+function rfqStatusDlg(){
+  var r=RF.cur.rfq;
+  pmodal('Status of '+r.rfq_no,'<div class="form"><div class="f"><label for="rsS">Status</label><select id="rsS"><option value="auto">Automatic (Draft / Sent / Chasing / Comparison)</option><option>Short</option><option>Approval sent</option><option>Awarded</option><option>Cancelled</option></select>'+
+    '<div class="hint">Automatic follows the send list. Short = goal guard on (fewer than 3 valid quotes after the final reminder). Awarded / Cancelled lock the RFQ.</div></div><div class="f"><label for="rsN">Note / reason</label><input id="rsN" maxlength="300"></div></div>',
+    '<button class="btn" id="rsC">Cancel</button><button class="btn pri" id="rsGo">Save</button>');
+  if(['Short','Approval sent','Awarded','Cancelled'].indexOf(r.status)>=0) $('rsS').value=r.status;
+  $('rsC').onclick=closeModal;
+  $('rsGo').onclick=function(){ var btn=this; busy(btn,true); api('rfqStatus',{rfq_no:r.rfq_no, status:$('rsS').value, note:$('rsN').value.trim()}).then(function(x){ RF.cur.rfq=x.rfq; RF.list=null; (x._log||[]).forEach(function(l){ RF.cur.log.push(l); }); closeModal(); renderRfq(); }).catch(function(e){ busy(btn,false); fail(e); }); };
+}
+function printRfq(D){
+  var r=D.rfq, c=(PR.set&&PR.set.company)||{}, w=window.open('','_blank'); if(!w){ toast('Allow pop-ups to print / save as PDF.',true); return; }
+  var moq=Procure.rfqForTemplates(r,D.items).qtyMode==='moq';
+  var who=[c.sender_name||'Gemar C. Tubalado', c.sender_designation||'Quantity Surveyor', c.sender_email||'qs@arzabrunei.com', c.sender_phone].filter(Boolean).map(esc).join(' · ');
+  w.document.open(); w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+esc(r.rfq_no)+' - '+esc(r.title)+'</title><style>@page{size:A4 portrait;margin:14mm 14mm 18mm}body{font:11.5px/1.45 Arial,sans-serif;color:#111;margin:0}'+
+    '.lh{display:flex;gap:16px;align-items:center;border-bottom:2px solid #120377;padding-bottom:10px}.lh img{max-height:60px;max-width:220px}.lhn{font-size:18px;font-weight:700;color:#120377}.lhs{font-size:10.5px;color:#444}'+
+    'h1{font-size:16px;letter-spacing:1.5px;text-align:center;margin:16px 0 10px}table{border-collapse:collapse;width:100%}.meta td{padding:2px 6px 2px 0;vertical-align:top}.meta td:first-child{color:#555;width:120px}'+
+    '.it{margin-top:12px}.it th,.it td{border:1px solid #999;padding:5px 6px;vertical-align:top}.it th{background:#eef0fb;text-align:left;font-size:10.5px}.r{text-align:right}h3{font-size:12px;margin:14px 0 4px}ul{margin:4px 0;padding-left:18px}'+
+    '.ft{position:fixed;bottom:0;left:0;right:0;font-size:9.5px;color:#666;text-align:center;border-top:1px solid #ccc;padding-top:4px}</style></head><body>'+letterhead(c)+'<h1>REQUEST FOR QUOTATION</h1>'+
+    '<table class="meta"><tr><td>RFQ no.</td><td><b>'+esc(r.rfq_no)+'</b></td><td style="color:#555;width:110px">Date</td><td>'+esc(Procure.longDate(r.rfq_date))+'</td></tr><tr><td>Subject</td><td colspan="3">'+esc(r.title)+'</td></tr>'+
+    (r.project?'<tr><td>Project</td><td colspan="3">'+esc(r.project)+'</td></tr>':'')+'<tr><td>To</td><td colspan="3">'+(D.recipients&&D.recipients.length===1&&D.recipients[0].supplier?esc(D.recipients[0].supplier.name):'Supplier')+'</td></tr><tr><td>Quote deadline</td><td colspan="3"><b>'+esc(r.deadline?Procure.longDate(r.deadline):'')+'</b></td></tr></table>'+
+    '<table class="it"><thead><tr><th style="width:28px">No.</th><th>Description / specification</th><th style="width:130px">Brand / standard</th><th class="r" style="width:55px">Qty</th><th style="width:55px">Unit</th><th style="width:80px">Required on site</th></tr></thead><tbody>'+D.items.map(function(x){
+      return '<tr><td>'+x.line+'</td><td>'+esc(x.description)+'</td><td>'+esc(x.spec_brand||'')+'</td><td class="r">'+(x.qty==null?'MOQ':esc(x.qty))+'</td><td>'+esc(x.unit||'')+'</td><td>'+esc(x.required_date?fmtDate(x.required_date):'')+'</td></tr>'; }).join('')+'</tbody></table>'+
+    '<h3>Please quote</h3><ul>'+(moq?'<li>Quantities are being finalised: please state your Minimum Order Quantity (MOQ) for each item and the unit price at MOQ, with price breaks if any.</li>':'<li>Unit price for the quantities above, with price breaks if any.</li>')+
+      '<li>Local / regional suppliers: price in B$ (S$ or RM accepted), delivered to '+esc(r.delivery_place||'Bandar Seri Begawan, Brunei')+'; stock availability, delivery lead time and charges.</li>'+
+      '<li>Overseas suppliers: price in USD, FOB nearest port and, if possible, CIF Muara Port, Brunei; production lead time, packing'+(r.certs?', '+esc(r.certs):'')+'.</li><li>Payment terms and quote validity.</li></ul>'+
+    '<h3>Contact</h3><p>'+who+'</p><div class="ft">Please quote RFQ no. '+esc(r.rfq_no)+' in your reply · '+esc(c.name||'ARZA SDN BHD')+'</div>'+
+    '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>'); w.document.close();
+}
+/* import an Excel send list (RFQ Text + Send List sheets) with its statuses */
+function importRfqWorkbook(file){
+  Promise.all([file.arrayBuffer(), PR.data?Promise.resolve(PR.data):prLoad(), RF.list?Promise.resolve(RF.list):rfLoad()]).then(function(x){
+    var wb=XLSX.read(new Uint8Array(x[0]),{type:'array',cellDates:true});
+    if(!wb.Sheets['RFQ Text']||!wb.Sheets['Send List']) throw new Error('needs the sheets "RFQ Text" and "Send List" (Excel send-list format, e.g. RFQ-2611-002)');
+    var t={}; XLSX.utils.sheet_to_json(wb.Sheets['RFQ Text'],{header:1,defval:''}).forEach(function(r){ if(r[0]) t[String(r[0]).trim()]=r[1]; });
+    var H=Procure.rfqFromTextSheet(t); if(!Procure.parseDocNo(H.rfq_no)) throw new Error('"RFQ ref" is missing or not like RFQ-2611-002');
+    var a=XLSX.utils.sheet_to_json(wb.Sheets['Send List'],{header:1,defval:''}), hi=a.findIndex(function(r){ return r.indexOf('Supplier')>=0&&r.indexOf('Status')>=0; }); if(hi<0) throw new Error('no header row with "Supplier" and "Status" on the Send List sheet');
+    var hd=a[hi], col=function(r,n){ var i=hd.indexOf(n); return i<0?'':r[i]; };
+    var rows=a.slice(hi+1).filter(function(r){ return String(col(r,'Supplier')).trim() && col(r,'#')!==''; }).map(function(r){
+      var row={company_name:String(col(r,'Supplier')).trim(), country:col(r,'Country'), city:col(r,'City'), email:col(r,'Email'), phone:col(r,'Phone'), website:col(r,'Website / platform')};
+      var st=String(col(r,'Status')).trim(); if(Procure.RECIPIENT_STATUS.indexOf(st)<0) st='Not contacted';
+      var q=/^y/i.test(String(col(r,'Quote received (Y/N)'))); if(q&&Procure.RESPONDED.indexOf(st)<0) st='Quoted';
+      var dt=function(n){ var d=Procure.dateIso(col(r,n)); return d?d+' 09:00':''; };
+      var cc=Procure.countryCode(row.country), wa=Procure.whatsappOf(row.phone,row.country), em=Procure.splitEmails(row.email)[0]||'';
+      return {row:row, sid:Procure.matchSupplier(row,PR.data.suppliers), priority:+col(r,'Priority')||null, zone:Procure.zoneOf(row.country,row.city), status:st, valid:q?true:null, email:em, whatsapp:wa,
+        phone:(Procure.parsePhones(row.phone,row.country)[0]||{}).e164||'', emailed_at:dt('Date emailed'), whatsapp_at:dt('Date WhatsApp'), replied_at:dt('Reply date'), note:String(col(r,'Notes')||'').slice(0,300), cc:cc};
+    });
+    var exists=(RF.list.rfqs||[]).some(function(r){ return r.rfq_no===H.rfq_no; }), ok=rows.filter(function(r){ return r.sid; }), miss=rows.filter(function(r){ return !r.sid; });
+    pmodal('Import '+H.rfq_no+' — '+file.name,'<p><b>'+esc(H.title)+'</b> · deadline '+esc(H.deadline?Procure.longDate(H.deadline):'?')+' · '+H.items.length+' items · '+(exists?'<b>already in QS CRM: only the send list and statuses are updated</b>':'new RFQ with its own number')+'</p>'+
+      '<p>'+ok.length+' of '+rows.length+' suppliers found in the database.'+(miss.length?' <b class="neg">'+miss.length+' not found</b> — import the workbook\'s "Discovery (import)" sheet in the Review queue first and approve them, then import this again:':'')+'</p>'+
+      (miss.length?'<ul class="plain">'+miss.map(function(m){ return '<li>'+esc(m.row.company_name)+'</li>'; }).join('')+'</ul>':'')+
+      '<div class="tbl" style="max-height:260px"><table class="mini"><thead><tr><th>Supplier</th><th>Matched</th><th>Status</th></tr></thead><tbody>'+ok.map(function(m){ return '<tr style="cursor:default"><td>'+esc(m.row.company_name)+'</td><td>'+esc(m.sid)+'</td><td>'+esc(m.status)+'</td></tr>'; }).join('')+'</tbody></table></div>',
+      (miss.length?'<button class="btn" id="riQ">Go to Review queue</button>':'')+'<span style="flex:1"></span><button class="btn" id="riC">Cancel</button><button class="btn pri" id="riGo"'+(ok.length?'':' disabled')+'>Import '+ok.length+' supplier'+(ok.length===1?'':'s')+'</button>');
+    $('riC').onclick=closeModal; if($('riQ')) $('riQ').onclick=function(){ closeModal(); showView('queue'); };
+    $('riGo').onclick=function(){ var btn=this; busy(btn,true);
+      var d0=ok.map(function(m){ return m.emailed_at||m.whatsapp_at; }).filter(Boolean).sort()[0], p=Procure.parseDocNo(H.rfq_no), ym='20'+('0'+p.yy).slice(-2)+'-'+('0'+p.mm).slice(-2);
+      var rfqDate=d0&&d0.slice(0,7)===ym?d0.slice(0,10):(today().slice(0,7)===ym?today():ym+'-01');
+      var save=exists?Promise.resolve():api('saveRfq',{rfq_no:H.rfq_no, new:true, header:{title:H.title, rfq_date:rfqDate, deadline:H.deadline, urgency:/not urgent/i.test(H.notes)?'RESTOCK':Procure.urgencyOf(rfqDate,''), qty_mode:H.qty_mode, short_desc:H.short_desc, delivery_place:H.delivery_place, certs:H.certs, notes:H.notes}, items:H.items});
+      save.then(function(){ return api('setRecipients',{rfq_no:H.rfq_no, add:ok.map(function(m){ var o={supplier_id:m.sid, zone:m.zone, priority:m.priority, email:m.email, whatsapp:m.whatsapp, phone:m.phone, status:m.status, note:m.note};
+          ['emailed_at','whatsapp_at','replied_at'].forEach(function(k){ if(m[k]) o[k]=m[k]; }); if(m.valid!=null) o.valid_quote=m.valid; return o; })}); })
+        .then(function(){ closeModal(); toast(H.rfq_no+' imported'); RF.no=H.rfq_no; RF.cur=null; RF.list=null; showView('rfq'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+  }).catch(function(e){ toast('Could not import '+file.name+': '+e.message,true); });
+}
+
+/* ----- Reports › RFQ reports (standards §9) ----- */
+function renderRfqReports(){
+  var el=$('vRR'); if(needLive(el,'RFQ reports')) return;
+  if(!RF.list){ el.innerHTML='<div class="empty"><span class="spin"></span> Loading…</div>'; rfLoad().then(renderRfqReports).catch(function(e){ rfNeedDb(el,e); }); return; }
+  var all=(RF.list.rfqs||[]).filter(function(r){ return r.status!=='Cancelled'; }), f=RF.rep;
+  var months=all.map(function(r){ return String(r.rfq_date).slice(0,7); }).filter(function(v,i,a){ return a.indexOf(v)===i; }).sort().reverse();
+  var rows=all.filter(function(r){ return (!f.month||String(r.rfq_date).slice(0,7)===f.month) && (!f.cat||(r.categories||[]).indexOf(f.cat)>=0); });
+  var K=Procure.rfqKpis(rows), pct=function(x){ return Math.round((x||0)*100)+'%'; }, hr=function(h){ return h==null?'—':h<48?h.toFixed(1)+' h':(h/24).toFixed(1)+' d'; };
+  var cut=function(keyOf){ var g={}; rows.forEach(function(r){ (r.recipients||[]).forEach(function(x){ [].concat(keyOf(x,r)).forEach(function(k){ (g[k]=g[k]||[]).push(x); }); }); });
+    return Object.keys(g).sort().map(function(k){ var kk=Procure.rfqKpis([{recipients:g[k]}]); return [k, g[k].length, kk.contacted, kk.replied, pct(kk.replyRate), kk.quoted, kk.valid, hr(kk.avgResponseHours)]; }); };
+  var chan=function(x){ return x.emailed_at&&x.whatsapp_at?'Email + WhatsApp':x.emailed_at?'Email only':x.whatsapp_at?'WhatsApp only':'Not contacted'; };
+  var cuts=[['Category',cut(function(x,r){ return (r.categories&&r.categories.length?r.categories:['(none)']).map(function(c){ return c+' '+catName(c); }); })],['Sourcing zone',cut(function(x){ return x.zone?ZONE_TXT[x.zone]:'?'; })],['Country',cut(function(x){ return Procure.countryName(x.country)||'?'; })],['Channel',cut(chan)]];
+  var tbl=function(head,data){ return '<div class="tbl"><table class="mini"><thead><tr>'+head.map(function(h,i){ return '<th'+(i?' class="r"':'')+'>'+esc(h)+'</th>'; }).join('')+'</tr></thead><tbody>'+(data.length?data.map(function(r){ return '<tr style="cursor:default">'+r.map(function(c,i){ return '<td'+(i?' class="r"':'')+'>'+esc(c)+'</td>'; }).join('')+'</tr>'; }).join(''):'<tr><td colspan="'+head.length+'" class="n">no data</td></tr>')+'</tbody></table></div>'; };
+  var H=['','Listed','Contacted','Replied','Reply rate','Quotes','Valid','Avg response'];
+  var perRfq=rows.map(function(r){ var k=Procure.rfqKpis([r]); return [r.rfq_no+' '+r.title.slice(0,40), r.status, (r.recipients||[]).length, k.contacted, pct(k.replyRate), k.quoted, k.valid, k.valid>=3?'yes':'no']; });
+  el.innerHTML='<div class="bar"><div><h2>RFQ reports</h2><div class="scope">Reply rate, quotes and speed of the RFQs (standards §9). Cancelled RFQs are left out.</div></div><span style="flex:1"></span><button class="btn exp" id="rrExp">Export</button></div>'+
+    '<div class="bar"><select id="rrM"><option value="">All months</option>'+months.map(function(m){ return '<option'+(m===f.month?' selected':'')+'>'+m+'</option>'; }).join('')+'</select><select id="rrC"><option value="">All categories</option>'+Procure.CATEGORIES.map(function(c){ return '<option value="'+c[0]+'"'+(c[0]===f.cat?' selected':'')+'>'+c[0]+' — '+esc(c[1])+'</option>'; }).join('')+'</select></div>'+
+    kpiRow([['RFQs',K.rfqs,K.rfqsSent+' sent'],['Suppliers contacted',K.contacted,K.rfqsSent?(K.contacted/K.rfqsSent).toFixed(1)+' per RFQ':'—'],['Reply rate',pct(K.replyRate),K.replied+' replied'],['Quote rate',pct(K.quoteRate),K.quoted+' quotes · '+pct(K.validRate)+' valid'],['RFQs with 3+ valid quotes',pct(K.rfqSuccess),K.rfqsOk+' of '+K.rfqsSent],['Response time',hr(K.avgResponseHours),'median '+hr(K.medianResponseHours)]])+
+    cuts.map(function(c){ return '<div class="card"><h3>By '+c[0].toLowerCase()+'</h3>'+tbl([c[0]].concat(H.slice(1)),c[1])+'</div>'; }).join('')+
+    '<div class="card"><h3>By RFQ</h3>'+tbl(['RFQ','Status','Listed','Contacted','Reply rate','Quotes','Valid','3+ valid'],perRfq)+'</div>'+
+    '<p class="n">Contact target per category (⌈3 ÷ valid-quote rate⌉, 5–25) is used once a category has 5 or more RFQs. Minutes per supplier vs the manual baseline comes with v3.3.</p>';
+  $('rrM').onchange=function(){ RF.rep.month=this.value; renderRfqReports(); }; $('rrC').onchange=function(){ RF.rep.cat=this.value; renderRfqReports(); };
+  $('rrExp').onclick=function(){ if(!window.XLSX) return; xlsxFrom([{name:'Summary',aoa:[['RFQ reports',f.month||'all months',f.cat||'all categories'],[],['RFQs',K.rfqs],['RFQs sent',K.rfqsSent],['Suppliers contacted',K.contacted],['Replied',K.replied],['Reply rate',K.replyRate],['Quotes',K.quoted],['Valid quotes',K.valid],['RFQs with 3+ valid',K.rfqsOk],['Avg response hours',K.avgResponseHours],['Median response hours',K.medianResponseHours]],cols:[28,14,14]}]
+    .concat(cuts.map(function(c){ return {name:'By '+c[0].toLowerCase().replace('sourcing ',''), aoa:[[c[0]].concat(H.slice(1))].concat(c[1]), cols:[34,9,10,9,10,8,8,13]}; }))
+    .concat([{name:'By RFQ', aoa:[['RFQ','Status','Listed','Contacted','Reply rate','Quotes','Valid','3+ valid']].concat(perRfq), cols:[50,12,8,10,10,8,8,9]}]), 'QS CRM RFQ report '+today()+'.xlsx'); };
+}
+$('rfFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) importRfqWorkbook(f); };
 
 /* ---------- events ---------- */
 $('btnLogin').onclick=signIn;

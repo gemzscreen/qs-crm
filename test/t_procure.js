@@ -95,6 +95,7 @@ eq(P.categoryCode('hv'), 'HV', 'category by code');
 eq(P.categoryCode('Reinforcement'), 'RB', 'category by name');
 eq(P.categoryCode('Stainless steel - railing tubes & fittings'), 'MW', 'RFQ-2611-002 free text -> MW');
 eq(P.categoryCode('Aircon copper pipe & insulation'), 'HV', 'aircon -> HV');
+eq(P.categoryCode('NBR insulation tube 3/8" x 19mm'), 'HV', 'NBR insulation tube -> HV');
 eq(P.categoryCode('something else'), '', 'unknown category');
 eq(P.categoryCodes('HV, PL'), ['HV', 'PL'], 'several codes');
 eq(P.categoryCodes('Doors, windows & glazing'), ['DW'], 'name with commas = one category');
@@ -128,6 +129,51 @@ eq(P.autoVerification({ ok: true }, { mx: null, a: true }, false), 'Checked', 'n
 eq(P.autoVerification({ ok: false }, { mx: true }, true), 'Unverified', 'offline fail -> Unverified');
 eq(P.autoVerification({ ok: true }, { mx: true, a: false }, true), 'Unverified', 'website does not resolve -> Unverified');
 eq(P.dnsTargets({ email: 'x@gmail.com / y@acme.com.bn', website: 'https://acme.en.alibaba.com' }), { mx: 'acme.com.bn', a: '' }, 'dns targets skip free-mail + platform');
+
+/* ----- v3.1.2: templates, item lists, RFQ texts, chase list, prompt, KPIs ----- */
+eq(P.TEMPLATE_COLS.length, 19, 'template = 17 discovery columns + alias, type');
+ok(P.TEMPLATE_COLS.every(c => P.TEMPLATE_HELP[c]), 'every template column has help + example');
+const tmplRow = {}; P.TEMPLATE_COLS.forEach(c => tmplRow[c] = P.TEMPLATE_HELP[c][1]);
+const tSup = P.toSupplier(P.discoveryRow(tmplRow));
+eq([tSup.fields.name, tSup.fields.country, tSup.fields.type, tSup.fields.aliases, tSup.categories[0].code, tSup.contacts[0].whatsapp], ['Foshan Vinmay Stainless Steel Co., Ltd.', 'CN', 'Manufacturer', 'Vinmay', 'MW', '+8613143276868'], 'template example row imports');
+eq(P.dateIso('15/12/2026'), '2026-12-15', 'd/m/y date');
+eq(P.dateIso(new Date(2026, 11, 15)), '2026-12-15', 'Date object');
+eq(P.mrItem({ Description: 'Rebar Y12 x 12m', Qty: '1,200', Unit: 'pcs', 'Required date': '2026-11-20' }),
+  { line: null, description: 'Rebar Y12 x 12m', spec_brand: '', qty: 1200, unit: 'pcs', required_date: '2026-11-20', category: 'RB', res_code: '', only_overseas: false, notes: '' }, 'mrItem guesses category');
+eq(P.parsePasted('Cement OPC 50kg\t\t200\tbags\t20/11/2026\nPlywood 18mm\tmarine\t40\tsheets').map(x => [x.description, x.qty, x.unit, x.required_date, x.category]),
+  [['Cement OPC 50kg', 200, 'bags', '2026-11-20', 'CC'], ['Plywood 18mm', 40, 'sheets', '', 'FW']], 'paste from Excel');
+eq(P.parsePasted('GI duct 0.6mm - 50 sheets\nCopper pipe 3/8" 15m').map(x => [x.description, x.qty, x.unit]), [['GI duct 0.6mm', 50, 'sheets'], ['Copper pipe 3/8"', 15, 'm']], 'typed lines');
+eq(P.parsePasted('Description\tQty\tUnit\nTile adhesive\t30\tbags')[0].category, 'TI', 'pasted with header');
+const R = { rfq_no: 'RFQ-2611-003', title: 'Cement and plywood', deadline: '2026-11-12', delivery_place: 'Gadong, Brunei' };
+const tr = P.rfqForTemplates(R, [{ description: 'Cement OPC 50kg', spec_brand: 'Holcim', qty: 200, unit: 'bags' }, { description: 'Plywood 18mm', qty: 40, unit: 'sheets' }]);
+eq([tr.qtyMode, tr.items[0].desc, tr.short_desc], ['firm', 'Cement OPC 50kg (Holcim)', 'Cement OPC 50kg; Plywood 18mm'], 'RFQ -> template object');
+eq(P.rfqForTemplates(R, [{ description: 'X' }]).qtyMode, 'moq', 'blank qty -> MOQ wording');
+const loc = P.buildEmailFit(tr, { zone: 1, email: 'a@b.com' });
+ok(!loc.attach && /delivered to Gadong, Brunei/.test(loc.body) && /200 bags/.test(loc.body), 'short RFQ: full email');
+const many = P.rfqForTemplates(R, Array.from({ length: 14 }, (_, i) => ({ description: 'Item number ' + (i + 1) + ' with a fairly long specification text for testing the length', qty: 10, unit: 'no' })));
+const big = P.buildEmailFit(many, { zone: 4, email: 'a@b.com' });
+ok(big.attach && !big.tooLong && /attached RFQ RFQ-2611-003 \(14 items\)/.test(big.body) && /in USD/.test(big.body), 'long RFQ: short body + attach PDF (' + big.link.length + ')');
+const rem = P.buildReminderEmail('reminder1', Object.assign({}, tr, { sent_date: '2026-11-08' }), { zone: 1, email: 'a@b.com' });
+ok(/^Reminder: RFQ-2611-003/.test(rem.subject) && /Kindly reminding you of our RFQ-2611-003/.test(rem.body) && !/\{\{/.test(rem.body), 'reminder email');
+// chase list (RESTOCK sent Sun 8 Nov: R1 Tue 10, R2 Thu 12, no-reply Sat 14)
+const rq = { urgency: 'RESTOCK' };
+eq(P.chaseDue({ status: 'Emailed', emailed_at: '2026-11-08 10:00' }, rq, '2026-11-09').due, '', 'not due yet');
+eq(P.chaseDue({ status: 'WhatsApp sent', emailed_at: '2026-11-08 10:00', whatsapp_at: '2026-11-08 10:05' }, rq, '2026-11-10').due, 'reminder1', 'R1 due Tue');
+eq(P.chaseDue({ status: 'Reminder 1', emailed_at: '2026-11-08 10:00' }, rq, '2026-11-11').due, '', 'R2 not yet Wed');
+eq(P.chaseDue({ status: 'Reminder 1', emailed_at: '2026-11-08 10:00' }, rq, '2026-11-12').due, 'reminder2', 'R2 due Thu');
+eq(P.chaseDue({ status: 'Reminder 2', emailed_at: '2026-11-08 10:00' }, rq, '2026-11-14').due, 'noreply', 'no reply Sat');
+eq(P.chaseDue({ status: 'Quoted', emailed_at: '2026-11-08 10:00' }, rq, '2026-11-20').due, '', 'responded = nothing to chase');
+eq(P.chaseDue({ status: 'Emailed', emailed_at: '2026-11-09 09:00' }, { urgency: 'SUPER URGENT' }, new Date(2026, 10, 9, 11, 30)).due, 'reminder1', 'super urgent R1 after 2 h');
+const pr = P.discoveryPrompt({ rfq_no: 'RFQ-2611-003', title: 'Aircon copper pipe', urgency: 'URGENT' }, [{ description: 'Copper pipe 3/8"', category: 'HV', qty: 15, unit: 'm' }], { zones: [1, 2], exclude: ['Far East Group'] });
+ok(/Brunei; Borneo \(Miri/.test(pr) && /HV HVAC/.test(pr) && pr.indexOf(P.TEMPLATE_COLS.join(',')) > 0 && /Far East Group/.test(pr), 'discovery prompt');
+const K = P.rfqKpis([{ rfq_no: 'A', recipients: [
+  { status: 'Quoted', valid_quote: true, emailed_at: '2026-11-08 10:00', replied_at: '2026-11-08 14:00' },
+  { status: 'Quoted', valid_quote: true, emailed_at: '2026-11-08 10:00', replied_at: '2026-11-09 10:00' },
+  { status: 'Quoted', valid_quote: true, emailed_at: '2026-11-08 10:00', replied_at: '2026-11-08 12:00' },
+  { status: 'Declined', emailed_at: '2026-11-08 10:00', replied_at: '2026-11-08 11:00' }, { status: 'No reply', emailed_at: '2026-11-08 10:00' }, { status: 'Not contacted' }] },
+  { rfq_no: 'B', recipients: [{ status: 'Emailed', emailed_at: '2026-11-09 10:00' }] }, { rfq_no: 'C', recipients: [] }]);
+eq([K.rfqs, K.rfqsSent, K.rfqsOk, K.contacted, K.replied, K.quoted, K.valid, Math.round(K.replyRate * 100), Math.round(K.rfqSuccess * 100), K.avgResponseHours, K.medianResponseHours],
+   [3, 2, 1, 6, 4, 3, 3, 67, 50, 7.75, 3], 'RFQ KPIs');
 
 // DNS-over-HTTPS with a fake fetch (Google fails -> Cloudflare)
 const calls = [];
@@ -176,6 +222,15 @@ if (have('rfq002.json')) {
   eq(em.tooLong, false, 'link length ok (' + em.link.length + ')');
   eq(P.buildWhatsApp('wa_follow', rfq, vin).text, F.text['WhatsApp follow-up (after email)'].replace('<supplier email>', 'marketing@vinssco.com'), 'WA follow-up');
   eq(P.buildWhatsApp('wa_full', rfq, { zone: 2, whatsapp: '+60193163328' }).text, F.text['WhatsApp full RFQ (no email)'], 'WA full RFQ');
+
+  // v3.1.2: the RFQ Text sheet rebuilds the RFQ; the send list rows find their suppliers
+  const H = P.rfqFromTextSheet(F.text);
+  eq([H.rfq_no, H.title, H.deadline, H.qty_mode, H.items.length, H.items[3].category, H.delivery_place], ['RFQ-2611-002', 'SS304 Railing Tubes 1in, 1-1/2in, 2in & Fittings', '2026-11-12', 'moq', 4, 'MW', 'Bandar Seri Begawan, Brunei'], 'RFQ Text sheet -> RFQ');
+  const Hr = P.rfqForTemplates(Object.assign({}, H, { certs: 'mill certificate / material test report for SS304' }), H.items.map(i => ({ description: i.description, short: i.short })));
+  eq(P.buildEmail(Hr, { zone: 4, email: 'x@y.com' }).body.trim(), F.text['Email body - China'].trim(), 'rebuilt RFQ -> same China email');
+  eq(P.buildWhatsApp('wa_full', Hr, { zone: 2, whatsapp: '+60193163328' }).text, F.text['WhatsApp full RFQ (no email)'], 'rebuilt RFQ -> same WhatsApp full RFQ');
+  const dbS = F.discovery.map((r, i) => Object.assign({ supplier_id: P.supplierId(i + 1) }, P.toSupplier(P.discoveryRow(r)).fields, { contacts: P.toSupplier(P.discoveryRow(r)).contacts, categories: [] }));
+  eq(F.discovery.map(r => P.matchSupplier({ company_name: r.company_name, country: r.country, email: r.email, phone: r.phone, website: r.website }, dbS)), dbS.map(s => s.supplier_id), 'send-list rows match their suppliers');
   // v3.1.0: the Discovery sheet imports as 19 suppliers, category MW, all with a contact
   const rows = F.discovery.map(r => P.discoveryRow(r));
   const sups = rows.map(P.toSupplier);

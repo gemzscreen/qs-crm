@@ -120,9 +120,67 @@ select pg_temp.ok(jsonb_array_length(:'r'::jsonb -> 'holidays') = 2, '2 holidays
 select public.crm_setholidays('{"remove":["2027-01-01"]}') as r \gset
 select pg_temp.ok(jsonb_array_length(:'r'::jsonb -> 'holidays') = 1 and (:'r'::jsonb #>> '{holidays,0,label}') = 'Christmas Day', 'holiday removed');
 
+-- v3.1.2: RFQs (as qs)
+select set_config('request.uid', '00000000-0000-0000-0000-000000000002', false);
+select pg_temp.err($q$select public.crm_saverfq('{"header":{"title":""},"items":[{"description":"x"}]}')$q$, 'title', 'RFQ title required');
+select pg_temp.err($q$select public.crm_saverfq('{"header":{"title":"T"},"items":[]}')$q$, 'at least one item', 'items required');
+select pg_temp.err($q$select public.crm_saverfq('{"header":{"title":"T"},"items":[{"description":"x","qty":"ten"}]}')$q$, 'not a number', 'qty must be a number');
+select pg_temp.err($q$select public.crm_saverfq('{"header":{"title":"T"},"items":[{"description":"x","category":"ZZ"}]}')$q$, 'Unknown category', 'item category checked');
+-- import RFQ-2611-002 with its own number, then the first new RFQ of the month is RFQ-2611-003
+select public.crm_saverfq('{"rfq_no":"RFQ-2611-002","new":true,"header":{"title":"SS304 railing tubes","rfq_date":"2026-11-08","deadline":"2026-11-12","urgency":"RESTOCK","qty_mode":"moq"},"items":[{"description":"SS304 tube 25.4mm","category":"MW"},{"description":"SS304 fittings","category":"MW"}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb ->> 'rfq_no') = 'RFQ-2611-002' and (:'r'::jsonb #>> '{rfq,status}') = 'Draft', 'imported RFQ keeps its number');
+select pg_temp.err($q$select public.crm_saverfq('{"rfq_no":"RFQ-2611-002","new":true,"header":{"title":"again"},"items":[{"description":"x"}]}')$q$, 'already exists', 'imported number cannot be reused');
+select public.crm_saverfq('{"header":{"title":"Cement and plywood","rfq_date":"2026-11-09","urgency":"URGENT","deadline":"2026-11-10","delivery_place":"Gadong"},"items":[{"description":"Cement OPC 50kg","qty":200,"unit":"bags","category":"CC","required_date":"2026-11-14"},{"description":"Plywood 18mm","qty":"40","unit":"sheets","category":"FW","required_date":"2026-11-12"}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb ->> 'rfq_no') = 'RFQ-2611-003', 'next number RFQ-2611-003');
+select pg_temp.ok((:'r'::jsonb #>> '{rfq,required_date}') = '2026-11-12', 'required date = earliest item date');
+select public.crm_saverfq('{"header":{"title":"December job","rfq_date":"2026-12-01"},"items":[{"description":"Paint"}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb ->> 'rfq_no') = 'RFQ-2612-001', 'numbering restarts each month');
+-- send list
+select pg_temp.err($q$select public.crm_setrecipients('{"rfq_no":"RFQ-2611-003","add":[{"supplier_id":"SUP-0009"}]}')$q$, 'not found', 'unknown supplier');
+select public.crm_setrecipients('{"rfq_no":"rfq-2611-003","add":[{"supplier_id":"SUP-0001","zone":1,"priority":1,"email":"sales@betahw.com.bn","whatsapp":"+6738765432"},{"supplier_id":"SUP-0003","zone":4,"priority":2,"email":"sales@gammametal.com"},{"supplier_id":"SUP-0002","zone":1,"priority":1}]}') as r \gset
+select pg_temp.ok(jsonb_array_length(:'r'::jsonb -> 'recipients') = 3 and (:'r'::jsonb #>> '{recipients,0,stats,rfqs}') = '1', '3 on the send list, with stats');
+select public.crm_setrecipients('{"rfq_no":"RFQ-2611-003","remove":["SUP-0002"]}') as r \gset
+select pg_temp.ok(jsonb_array_length(:'r'::jsonb -> 'recipients') = 2, 'remove a not-contacted supplier');
+-- clicks: Email then WhatsApp -> statuses + RFQ Sent
+select public.crm_rfqclick('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","action":"email"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{recipient,status}') = 'Emailed' and (:'r'::jsonb ->> 'rfq_status') = 'Sent', 'Email click -> Emailed, RFQ Sent');
+select public.crm_rfqclick('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","action":"whatsapp"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{recipient,status}') = 'WhatsApp sent' and (:'r'::jsonb #>> '{recipient,emailed_at}') is not null, 'WhatsApp click -> WhatsApp sent');
+select pg_temp.err($q$select public.crm_setrecipients('{"rfq_no":"RFQ-2611-003","remove":["SUP-0001"]}')$q$, 'already contacted', 'contacted supplier cannot be removed');
+select public.crm_rfqclick('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0003","action":"email"}') as r \gset
+select public.crm_rfqclick('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0003","action":"reminder1"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{recipient,status}') = 'Reminder 1' and (:'r'::jsonb ->> 'rfq_status') = 'Chasing', 'reminder -> Chasing');
+select pg_temp.ok((select count(*) from public.rfq_clicks where rfq_no = 'RFQ-2611-003') = 4, '4 clicks logged');
+-- replies: Quoted -> supplier Verified; Bounced with no phone -> Failed
+update public.suppliers set verification = 'Checked' where supplier_id = 'SUP-0001';
+select public.crm_setrecipient('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","status":"Quoted","note":"B$ 7.20/bag"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{recipient,valid_quote}') = 'true' and (:'r'::jsonb #>> '{recipient,replied_at}') is not null, 'Quoted = valid by default, reply time set');
+select pg_temp.ok((select verification from public.suppliers where supplier_id = 'SUP-0001') = 'Verified', 'reply -> supplier Verified');
+select public.crm_setrecipient('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0003","status":"Bounced"}') as r \gset
+select pg_temp.ok((select verification from public.suppliers where supplier_id = 'SUP-0003') = 'Failed', 'bounced + no phone -> supplier Failed');
+select public.crm_setrecipient('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","status":"Quoted","valid_quote":false}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{recipient,valid_quote}') = 'false', 'valid tick can be removed');
+select pg_temp.ok((select (x -> 'stats' ->> 'responded')::int from jsonb_array_elements(public.crm_procdata() -> 'suppliers') x where x ->> 'supplier_id' = 'SUP-0001') = 1, 'supplier stats: 1 response');
+-- import with statuses and dates
+select public.crm_setrecipients('{"rfq_no":"RFQ-2611-002","add":[{"supplier_id":"SUP-0003","status":"Quoted","emailed_at":"2026-11-08 10:00","replied_at":"2026-11-09 09:00","valid_quote":true}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{recipients,0,status}') = 'Quoted' and (:'r'::jsonb #>> '{rfq,status}') = 'Sent' and (:'r'::jsonb #>> '{rfq,sent_at}') = '2026-11-08 10:00', 'import keeps status and dates');
+-- register, status by hand
+select pg_temp.ok(jsonb_array_length(public.crm_rfqs() -> 'rfqs') = 3 and (public.crm_rfqs() #>> '{rfqs,0,rfq_no}') = 'RFQ-2612-001', 'register lists 3 RFQs, newest first');
+select pg_temp.err($q$select public.crm_rfqstatus('{"rfq_no":"RFQ-2612-001","status":"Cancelled"}')$q$, 'reason', 'cancel needs a reason');
+select public.crm_rfqstatus('{"rfq_no":"RFQ-2612-001","status":"Cancelled","note":"job postponed"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{rfq,status}') = 'Cancelled', 'cancelled');
+select pg_temp.err($q$select public.crm_saverfq('{"rfq_no":"RFQ-2612-001","header":{"title":"x"},"items":[{"description":"y"}]}')$q$, 'cannot be changed', 'cancelled RFQ is locked');
+select public.crm_rfqstatus('{"rfq_no":"RFQ-2612-001","status":"auto"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{rfq,status}') = 'Draft', 'back to automatic status');
+select pg_temp.ok(jsonb_array_length(public.crm_rfq('{"rfq_no":"RFQ-2611-003"}') -> 'log') >= 4, 'RFQ history');
+select set_config('request.uid', '00000000-0000-0000-0000-000000000003', false);
+select pg_temp.err($q$select public.crm_rfqclick('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","action":"email"}')$q$, 'Read-only', 'viewer cannot click-log');
+select pg_temp.ok(jsonb_array_length(public.crm_rfq('{"rfq_no":"RFQ-2611-003"}') -> 'items') = 2, 'viewer reads an RFQ');
+
 -- grants and row-level security as the app's database role
 set role authenticated;
 select pg_temp.ok((select count(*) from public.suppliers) = 3, 'authenticated reads suppliers through RLS');
+select pg_temp.ok((select count(*) from public.rfqs) = 3, 'authenticated reads RFQs through RLS');
 select pg_temp.ok(jsonb_array_length(public.crm_procdata() -> 'suppliers') = 3, 'authenticated may call crm_procdata');
 select pg_temp.err($q$insert into public.suppliers (supplier_id, name, country) values ('SUP-9999', 'x', 'BN')$q$, 'permission denied', 'no direct writes');
 select pg_temp.err($q$select public.crm_supwrite(null, '{}', '[]', '[]', '{}', null)$q$, 'permission denied', 'internal functions not callable');
