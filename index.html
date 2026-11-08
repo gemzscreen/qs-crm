@@ -366,6 +366,37 @@ tbody tr:hover td{background:var(--hover)}
   .nav .ddm a{color:#e6e8fb;padding:7px 12px} .nav .ddm a span{color:#9ea3d6} .nav .ddm a:hover,.nav .ddm a.on{background:rgba(255,255,255,.12)}
 }
 #vLB tr.sel td{background:var(--hover,rgba(42,120,214,.10))} #vDB .kpi[data-go]:hover{outline:1px solid var(--line)}
+/* v3.1.0: Procurement pages */
+.pv .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.pv .card h3{margin:0 0 8px;font-size:14px} .pv h2{font-size:19px;font-weight:700;letter-spacing:-.01em;margin:0 0 3px;color:var(--bink)}
+.pv .n,.modal .n{font-size:12px;color:var(--ink3);margin:4px 0 8px} .pv code{font-family:var(--mono);color:var(--bink)}
+.pv table th{position:static;cursor:default} .pv th[data-sk]{cursor:pointer} .pv tbody tr{cursor:pointer}
+.pv td.dsc{min-width:260px;max-width:460px} .pv tr.void td{color:var(--ink3)} .pv .pos,.modal .pos{color:var(--ok)} .pv .neg,.modal .neg{color:var(--bad)}
+.pv .ok{color:var(--ok);margin:4px 0} .pv ul.plain,.modal ul.plain{margin:0;padding-left:18px;font-size:13px}
+.pv .edbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.pv .edbar .tot{font-size:12.5px;color:var(--ink2)}
+.pv>.bar:first-child>div:first-child{flex:1 1 520px;min-width:0}
+.pv .sub2,.modal .sub2{font-size:11.5px;color:var(--ink3);font-weight:400}
+.pv .pact{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:8px}
+.vf-Unverified{background:var(--mutebg);color:var(--mute)} .vf-Checked{background:var(--infobg);color:var(--info)} .vf-Verified{background:var(--okbg);color:var(--ok)} .vf-Failed{background:var(--badbg);color:var(--bad)}
+.ss-Inactive{background:var(--mutebg);color:var(--mute)} .ss-Blacklisted{background:var(--badbg);color:var(--bad)}
+.zn{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:9px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
+.zn.z1{border-color:var(--s3);color:var(--s3)} .zn.z2{border-color:var(--s1);color:var(--s1)} .zn.z3{border-color:var(--s7);color:var(--s7)} .zn.z4{border-color:var(--s2);color:var(--s2)} .zn.z5{border-color:var(--s8);color:var(--ink3)}
+.cat{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;padding:1px 6px;border-radius:5px;background:var(--line2);color:var(--bink)}
+.nbadge{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:9px;background:var(--accent);color:#fff;font-style:normal;font-size:11px;line-height:17px;text-align:center;vertical-align:1px}
+.modal .box.xwide{width:min(1120px,100%);max-height:90vh}
+.modal dl.rec{display:grid;grid-template-columns:150px 1fr;gap:5px 12px;margin:0 0 6px;font-size:13px} .modal dl.rec dt{color:var(--ink3)} .modal dl.rec dd{margin:0;word-break:break-word}
+.modal .psec{margin:16px 0 6px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3)} .modal .psec .hint{text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px}
+.modal .prhead{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 12px}
+.modal .cb{text-decoration:none;color:inherit;margin-left:4px} .modal .cb.wa{color:#128c4a;border-color:#128c4a}
+.modal td input.ed{width:100%;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:var(--field);font:inherit;font-size:12.5px}
+.modal td select{padding:4px;border:1px solid var(--line);border-radius:5px;background:var(--field);font-size:12.5px}
+.modal table.sfc td{padding:4px 5px}
+.catgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 12px;font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--field)}
+.catgrid label{display:flex;gap:6px;align-items:center;font-weight:400;color:var(--ink);margin:0;cursor:pointer} .catgrid b{font-family:var(--mono);font-size:11px;color:var(--bink);width:20px}
+.lh{display:flex;gap:16px;align-items:center;border:1px solid var(--line);border-bottom:3px solid var(--brand);border-radius:6px;padding:12px 14px;background:#fff;color:#111}
+.lh img{max-height:64px;max-width:220px} .lhn{font-size:18px;font-weight:700;color:#120377} .lhs{font-size:11.5px;color:#444}
+@media (max-width:900px){.catgrid{grid-template-columns:1fr 1fr}.modal dl.rec{grid-template-columns:110px 1fr}}
 </style>
 </head>
 <body>
@@ -386,6 +417,11 @@ tbody tr:hover td{background:var(--hover)}
         <a data-v="library"><b>BQ Library</b><span>Every priced line, rate history</span></a>
         <a data-v="master"><b>Masterlist</b><span>Rates and resources from the pricing sheet</span></a>
       </div></div>
+    <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">Procurement<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="ddm">
+        <a data-v="suppliers"><b>Suppliers</b><span>Supplier database: contacts, categories, zones, verification</span></a>
+        <a data-v="queue"><b>Review queue <em class="nbadge hidden" id="nbQueue"></em></b><span>AI-found suppliers waiting for approval</span></a>
+      </div></div>
     <a data-v="reports">Reports</a>
   </nav>
   <div class="sp"></div>
@@ -396,6 +432,7 @@ tbody tr:hover td{background:var(--hover)}
       <div class="mehead" id="meHead"></div>
       <a data-act="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>My profile</a>
       <a data-v="users" class="hidden" id="navUsers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2.2.6 3.5 2.4 3.5 5.2"/></svg>Team &amp; access</a>
+      <a data-v="company" class="hidden" id="navCompany"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 21V5l8-3 8 3v16M9 21v-5h6v5M8 8h1M12 8h1M16 8h1M8 12h1M12 12h1M16 12h1"/></svg>Company &amp; settings</a>
       <a data-act="ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>What's new<code id="meVer"></code></a>
       <div class="sep"></div>
       <a data-act="out" id="btnOut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/></svg>Sign out</a>
@@ -463,13 +500,18 @@ tbody tr:hover td{background:var(--hover)}
 <main id="vML" class="hidden"></main>
 <input type="file" id="migFile" accept=".xlsx" class="hidden">
 <main id="vAB" class="hidden"></main>
+<main id="vSP" class="hidden pv"></main>
+<main id="vRQ" class="hidden pv"></main>
+<main id="vCS" class="hidden pv"></main>
+<input type="file" id="rqFile" accept=".xlsx,.xlsm,.xls,.csv" class="hidden">
+<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" class="hidden">
 <input type="file" id="rvFile" accept=".xlsx,.xlsm" class="hidden">
 <input type="file" id="abFile" accept=".xlsx,.xlsm" class="hidden">
 
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v2.3.0</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.1.0</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -1328,11 +1370,628 @@ tbody tr:hover td{background:var(--hover)}
 })(this);
 </script>
 <script>
+/*
+ * QS CRM v3 Procurement — v3.0 standards helpers (supplier-crm/v3.0-standards.md)
+ * IDs and numbers, country/zone, urgency -> sourcing zones + goal guard, phone/email/web
+ * normalisation, de-duplication keys, Brunei working days, Roundcube / WhatsApp links,
+ * message templates.
+ * v3.1.0: material categories (standards §3), discovery import rows -> supplier records + contacts.
+ * Works in the browser (global Procure) and in Node (module.exports). No dependencies.
+ */
+(function (root) {
+  'use strict';
+
+  /* ---------- IDs and numbers ---------- */
+  function pad(n, w) { n = String(n); while (n.length < w) n = '0' + n; return n; }
+  function yymm(d) { d = toDate(d); return pad(d.getFullYear() % 100, 2) + pad(d.getMonth() + 1, 2); }
+  // RFQ-YYMM-NNN, MR-YYMM-NNN: running number restarts every month (month of issue).
+  function docNo(prefix, date, seq) { return prefix + '-' + yymm(date) + '-' + pad(seq, 3); }
+  function rfqNo(date, seq) { return docNo('RFQ', date, seq); }
+  function mrNo(date, seq) { return docNo('MR', date, seq); }
+  var DOC_RE = /^(RFQ|MR)-(\d{2})(\d{2})-(\d{3,})(?:-R(\d+))?$/;
+  function parseDocNo(s) {
+    var m = DOC_RE.exec(String(s || '').trim().toUpperCase());
+    if (!m || +m[3] < 1 || +m[3] > 12) return null;
+    return { prefix: m[1], yy: +m[2], mm: +m[3], seq: +m[4], rev: m[5] ? +m[5] : 0 };
+  }
+  // next number in the month from the numbers already used (any revision counts once)
+  function nextDocNo(prefix, date, used) {
+    var key = yymm(date), max = 0;
+    (used || []).forEach(function (u) {
+      var p = parseDocNo(u);
+      if (p && p.prefix === prefix && pad(p.yy, 2) + pad(p.mm, 2) === key) max = Math.max(max, p.seq);
+    });
+    return docNo(prefix, date, max + 1);
+  }
+  function supplierId(n) { return 'SUP-' + pad(n, 4); }
+  function parseSupplierId(s) { var m = /^SUP-(\d{4,})$/.exec(String(s || '').trim().toUpperCase()); return m ? +m[1] : null; }
+
+  /* ---------- countries and sourcing zones ---------- */
+  // name/alias -> [ISO2, dialling code, trunk prefix to drop]
+  var COUNTRIES = {
+    BN: ['Brunei', '673', ''], MY: ['Malaysia', '60', '0'], SG: ['Singapore', '65', ''],
+    CN: ['China', '86', '0'], VN: ['Vietnam', '84', '0'], ID: ['Indonesia', '62', '0'],
+    TH: ['Thailand', '66', '0'], PH: ['Philippines', '63', '0'], IN: ['India', '91', '0'],
+    TW: ['Taiwan', '886', '0'], KR: ['South Korea', '82', '0'], JP: ['Japan', '81', '0'],
+    HK: ['Hong Kong', '852', ''], AE: ['UAE', '971', '0'], TR: ['Turkey', '90', '0'],
+    AU: ['Australia', '61', '0'], GB: ['United Kingdom', '44', '0'], DE: ['Germany', '49', '0'],
+    IT: ['Italy', '39', ''], US: ['USA', '1', '']
+  };
+  var ALIASES = { 'brunei darussalam': 'BN', 'negara brunei darussalam': 'BN', 'prc': 'CN', "people's republic of china": 'CN',
+    'viet nam': 'VN', 'korea': 'KR', 'republic of korea': 'KR', 'united arab emirates': 'AE', 'uk': 'GB',
+    'united states': 'US', 'turkiye': 'TR' };
+  var BORNEO_RE = /\b(borneo|sarawak|sabah|labuan|miri|limbang|lawas|bintulu|sibu|kuching|kota kinabalu|sandakan|tawau|marudi|kuala belait)\b/i;
+  function countryCode(name) {
+    var s = String(name || '').toLowerCase().replace(/\(.*?\)/g, '').trim();
+    if (!s) return '';
+    if (/^[a-z]{2}$/.test(s) && COUNTRIES[s.toUpperCase()]) return s.toUpperCase();
+    if (ALIASES[s]) return ALIASES[s];
+    for (var k in COUNTRIES) if (COUNTRIES[k][0].toLowerCase() === s) return k;
+    return '';
+  }
+  // Zone 1 Brunei · 2 Borneo (Sarawak/Sabah/Labuan) · 3 MY/SG · 4 China/Vietnam · 5 other countries
+  var ZONES = { 1: 'Brunei', 2: 'Borneo', 3: 'MY/SG', 4: 'China/Vietnam', 5: 'Other countries' };
+  function zoneOf(country, city) {
+    var cc = countryCode(country), where = String(country || '') + ' ' + String(city || '');
+    if (cc === 'BN') return 1;
+    if (cc === 'MY') return BORNEO_RE.test(where) ? 2 : 3;
+    if (cc === 'SG') return 3;
+    if (cc === 'CN' || cc === 'VN') return 4;
+    return 5;
+  }
+  function zoneLabel(z, country) {
+    var cc = countryCode(country);
+    if (z === 4) return '4 ' + (cc === 'VN' ? 'Vietnam' : 'China');
+    return z + ' ' + ZONES[z];
+  }
+
+  /* ---------- urgency -> zones, priority, goal guard ---------- */
+  // Urgency = calendar days from RFQ date to required-on-site date (Gemz, 8 Nov 2026):
+  //   SUPER URGENT 1-2 · URGENT 3-7 · NORMAL 8-14 · NEEDED SOON 15-21 (22-29 counted here too) · RESTOCK 30+ or no date
+  // Each class: zones to contact first, zone priority (1 = send first), freight, channels, and the RFQ timetable
+  // (offsets from sending: h = clock hours, wd = Brunei working days).
+  var URGENCY = [
+    { code: 'SUPER URGENT', max: 2, zones: [1], priority: { 1: 1 }, widenTo: [2], freight: 'local delivery / pick-up',
+      channels: 'call + WhatsApp full RFQ + email at the same time', reminder1: { h: 2 }, reminder2: { h: 4 }, deadline: { h: 6 } },
+    { code: 'URGENT', max: 7, zones: [1, 2], priority: { 1: 1, 2: 1 }, widenTo: [3], freight: 'local delivery; MY/SG by air/courier if widened',
+      channels: 'email + WhatsApp within the hour', reminder1: { h: 4 }, reminder2: { wd: 1 }, deadline: { wd: 1 } },
+    { code: 'NORMAL', max: 14, zones: [1, 2, 3], priority: { 1: 1, 2: 1, 3: 2 }, widenTo: [4], freight: 'local / short sea; zone 4 by air only',
+      channels: 'email then WhatsApp', reminder1: { wd: 1 }, reminder2: { wd: 2 }, deadline: { wd: 2 } },
+    { code: 'NEEDED SOON', max: 29, zones: [1, 2, 3, 4], priority: { 1: 1, 2: 1, 3: 1, 4: 2 }, widenTo: [5], freight: 'zone 4 by air/express, compare landed cost',
+      channels: 'email then WhatsApp', reminder1: { wd: 2 }, reminder2: { wd: 3 }, deadline: { wd: 3 } },
+    { code: 'RESTOCK', max: Infinity, zones: [4, 3, 1, 2], priority: { 4: 1, 3: 2, 1: 2, 2: 2 }, vietnamPriority: 2, widenTo: [5], freight: 'sea (lead-time warning if quote > days available)',
+      channels: 'email then WhatsApp', benchmark: [1, 2], reminder1: { wd: 2 }, reminder2: { wd: 4 }, deadline: { wd: 4 } }
+  ];
+  function daysBetween(a, b) { return Math.round((stripTime(toDate(b)) - stripTime(toDate(a))) / 86400000); }
+  function urgencyClass(code) { for (var i = 0; i < URGENCY.length; i++) if (URGENCY[i].code === code) return URGENCY[i]; return URGENCY[URGENCY.length - 1]; }
+  function urgencyOf(rfqDate, requiredDate) {
+    if (!requiredDate) return 'RESTOCK';
+    var d = Math.max(daysBetween(rfqDate, requiredDate), 0);
+    for (var i = 0; i < URGENCY.length; i++) if (d <= URGENCY[i].max) return URGENCY[i].code;
+    return 'RESTOCK';
+  }
+  // Which zones to contact first, and the priority of each zone (1 = send first).
+  // onlyOverseas: item/brand only made in China (or another zone-4/5 country) -> that zone P1 + air/express when < 30 days.
+  function sourcingPlan(urgency, onlyOverseas) {
+    var c = urgencyClass(urgency), p = { code: c.code, zones: c.zones.slice(), priority: JSON.parse(JSON.stringify(c.priority)),
+      widenTo: (c.widenTo || []).slice(), freight: c.freight, channels: c.channels, benchmark: (c.benchmark || []).slice() };
+    if (onlyOverseas && c.code !== 'RESTOCK') {
+      if (p.zones.indexOf(4) < 0) p.zones.push(4);
+      p.priority[4] = 1; p.freight = 'air/express from the maker; local suppliers as benchmark'; p.benchmark = [1, 2];
+    }
+    return p;
+  }
+  // lead-time warning: quote lead time (days) longer than the days left to the required date
+  function leadTimeWarning(rfqDate, requiredDate, leadDays) {
+    if (!requiredDate || leadDays == null) return '';
+    var left = daysBetween(rfqDate, requiredDate);
+    return leadDays > left ? 'lead time ' + leadDays + ' d > ' + left + ' d available' : '';
+  }
+  // Goal guard: >= 3 valid quotes. Widen when no supplier in the allowed zones, or < 3 valid quotes
+  // after the 2nd reminder. Returns the zones to add next (next zones, then zone 5), or [] if goal met.
+  function goalGuard(state) {
+    var used = state.zonesUsed || [], valid = state.validQuotes || 0;
+    var short = (state.suppliersInZones === 0) || (valid < 3 && state.reminder2Done);
+    if (!short) return { widen: false, zones: [] };
+    var order = [1, 2, 3, 4, 5], next = order.filter(function (z) { return used.indexOf(z) < 0; });
+    var add = next.filter(function (z) { return z < 5; });
+    if (!add.length && next.indexOf(5) >= 0) add = [5];
+    else if (add.length) add = [add[0]];
+    return { widen: add.length > 0, zones: add, flag: add.length ? 'search widened to ' + add.map(function (z) { return ZONES[z]; }).join(', ') : 'all zones used' };
+  }
+
+  /* ---------- phones ---------- */
+  var DIAL = Object.keys(COUNTRIES).map(function (k) { return [COUNTRIES[k][1], k]; })
+    .sort(function (a, b) { return b[0].length - a[0].length; });
+  function kindOf(cc, n) {
+    switch (cc) {
+      case 'BN': return n.length !== 7 ? 'invalid' : /^[78]/.test(n) ? 'mobile' : /^[2-5]/.test(n) ? 'landline' : 'invalid';
+      case 'MY': return /^1\d{8,9}$/.test(n) ? 'mobile' : /^[3-9]\d{7,8}$/.test(n) ? 'landline' : 'invalid';
+      case 'SG': return !/^\d{8}$/.test(n) ? 'invalid' : /^[89]/.test(n) ? 'mobile' : /^6/.test(n) ? 'landline' : 'other';
+      case 'CN': return /^1[3-9]\d{9}$/.test(n) ? 'mobile' : /^(10|2\d|[3-9]\d{2})\d{7,8}$/.test(n) ? 'landline' : 'invalid';
+      case 'VN': return /^[35789]\d{8}$/.test(n) ? 'mobile' : /^2\d{9}$/.test(n) ? 'landline' : 'invalid';
+      case 'ID': return /^8\d{8,11}$/.test(n) ? 'mobile' : /^[2-7]\d{6,10}$/.test(n) ? 'landline' : 'invalid';
+      case 'TH': return /^[689]\d{8}$/.test(n) ? 'mobile' : /^[2-7]\d{7}$/.test(n) ? 'landline' : 'invalid';
+      case 'PH': return /^9\d{9}$/.test(n) ? 'mobile' : /^[2-8]\d{7,8}$/.test(n) ? 'landline' : 'invalid';
+      case 'IN': return /^[6-9]\d{9}$/.test(n) ? 'mobile' : /^[1-5]\d{9}$/.test(n) ? 'landline' : 'invalid';
+      default: return n.length >= 6 && n.length <= 13 ? 'unknown' : 'invalid';
+    }
+  }
+  // "+86 131 4327 6868 / 0757-85436751", "+673 242 8981 / HP 874 0081, 890 6000", "0757-82707815 / WA +86 137 0260 0484"
+  function parsePhones(raw, country) {
+    var home = countryCode(country), out = [], seen = {};
+    String(raw || '').split(/\s*\/\s*|\s*[,;]\s*|\s+or\s+|\n/).forEach(function (part) {
+      var p = part.trim(); if (!p) return;
+      var waTag = /\b(WA|whats\s*app)\b/i.test(p), mobTag = /\b(HP|H\/P|mob(ile)?|cell)\b/i.test(p);
+      var s = p.replace(/[^\d+]/g, '');
+      if (s.replace(/\+/g, '').length < 6) return;
+      var cc = home, nat;
+      if (/^\+|^00/.test(s)) {
+        s = s.replace(/^\+|^00/, '').replace(/\+/g, '');
+        var hit = null; for (var i = 0; i < DIAL.length; i++) if (s.indexOf(DIAL[i][0]) === 0) { hit = DIAL[i]; break; }
+        if (!hit) { out.push({ raw: p, e164: '+' + s, cc: '', kind: 'unknown', whatsapp: waTag }); return; }
+        cc = hit[1]; nat = s.slice(hit[0].length);
+        if (nat.charAt(0) === '0' && COUNTRIES[cc][2] === '0') nat = nat.slice(1); // "+60 (0)19..."
+      } else {
+        if (!cc) { out.push({ raw: p, e164: '', cc: '', kind: 'invalid', whatsapp: false, note: 'no country code' }); return; }
+        nat = s.replace(/\+/g, '');
+        if (COUNTRIES[cc][2] && nat.indexOf(COUNTRIES[cc][2]) === 0) nat = nat.slice(COUNTRIES[cc][2].length);
+      }
+      var kind = kindOf(cc, nat), e164 = '+' + COUNTRIES[cc][1] + nat;
+      if (seen[e164]) return; seen[e164] = 1;
+      out.push({ raw: p, e164: e164, cc: cc, kind: kind,
+        whatsapp: waTag || kind === 'mobile' || (mobTag && kind !== 'landline'), tag: waTag ? 'WA' : mobTag ? 'HP' : '' });
+    });
+    return out;
+  }
+  // Best WhatsApp number: a WA-tagged number first, then the first mobile.
+  function whatsappOf(raw, country) {
+    var ph = parsePhones(raw, country).filter(function (x) { return x.whatsapp && x.kind !== 'invalid'; });
+    var wa = ph.filter(function (x) { return x.tag === 'WA'; });
+    return (wa[0] || ph[0] || {}).e164 || '';
+  }
+  function digits(e164) { return String(e164 || '').replace(/\D/g, ''); }
+
+  /* ---------- email, web, de-duplication ---------- */
+  var FREE_MAIL = ['gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.com.sg', 'yahoo.com.my', 'hotmail.com', 'outlook.com',
+    'live.com', 'icloud.com', 'msn.com', '163.com', '126.com', 'qq.com', 'sina.com', 'sina.cn', 'foxmail.com', 'aliyun.com',
+    'yeah.net', 'tom.com', 'sohu.com', 'streamyx.com', 'brunet.bn', 'simpur.net.bn'];
+  var PLATFORMS = ['alibaba.com', '1688.com', 'made-in-china.com', 'globalsources.com', 'indiamart.com', 'tradeindia.com',
+    'suppliergo.com', 'archify.com', 'facebook.com', 'linkedin.com', 'instagram.com', 'issuu.com', 'yellowpages.com.bn',
+    'bruneiproperty.com.bn', 'miribiz.com', 'newpages.asia', 'google.com', 'wa.me'];
+  var EMAIL_RE = /^[^\s@<>()"',;]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
+  function splitEmails(raw) {
+    var out = [];
+    String(raw || '').split(/\s*[\/,;]\s*|\s+/).forEach(function (e) {
+      e = e.trim().replace(/^mailto:/i, '').replace(/[.)]+$/, '').toLowerCase();
+      if (EMAIL_RE.test(e) && out.indexOf(e) < 0) out.push(e);
+    });
+    return out;
+  }
+  function emailDomain(e) { e = String(e || '').toLowerCase(); return e.indexOf('@') > 0 ? e.split('@')[1] : ''; }
+  function webDomain(url) {
+    var s = String(url || '').trim().toLowerCase();
+    if (!s) return '';
+    s = s.replace(/^[a-z]+:\/\//, '').split(/[\/?#]/)[0].replace(/:\d+$/, '').replace(/^www\d?\./, '').replace(/^m\./, '');
+    return /\./.test(s) ? s : '';
+  }
+  function baseDomain(d) { // abcsteel.m.en.alibaba.com -> alibaba.com ; sonha.com.vn -> sonha.com.vn
+    var p = String(d || '').split('.'); if (p.length <= 2) return d;
+    var sl = p[p.length - 2]; var two = /^(com|net|org|edu|gov|co|ac)$/.test(sl) && p[p.length - 1].length === 2;
+    return p.slice(two ? -3 : -2).join('.');
+  }
+  function isFreeMail(d) { return FREE_MAIL.indexOf(String(d || '').toLowerCase()) >= 0; }
+  function isPlatform(d) { return PLATFORMS.indexOf(baseDomain(String(d || '').toLowerCase())) >= 0; }
+  function normName(n) {
+    return String(n || '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/&/g, ' and ')
+      .replace(/\b(sdn\.?\s*bhd\.?|bhd|pte\.?\s*ltd\.?|co\.?,?\s*ltd\.?|company|limited|ltd|inc|corp(oration)?|llc|jsc|enterprise|trading|industries|industry|group|factory|the)\b/g, ' ')
+      .replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+  }
+  // keys used to find duplicates: email, phone (E.164), company web domain, company email domain, name+country
+  function dedupKeys(s) {
+    var k = [], cc = countryCode(s.country);
+    splitEmails(s.email).forEach(function (e) { k.push('email:' + e); var d = emailDomain(e); if (d && !isFreeMail(d)) k.push('dom:' + baseDomain(d)); });
+    parsePhones(s.phone, s.country).concat(parsePhones(s.whatsapp, s.country)).forEach(function (p) { if (p.e164 && p.kind !== 'invalid') k.push('tel:' + p.e164); });
+    var w = webDomain(s.website); if (w && !isPlatform(w)) k.push('dom:' + baseDomain(w));
+    var nm = normName(s.company_name || s.name); if (nm) k.push('name:' + nm + '|' + cc);
+    return k.filter(function (x, i) { return k.indexOf(x) === i; });
+  }
+  function findDuplicates(rows) { // -> [{a, b, keys}] index pairs sharing at least one key
+    var by = {}, pairs = {};
+    rows.forEach(function (r, i) { dedupKeys(r).forEach(function (key) { (by[key] = by[key] || []).push(i); }); });
+    Object.keys(by).forEach(function (key) {
+      var ix = by[key]; for (var a = 0; a < ix.length; a++) for (var b = a + 1; b < ix.length; b++) {
+        var id = ix[a] + '-' + ix[b]; (pairs[id] = pairs[id] || { a: ix[a], b: ix[b], keys: [] }).keys.push(key);
+      }
+    });
+    return Object.keys(pairs).map(function (k) { return pairs[k]; });
+  }
+  // Format checks that need no network. MX / A lookups are done in the browser (checkDns).
+  function offlineChecks(s) {
+    var issues = [], cc = countryCode(s.country);
+    if (!s.company_name) issues.push('no company name');
+    if (!cc) issues.push('unknown country "' + (s.country || '') + '"');
+    var em = splitEmails(s.email);
+    if (s.email && !em.length) issues.push('email not valid');
+    var ph = parsePhones(s.phone, s.country);
+    ph.forEach(function (p) { if (p.kind === 'invalid') issues.push('phone ' + p.raw + ' not valid for ' + (cc || '?')); });
+    if (!em.length && !ph.length && !s.whatsapp) issues.push('no email or phone - platform/form only');
+    var w = webDomain(s.website); if (w && isPlatform(w)) issues.push('website is a platform listing (' + baseDomain(w) + ')');
+    if (em.length && em.every(function (e) { return isFreeMail(emailDomain(e)); })) issues.push('free-mail address only');
+    return { ok: !issues.filter(function (i) { return !/free-mail|platform/.test(i); }).length, issues: issues };
+  }
+  // Browser only: free DNS-over-HTTPS (Google, then Cloudflare). Returns {mx: bool|null, a: bool|null}.
+  function checkDns(domain, fetchFn) {
+    fetchFn = fetchFn || (typeof fetch !== 'undefined' ? fetch : null);
+    if (!fetchFn || !domain) return Promise.resolve({ mx: null, a: null });
+    function q(type) {
+      var urls = ['https://dns.google/resolve?name=' + encodeURIComponent(domain) + '&type=' + type,
+                  'https://cloudflare-dns.com/dns-query?name=' + encodeURIComponent(domain) + '&type=' + type];
+      function go(i) {
+        if (i >= urls.length) return Promise.resolve(null);
+        return fetchFn(urls[i], { headers: { accept: 'application/dns-json' } }).then(function (r) { return r.json(); })
+          .then(function (j) { return j.Status === 0 && !!(j.Answer && j.Answer.length); }, function () { return go(i + 1); });
+      }
+      return go(0);
+    }
+    return Promise.all([q('MX'), q('A')]).then(function (r) { return { mx: r[0], a: r[1] }; });
+  }
+
+  /* ---------- importers ---------- */
+  // city from an address: the 1-2 parts before the country, postcodes removed
+  function cityFromAddress(addr, country) {
+    var parts = String(addr || '').split(',').map(function (s) { return s.replace(/\(.*?\)/g, '').replace(/\b\d{5,6}\b/g, '').replace(/#\S+/g, '').trim(); }).filter(Boolean);
+    var cc = countryCode(country), cname = (COUNTRIES[cc] || [''])[0].toLowerCase();
+    if (cc === 'SG' || cc === 'HK') return COUNTRIES[cc][0];
+    if (parts.length && parts[parts.length - 1].toLowerCase() === cname) parts.pop();
+    var noStreet = parts.filter(function (s) { return !/\d/.test(s); });
+    if (noStreet.length) parts = noStreet;
+    if (!parts.length) return '';
+    if (parts.length === 1) return parts[0].replace(/^(.*?)\s*\b(province|city)\b.*$/i, '$1').trim() || parts[0];
+    return parts.slice(-2).join(', ').replace(/\s+(Province|City)\b/g, '');
+  }
+  // Gemini "Aircon Materials Suppliers Directory" row -> discovery row (spec §5 mapping)
+  // in: {Country, 'Company Name', Status, 'Export Responsiveness', Specialty, Address, 'Contact Email', 'Contact Number'}
+  function fromGeminiDirectory(r, opts) {
+    opts = opts || {};
+    var name = String(r['Company Name'] || '').trim(), alias = (/\((.*?)\)/.exec(name) || [])[1] || '';
+    var emails = splitEmails(r['Contact Email']), dom = emails.map(emailDomain).filter(function (d) { return d && !isFreeMail(d); })[0] || '';
+    var notes = [];
+    if (r['Export Responsiveness']) notes.push('AI estimate (Gemini) export responsiveness: ' + r['Export Responsiveness']);
+    if (r.Status && !/pending contact/i.test(r.Status)) notes.push('Gemini status: ' + r.Status);
+    if (dom) notes.push('website guessed from email domain');
+    return {
+      company_name: name.replace(/\s*\(.*?\)\s*/g, ' ').trim(), alias: alias, country: String(r.Country || '').trim(),
+      city: cityFromAddress(r.Address, r.Country), address: String(r.Address || '').trim(), website: dom ? 'https://' + dom : '',
+      category: opts.category || 'HV', specialty: String(r.Specialty || '').trim(), contact_person: '',
+      email: emails.join(' / '), phone: String(r['Contact Number'] || '').trim(), whatsapp: whatsappOf(r['Contact Number'], r.Country),
+      source_url: opts.source || 'Aircon_Materials_Suppliers_Directory-v2.xlsx', notes: notes.join('; '),
+      found_by: 'Gemini', found_on: opts.found_on || '', verification: 'Unverified', zone: zoneLabel(zoneOf(r.Country, r.Address), r.Country)
+    };
+  }
+
+  /* ---------- Brunei working days (Mon-Thu + Sat; Fri and Sun off) ---------- */
+  function toDate(d) { if (d instanceof Date) return new Date(d.getTime()); if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) { var p = d.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); } return new Date(d); }
+  function stripTime(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function iso(d) { d = toDate(d); return d.getFullYear() + '-' + pad(d.getMonth() + 1, 2) + '-' + pad(d.getDate(), 2); }
+  function isWorkday(d, holidays) { d = toDate(d); var w = d.getDay(); return w !== 5 && w !== 0 && (holidays || []).indexOf(iso(d)) < 0; }
+  function addWorkdays(d, n, holidays) { d = stripTime(toDate(d)); while (n > 0) { d.setDate(d.getDate() + 1); if (isWorkday(d, holidays)) n--; } return d; }
+  // RFQ timetable from the send date-time, by urgency class (default RESTOCK: R1 +2 wd, R2 + deadline +4 wd).
+  // "no reply" flag: 1 wd after the later of deadline and reminder 2 (hour-based classes: at the deadline).
+  function isoT(d) { return iso(d) + ' ' + pad(d.getHours(), 2) + ':' + pad(d.getMinutes(), 2); }
+  function offset(sent, o, h) { if (o.h) return new Date(toDate(sent).getTime() + o.h * 3600000); return addWorkdays(sent, o.wd, h); }
+  function timetable(sent, opts) {
+    opts = opts || {}; var h = opts.holidays || [], c = urgencyClass(opts.urgency || 'RESTOCK'), hourly = !!c.deadline.h;
+    var fmt = hourly ? isoT : iso;
+    var deadline = opts.deadline ? toDate(opts.deadline) : offset(sent, c.deadline, h);
+    var r1 = offset(sent, c.reminder1, h), r2 = offset(sent, c.reminder2, h);
+    var noReply = hourly ? deadline : addWorkdays(deadline > r2 ? deadline : r2, 1, h);
+    return { urgency: c.code, sent: fmt(toDate(sent)), reminder1: fmt(r1), reminder2: fmt(r2), deadline: fmt(deadline), noReply: fmt(noReply) };
+  }
+  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  function longDate(d) { d = toDate(d); return DAYS[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear(); }
+
+  /* ---------- links ---------- */
+  var ROUNDCUBE = 'https://emailmg.ipage.com/roundcube/';
+  var LINK_MAX = 1600; // tested 8 Nov 2026: links up to ~1,580 chars open fine from Excel
+  function composeLink(to, subject, body, base) {
+    return (base || ROUNDCUBE) + '?_task=mail&_action=compose&_to=' + encodeURIComponent(to) +
+      '&_subject=' + encodeURIComponent(subject) + '&_body=' + encodeURIComponent(body);
+  }
+  function mailtoLink(to, subject, body) { return 'mailto:' + encodeURIComponent(to).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body); }
+  function waLink(e164, text) { return 'https://wa.me/' + digits(e164) + (text ? '?text=' + encodeURIComponent(text) : ''); }
+
+  /* ---------- templates ---------- */
+  // Audience: L = zones 1-3 (local / regional, delivered BSB), O = zones 4-5 (overseas, USD, FOB + CIF Muara)
+  function audienceOf(zone) { return zone >= 4 ? 'O' : 'L'; }
+  function currencyText(zone) { return zone === 1 ? 'in B$' : zone <= 3 ? 'in B$, S$ or RM' : 'in USD'; }
+  var T = {
+    subject: '{{rfq_no}} - {{title}} - ARZA SDN BHD',
+    open_L: 'Dear {{greeting}},\n\nGood day. ARZA SDN BHD (Brunei) would like to request your best quotation for the following, delivered to {{delivery_place}}:',
+    open_O: 'Dear {{greeting}},\n\nGood day. ARZA SDN BHD is a construction company in Brunei Darussalam. We would like to request your best quotation for the following:',
+    qty_firm: 'Please quote your unit price {{currency}} for the quantities above, with price breaks if any.',
+    qty_moq: 'Quantities are being finalised. Please state your Minimum Order Quantity (MOQ) for each item and quote the unit price at MOQ {{currency}}, with price breaks if any.',
+    terms_L: 'Please also include stock availability, delivery lead time and charges to {{delivery_short}}, payment terms and quote validity.',
+    terms_O: 'Please quote FOB (nearest port) and, if possible, CIF Muara Port, Brunei. Please also include production lead time, packing, payment terms, quote validity, and {{certs}}.',
+    close: 'Kindly reply by {{deadline}}.',
+    wa_follow: 'Good day, this is {{sender}}, Quantity Surveyor of ARZA SDN BHD (Brunei). We have emailed our {{rfq_no}} to {{supplier_email}} for {{short_desc}}. Kindly check and send your {{ask_short}} by {{deadline}}. Thank you.',
+    wa_full: 'Good day, this is {{sender}}, Quantity Surveyor of ARZA SDN BHD (Brunei). Request for quotation {{rfq_no}}:\n{{items_wa}}\n{{qty_wa}} - please send your {{ask_wa}} by {{deadline}}. Thank you.',
+    reminder1: 'Good day, this is {{sender}} of ARZA SDN BHD (Brunei). Kindly reminding you of our {{rfq_no}} for {{short_desc}} sent on {{sent_date}}. May we have your quotation by {{deadline}}? Thank you.',
+    reminder2: 'Good day, this is {{sender}} of ARZA SDN BHD (Brunei). Final reminder for our {{rfq_no}} ({{short_desc}}). We will close the comparison on {{close_date}}. If you cannot quote, a short "regret" reply is appreciated. Thank you.',
+    thanks: 'Good day, this is {{sender}} of ARZA SDN BHD (Brunei). Thank you for your quotation for {{rfq_no}}. We are pleased to inform you that it has been accepted; our procurement team will contact you with the purchase order. Thank you.',
+    regret: 'Good day, this is {{sender}} of ARZA SDN BHD (Brunei). Thank you for your quotation for {{rfq_no}}. This time the order has been placed with another supplier. We appreciate your time and will keep you in our list for future requirements. Thank you.'
+  };
+  function fill(t, v) { return t.replace(/\{\{(\w+)\}\}/g, function (m, k) { return v[k] != null && v[k] !== '' ? String(v[k]) : m; }); }
+  function itemsText(items, wa) {
+    return items.map(function (it, i) {
+      var q = it.qty ? ' - ' + it.qty + ' ' + (it.unit || '') : '';
+      return wa ? (i + 1) + ') ' + (it.short || it.desc) + q.trim().replace(/^-/, ' -') : (i + 1) + '. ' + it.desc + q;
+    }).join('\n');
+  }
+  // rfq: {rfq_no, title, short_desc, items:[{desc, short, qty, unit}], qtyMode 'firm'|'moq', deadline (date),
+  //       delivery_place, delivery_short, certs, sender}; sup: {zone, email, greeting}
+  function buildEmail(rfq, sup) {
+    var a = audienceOf(sup.zone), v = vars(rfq, sup);
+    var body = [fill(T['open_' + a], v), itemsText(rfq.items, false), fill(rfq.qtyMode === 'moq' ? T.qty_moq : T.qty_firm, v),
+      fill(T['terms_' + a], v), fill(T.close, v)].join('\n\n') + '\n';
+    var subject = fill(T.subject, v), link = sup.email ? composeLink(sup.email, subject, body) : '';
+    return { subject: subject, body: body, link: link, tooLong: link.length > LINK_MAX };
+  }
+  function buildWhatsApp(kind, rfq, sup, extra) {
+    var v = vars(rfq, sup); for (var k in (extra || {})) v[k] = extra[k];
+    var text = fill(T[kind], v);
+    return { text: text, link: sup.whatsapp ? waLink(sup.whatsapp, text) : '' };
+  }
+  function vars(rfq, sup) {
+    var moq = rfq.qtyMode === 'moq';
+    return {
+      rfq_no: rfq.rfq_no, title: rfq.title, short_desc: rfq.short_desc, greeting: sup.greeting || 'Sir/Madam',
+      delivery_place: rfq.delivery_place || 'Bandar Seri Begawan, Brunei', delivery_short: rfq.delivery_short || 'Brunei',
+      currency: currencyText(sup.zone), certs: rfq.certs || 'mill certificate / material test report',
+      deadline: longDate(rfq.deadline), sender: rfq.sender || 'Gemar', supplier_email: sup.email || '',
+      items_wa: itemsText(rfq.items, true),
+      qty_wa: moq ? 'Quantities being finalised' : 'Quantities as above',
+      ask_wa: moq ? 'MOQ per item and unit price at MOQ, lead time, delivery to Brunei, payment terms and validity' : 'unit prices, lead time, delivery to Brunei, payment terms and validity',
+      ask_short: moq ? 'MOQ and unit price at MOQ' : 'quotation',
+      sent_date: rfq.sent_date ? longDate(rfq.sent_date) : '', close_date: rfq.close_date ? longDate(rfq.close_date) : ''
+    };
+  }
+
+  /* ---------- statuses and KPIs ---------- */
+  var RECIPIENT_STATUS = ['Not contacted', 'Emailed', 'WhatsApp sent', 'Reminder 1', 'Reminder 2', 'Replied', 'Quoted', 'Declined', 'No reply', 'Bounced'];
+  var RESPONDED = ['Replied', 'Quoted', 'Declined'];
+  var VERIFICATION = ['Unverified', 'Checked', 'Verified', 'Failed'];
+  function kpis(recips) { // recips: [{status, valid_quote:bool, first_contact, first_reply}]
+    var contacted = recips.filter(function (r) { return r.status && r.status !== 'Not contacted'; });
+    var replied = contacted.filter(function (r) { return RESPONDED.indexOf(r.status) >= 0; });
+    var quoted = contacted.filter(function (r) { return r.status === 'Quoted'; });
+    var valid = quoted.filter(function (r) { return r.valid_quote; });
+    var hrs = replied.filter(function (r) { return r.first_contact && r.first_reply; })
+      .map(function (r) { return (toDate(r.first_reply) - toDate(r.first_contact)) / 3600000; });
+    return { contacted: contacted.length, replied: replied.length, quoted: quoted.length, valid: valid.length,
+      replyRate: contacted.length ? replied.length / contacted.length : 0, quoteRate: contacted.length ? quoted.length / contacted.length : 0,
+      goalMet: valid.length >= 3, avgResponseHours: hrs.length ? hrs.reduce(function (a, b) { return a + b; }, 0) / hrs.length : null };
+  }
+  // how many suppliers to contact for >= 3 valid quotes: ceil(3 / validQuoteRate), 8-10 when no history
+  function contactTarget(validQuoteRate, history) {
+    if (!history || history < 5 || !validQuoteRate) return 10;
+    return Math.max(5, Math.min(25, Math.ceil(3 / validQuoteRate)));
+  }
+
+  /* ---------- v3.1.0: material categories (standards §3) ---------- */
+  // [code, name, examples, masterlist rate prefix] - same list as the categories table in supabase/schema.sql
+  var CATEGORIES = [
+    ['CC', 'Cement, concrete & aggregates', 'cement, ready-mix, sand, aggregate, admixtures', 'CN'],
+    ['RB', 'Reinforcement', 'rebar, BRC mesh, tie wire, spacers', 'RB'],
+    ['FW', 'Formwork & timber', 'plywood, timber, props', 'FW'],
+    ['BW', 'Blocks & bricks', 'hollow blocks, bricks, lintels', 'BW'],
+    ['MW', 'Structural steel & metalwork', 'sections, plates, hollow sections, SS tubes & railings, gratings', ''],
+    ['RF', 'Roofing, cladding & rainwater', 'metal deck, insulation, foil, gutters, downpipes', ''],
+    ['DW', 'Doors, windows & glazing', 'doors, frames, alu windows, glass, ironmongery sets', ''],
+    ['TI', 'Tiles & stone', 'floor/wall tiles, adhesive, grout', 'TI'],
+    ['FN', 'Finishes', 'plaster, skim, ceiling boards, partitions', 'FN'],
+    ['PT', 'Paint & coatings', 'emulsion, weather-shield, primers, epoxy floor', 'FN'],
+    ['WP', 'Waterproofing & sealants', 'membranes, coatings, sealants, waterstops', 'WP'],
+    ['RP', 'Concrete repair & chemicals', 'repair mortar, bonding agent, epoxy injection, anti-corrosion', ''],
+    ['PL', 'Plumbing, sanitary & tanks', 'pipes & fittings, sanitary ware, tanks, pumps', 'PL'],
+    ['DR', 'Drainage & precast', 'uPVC/RC pipes, precast U-drains, manholes, gratings, culverts', ''],
+    ['EL', 'Electrical & lighting', 'cables, DBs, switches, lights, conduits', 'EL'],
+    ['HV', 'HVAC / aircon & ducting', 'GI ducting, copper pipe, insulation, aircon units', ''],
+    ['FP', 'Fire protection & safety systems', 'extinguishers, hose reels, detectors, signage', ''],
+    ['FF', 'Furniture, fit-out & equipment', 'furniture, blinds, TVs, projectors, signage', ''],
+    ['HW', 'Hardware & fixings', 'anchors, bolts, screws, adhesives', ''],
+    ['CS', 'Consumables, tools & PPE', 'discs, welding rods, small tools, PPE', ''],
+    ['PH', 'Plant & equipment hire', 'excavator, lorry, scaffold, generator', 'P'],
+    ['SV', 'Services & subcontract', 'testing labs, transport, freight forwarding, specialist sub-con', 'S'],
+    ['EW', 'External works & landscaping', 'fencing, paving, kerbs, turfing', '']
+  ];
+  // keyword guesses for free-text categories ("Stainless steel - railing tubes & fittings" -> MW); first match wins
+  var CAT_WORDS = [
+    ['HV', /\b(hvac|air[\s-]?con|aircond|ducting|duct|refrigera|copper (pipe|tube)|chiller)\w*/i],
+    ['FP', /\b(fire|extinguisher|hose reel|sprinkler|smoke detector)\w*/i],
+    ['RB', /\b(rebar|reinforc|brc|tie wire|y\d{2}\b)\w*/i],
+    ['MW', /\b(stainless|ss30[46]|steel|metal ?work|railing|hollow section|grating|beam|channel|angle bar|plate)\w*/i],
+    ['CC', /\b(cement|concrete|ready[\s-]?mix|aggregate|sand|admixture)\w*/i],
+    ['FW', /\b(formwork|plywood|timber|props?)\b/i],
+    ['BW', /\b(block|brick|lintel)s?\b/i],
+    ['RF', /\b(roof|cladding|metal deck|gutter|downpipe|rainwater)\w*/i],
+    ['DW', /\b(door|window|glazing|glass|ironmongery)\w*/i],
+    ['TI', /\b(tile|tiling|stone|granite|marble|grout)\w*/i],
+    ['PT', /\b(paint|coating|primer|emulsion|epoxy floor)\w*/i],
+    ['WP', /\b(waterproof|membrane|sealant|waterstop)\w*/i],
+    ['RP', /\b(repair mortar|bonding agent|epoxy injection|anti[\s-]?corrosion|concrete repair)\w*/i],
+    ['PL', /\b(plumbing|sanitary|pipe|tank|pump|tap|basin|wc)\w*/i],
+    ['DR', /\b(drain|precast|culvert|manhole|u[\s-]?drain)\w*/i],
+    ['EL', /\b(electric|cable|lighting|light|switch|conduit|db\b)\w*/i],
+    ['FN', /\b(plaster|skim|ceiling|partition|gypsum|finish)\w*/i],
+    ['FF', /\b(furniture|blind|fit[\s-]?out|projector|tv)\w*/i],
+    ['HW', /\b(hardware|anchor|bolt|screw|fixing|fastener)\w*/i],
+    ['CS', /\b(consumable|ppe|welding rod|cutting disc|tools?)\b/i],
+    ['PH', /\b(hire|rental|excavator|lorry|crane|scaffold|generator)\w*/i],
+    ['SV', /\b(service|testing|laboratory|transport|freight|forwarding|sub[\s-]?con)\w*/i],
+    ['EW', /\b(fencing|fence|paving|kerb|turf|landscap)\w*/i]
+  ];
+  function categoryName(code) { for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i][0] === code) return CATEGORIES[i][1]; return ''; }
+  // one text -> one code: the code itself, the category name, else a keyword guess, else ''
+  function categoryCode(text) {
+    var s = String(text || '').trim(); if (!s) return '';
+    var up = s.toUpperCase(), lo = s.toLowerCase(), i;
+    for (i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i][0] === up) return CATEGORIES[i][0];
+    for (i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i][1].toLowerCase() === lo) return CATEGORIES[i][0];
+    for (i = 0; i < CAT_WORDS.length; i++) if (CAT_WORDS[i][1].test(s)) return CAT_WORDS[i][0];
+    return '';
+  }
+  // "HV, PL" / "HV / Plumbing" -> ['HV', 'PL']; a free text that is one category name stays one
+  function categoryCodes(text) {
+    var one = categoryCode(text);
+    var parts = String(text || '').split(/\s*[,;\/|]\s*/).filter(Boolean);
+    if (parts.length < 2) return one ? [one] : [];
+    var codes = parts.map(function (p) { return /^[A-Za-z]{2}$/.test(p) || categoryName(String(p).toUpperCase()) ? categoryCode(p) : ''; }).filter(Boolean);
+    if (codes.length === parts.length) return codes.filter(function (c, i) { return codes.indexOf(c) === i; });
+    return one ? [one] : [];
+  }
+  function countryName(cc) { return (COUNTRIES[String(cc || '').toUpperCase()] || [cc || ''])[0]; }
+  var FOUND_BY = ['Claude', 'Gemini', 'Google', 'Referral', 'Marketplace', 'Walk-in', 'Other'];
+  function foundBy(text) {
+    var s = String(text || '').toLowerCase(); if (!s) return '';
+    if (/claude/.test(s)) return 'Claude'; if (/gemini/.test(s)) return 'Gemini'; if (/google/.test(s)) return 'Google';
+    if (/refer/.test(s)) return 'Referral'; if (/alibaba|made-in-china|marketplace|global ?sources|indiamart|platform/.test(s)) return 'Marketplace';
+    if (/walk/.test(s)) return 'Walk-in';
+    return 'Other';
+  }
+  var SUPPLIER_TYPES = ['Manufacturer', 'Exporter', 'Stockist', 'Dealer', 'Fabricator', 'Sub-con', 'Service'];
+  function supplierType(text) { // "Manufacturer/exporter" -> "Manufacturer"
+    var s = String(text || '').toLowerCase(); if (!s) return '';
+    for (var i = 0; i < SUPPLIER_TYPES.length; i++) if (s.indexOf(SUPPLIER_TYPES[i].toLowerCase().replace('-', '')) >= 0 || s.indexOf(SUPPLIER_TYPES[i].toLowerCase()) >= 0) return SUPPLIER_TYPES[i];
+    if (/distribut|wholesal|retail|trader|supplier/.test(s)) return 'Dealer';
+    if (/contractor/.test(s)) return 'Sub-con';
+    return '';
+  }
+
+  /* ---------- v3.1.0: discovery rows (standards §5) -> supplier records ---------- */
+  var DISCOVERY_COLS = ['company_name', 'country', 'city', 'address', 'website', 'category', 'specialty', 'contact_person', 'email', 'phone',
+    'whatsapp', 'source_url', 'notes', 'found_by', 'found_on', 'verification', 'zone'];
+  function str(v) { return v == null ? '' : (v instanceof Date ? iso(v) : String(v)).trim(); }
+  // any header-keyed row (17-col discovery sheet / CSV, Gemini row already converted) -> clean discovery row
+  function discoveryRow(r, opts) {
+    opts = opts || {}; var o = {};
+    DISCOVERY_COLS.forEach(function (k) { o[k] = str(r[k]); });
+    if (r.alias != null) o.alias = str(r.alias);
+    if (!o.alias) { var m = /\((.*?)\)/.exec(o.company_name); if (m) o.alias = m[1].trim(); }
+    if (r.type != null) o.type = str(r.type);
+    if (!o.found_on) o.found_on = opts.found_on || '';
+    if (/^\d{4}-\d{2}-\d{2}/.test(o.found_on)) o.found_on = o.found_on.slice(0, 10);
+    o.verification = 'Unverified';                        // always Unverified on import
+    var cc = countryCode(o.country);
+    o.zone = cc ? zoneLabel(zoneOf(o.country, o.city + ' ' + o.address), o.country) : '';
+    if (!o.whatsapp) o.whatsapp = whatsappOf(o.phone, o.country);
+    else o.whatsapp = (parsePhones(o.whatsapp, o.country)[0] || {}).e164 || o.whatsapp;
+    if (!categoryCodes(o.category).length && opts.category) o.category = opts.category;
+    return o;
+  }
+  // contacts: the first gets the person, first email, first phone and the WhatsApp number; more emails / phones get rows of their own
+  function contactsOf(row) {
+    var emails = splitEmails(row.email), phones = parsePhones(row.phone, row.country).filter(function (p) { return p.e164; });
+    var wa = row.whatsapp ? ((parsePhones(row.whatsapp, row.country)[0] || {}).e164 || '') : whatsappOf(row.phone, row.country);
+    var out = [], main = { name: str(row.contact_person), role: '', email: emails[0] || '', phone: '', whatsapp: wa, preferred: '' };
+    var rest = phones.filter(function (p) { return p.e164 !== wa; });
+    var waPh = phones.filter(function (p) { return p.e164 === wa; })[0];
+    main.phone = waPh ? waPh.e164 : (rest.length ? rest.shift().e164 : '');
+    out.push(main);
+    emails.slice(1).forEach(function (e) { out.push({ name: '', role: '', email: e, phone: '', whatsapp: '', preferred: 'email' }); });
+    rest.forEach(function (p) { out.push({ name: '', role: '', email: '', phone: p.e164, whatsapp: p.whatsapp && p.kind === 'mobile' ? p.e164 : '', preferred: 'phone' }); });
+    main.preferred = main.email ? 'email' : main.whatsapp ? 'whatsapp' : main.phone ? 'phone' : '';
+    return out.filter(function (c) { return c.name || c.email || c.phone || c.whatsapp; });
+  }
+  // discovery row -> what crm_savesupplier / crm_queuedecide store
+  function toSupplier(row) {
+    var cc = countryCode(row.country), web = str(row.website), wd = webDomain(web), plat = [];
+    if (wd && isPlatform(wd)) { plat.push(web); web = ''; }
+    var src = str(row.source_url); if (src && isPlatform(webDomain(src)) && plat.indexOf(src) < 0) plat.push(src);
+    if (web && !/^[a-z]+:\/\//i.test(web)) web = 'https://' + web;
+    var cats = categoryCodes(row.category), specialty = str(row.specialty);
+    var catText = str(row.category);
+    if (catText && cats.length === 1 && cats[0] !== catText.toUpperCase() && categoryName(cats[0]).toLowerCase() !== catText.toLowerCase())
+      specialty = specialty ? catText + ': ' + specialty : catText;   // keep the source wording ("Stainless steel - railing tubes & fittings")
+    var name = str(row.company_name), alias = str(row.alias);
+    if (alias && name.indexOf('(' + alias + ')') >= 0) name = name.replace('(' + alias + ')', '').replace(/\s+/g, ' ').trim();
+    return {
+      fields: {
+        name: name, aliases: alias, country: cc, city: str(row.city), address: str(row.address),
+        zone: cc ? zoneOf(row.country, str(row.city) + ' ' + str(row.address)) : null,
+        type: supplierType(row.type), website: web, platform_links: plat.join(' / '), specialty: specialty,
+        source_url: str(row.source_url), found_by: foundBy(row.found_by), found_on: str(row.found_on).slice(0, 10), notes: str(row.notes)
+      },
+      categories: cats.map(function (c) { return { code: c, specialty: specialty }; }),
+      contacts: contactsOf(row),
+      keys: dedupKeys(row)
+    };
+  }
+  // supplier record (from the database) -> a row shaped like a discovery row, for de-dup keys and the Excel export
+  function supplierAsRow(s) {
+    var c = s.contacts || [];
+    var pick = function (k) { return c.map(function (x) { return x[k]; }).filter(Boolean).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(' / '); };
+    return { company_name: s.name || '', alias: s.aliases || '', country: countryName(s.country), city: s.city || '', address: s.address || '',
+      website: s.website || '', category: (s.categories || []).map(function (x) { return x.code; }).join(', '), specialty: s.specialty || '',
+      contact_person: pick('name'), email: pick('email'), phone: pick('phone'), whatsapp: pick('whatsapp'), source_url: s.source_url || '',
+      notes: s.notes || '', found_by: s.found_by || '', found_on: s.found_on || '', verification: s.verification || 'Unverified',
+      zone: s.zone ? zoneLabel(s.zone, s.country) : '' };
+  }
+  // Unverified -> Checked when the automatic checks pass: offline OK and a mail server (MX) for a company email,
+  // or the website domain resolves (A) when there is no email. dns: {mx, a} (null = not checked).
+  function autoVerification(checks, dns, hasEmail) {
+    if (!checks || !checks.ok) return 'Unverified';
+    dns = dns || {};
+    if (dns.a === false) return 'Unverified';                // a website that does not resolve
+    if (hasEmail) return dns.mx === true ? 'Checked' : 'Unverified';
+    return dns.a === true ? 'Checked' : 'Unverified';
+  }
+  // which domains to look up for a discovery row: MX for the first company (or any) email domain, A for the website
+  function dnsTargets(row) {
+    var em = splitEmails(row.email), doms = em.map(emailDomain);
+    var mx = doms.filter(function (d) { return !isFreeMail(d); })[0] || doms[0] || '';
+    var w = webDomain(row.website); if (w && isPlatform(w)) w = '';
+    return { mx: mx, a: w };
+  }
+
+  var api = {
+    rfqNo: rfqNo, mrNo: mrNo, parseDocNo: parseDocNo, nextDocNo: nextDocNo, supplierId: supplierId, parseSupplierId: parseSupplierId,
+    COUNTRIES: COUNTRIES, countryCode: countryCode, ZONES: ZONES, zoneOf: zoneOf, zoneLabel: zoneLabel,
+    URGENCY: URGENCY, urgencyClass: urgencyClass, urgencyOf: urgencyOf, sourcingPlan: sourcingPlan, goalGuard: goalGuard,
+    leadTimeWarning: leadTimeWarning, cityFromAddress: cityFromAddress, fromGeminiDirectory: fromGeminiDirectory,
+    parsePhones: parsePhones, whatsappOf: whatsappOf, splitEmails: splitEmails, emailDomain: emailDomain, webDomain: webDomain,
+    baseDomain: baseDomain, isFreeMail: isFreeMail, isPlatform: isPlatform, normName: normName, dedupKeys: dedupKeys,
+    findDuplicates: findDuplicates, offlineChecks: offlineChecks, checkDns: checkDns,
+    isWorkday: isWorkday, addWorkdays: addWorkdays, timetable: timetable, iso: iso, longDate: longDate,
+    ROUNDCUBE: ROUNDCUBE, LINK_MAX: LINK_MAX, composeLink: composeLink, mailtoLink: mailtoLink, waLink: waLink,
+    TEMPLATES: T, fill: fill, audienceOf: audienceOf, currencyText: currencyText, buildEmail: buildEmail, buildWhatsApp: buildWhatsApp,
+    RECIPIENT_STATUS: RECIPIENT_STATUS, RESPONDED: RESPONDED, VERIFICATION: VERIFICATION, kpis: kpis, contactTarget: contactTarget,
+    CATEGORIES: CATEGORIES, categoryName: categoryName, categoryCode: categoryCode, categoryCodes: categoryCodes, countryName: countryName,
+    FOUND_BY: FOUND_BY, foundBy: foundBy, SUPPLIER_TYPES: SUPPLIER_TYPES, supplierType: supplierType,
+    DISCOVERY_COLS: DISCOVERY_COLS, discoveryRow: discoveryRow, contactsOf: contactsOf, toSupplier: toSupplier, supplierAsRow: supplierAsRow,
+    autoVerification: autoVerification, dnsTargets: dnsTargets, digits: digits
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.Procure = api;
+})(this);
+</script>
+<script>
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'2.3.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'3.1.0', user:'Gemz' };
 var CHANGELOG = [
+  { v:'3.1.0', date:'8 Nov 2026', items:[
+    'Procurement (QS CRM v3) starts: new Procurement menu with Suppliers and Review queue.',
+    'Suppliers: own supplier database with IDs SUP-0001 …, country, city, sourcing zone (1 Brunei · 2 Borneo · 3 MY/SG · 4 China/Vietnam · 5 other), material categories (23, mapped to the masterlist), specialty, contacts and verification (Unverified → Checked → Verified / Failed). Search and filter by category, zone, country, verification and status; Excel export (Suppliers, Contacts and a Discovery sheet that imports again).',
+    'Supplier card: contacts with one-click Email (Roundcube compose, To: filled), WhatsApp (mobiles only) and Call buttons; history of every change. Mark Verified / Failed with a note; Inactive or Blacklisted (with a reason) instead of deleting.',
+    'Review queue: import a discovery CSV / sheet (17 columns), the "Discovery (import)" sheet of an RFQ send list, or the Gemini supplier directory. Rows are checked automatically — format, phone numbers by country, free-mail and platform-only notes, mail server (MX) and website (A) by free DNS lookups, duplicates against the database and the file — then you approve, merge into an existing supplier, or reject. Rows that pass the checks are saved as Checked, the rest as Unverified.',
+    'Duplicate check on every new supplier (same email, phone, company web / email domain, or name + country): you choose to merge or keep both.',
+    'Company & settings (admin, under your name): company and letterhead details with logo upload (resized; a copy goes to Drive), test print of the letterhead, approval-pack addressee (default Quantity Surveyor, qs@arzabrunei.com), Brunei public holidays for RFQ reminders, and the category list.',
+    'Database: new tables suppliers, supplier_contacts, categories, supplier_categories, discovery_candidates, settings (+ lists for urgency classes, statuses, holidays). Applied by the Database workflow after merge.',
+    'Apps Script (Code.gs) changed: new procUpload action stores procurement files (now the logo) in Drive › Procurement. Paste Code.gs in Apps Script and Deploy › Manage deployments › Edit › New version. Without it everything else works; only the Drive copy of the logo is skipped.'
+  ]},
   { v:'2.3.0', date:'7 Nov 2026', items:[
     'New header: one line, grouped menus — Dashboard · Tenders · Contract (Rationalized BQ, As-built) · Pricing (BQ Library, Masterlist) · Reports. On small screens the menu folds into a ☰ button.',
     'Profile menu (top right): your initials, "Welcome, <name>" and your role. It holds My profile, Team & access (admin), What\'s new and Sign out.',
@@ -1548,7 +2207,7 @@ function apiF(action, body){
 
 /* ---------- login ---------- */
 function showLogin(err){
-  $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS','vDB','vLB','vML'].forEach(function(id){ $(id).classList.add('hidden'); }); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); closeMenus(); mobileNav(false);
+  $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS','vDB','vLB','vML','vSP','vRQ','vCS'].forEach(function(id){ $(id).classList.add('hidden'); }); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); closeMenus(); mobileNav(false);
   $('inEmail').value = load('email'); $('loginErr').textContent = err||''; closeDrawer();
   var c=cfg(); $('inSbUrl').value=c.supabaseUrl; $('inSbKey').value=c.supabaseKey; $('inDrive').value=c.driveUrl;
   $('cfgBox').classList.toggle('hidden', cfgOk());
@@ -1587,14 +2246,15 @@ function forgot(e){
     $('loginErr').textContent = r.error ? r.error.message : 'If '+email+' has an account, a reset link is on its way. Open it on this device.'; });
 }
 function signOut(){ var sb=S.sb; S.sb=null; S.me=null; S.mode=''; S.tenders=[];
-  if(typeof ML!=='undefined'){ ML.data=null; ML.q=''; ML.grp=''; ML.tab='rates'; } if(typeof LB!=='undefined'){ LB.data=null; } if(typeof RV!=='undefined'){ RV.no=''; RV.dirty=false; RV.edit=null; } if(sb){ try{ sb.auth.signOut(); }catch(e){} } showLogin(); }
+  if(typeof ML!=='undefined'){ ML.data=null; ML.q=''; ML.grp=''; ML.tab='rates'; } if(typeof LB!=='undefined'){ LB.data=null; } if(typeof RV!=='undefined'){ RV.no=''; RV.dirty=false; RV.edit=null; } if(typeof PR!=='undefined'){ PR.data=null; PR.Q=null; PR.sel={}; PR.set=null; prBadge(0); } if(sb){ try{ sb.auth.signOut(); }catch(e){} } showLogin(); }
 function enter(){
   $('vLogin').classList.add('hidden'); $('vMain').classList.remove('hidden'); $('top').classList.remove('hidden'); drawMe(); clock();
   var c=$('conn'); c.classList.remove('hidden','off'); c.classList.toggle('ro', ro());
   c.querySelector('span').textContent = fileMode() ? 'Read-only file · '+S.fileName : 'Connected · Supabase'+(canWrite()?'':' · read only');
   c.title = fileMode() ? 'Data from the file on this computer; nothing is saved' : 'Data is live in the QS CRM database';
   $('btnNew').classList.toggle('hidden', ro()); $('btnImport').classList.toggle('hidden', ro());
-  $('navUsers').classList.toggle('hidden', !isAdmin());
+  $('navUsers').classList.toggle('hidden', !isAdmin()); $('navCompany').classList.toggle('hidden', !isAdmin());
+  if(!fileMode()) prLoad().catch(function(){});   // review-queue badge (quietly: before the v3.1.0 database update there is nothing to show)
   fillFilters(); showView('tenders'); openFromHash();
 }
 function refresh(){
@@ -1958,7 +2618,7 @@ function billsTable(bq){
 }
 function issuesBox(bq){ return bq.issues.length ? '<div class="issues"><b>'+bq.issues.length+' item'+(bq.issues.length>1?'s':'')+' to check:</b><br>'+bq.issues.slice(0,12).map(esc).join('<br>')+(bq.issues.length>12?'<br>…':'')+'</div>' : ''; }
 function modal(title, body, foot){ $('impTitle').textContent=title; $('impBody').innerHTML=body; $('impFoot').innerHTML=foot; $('impModal').classList.remove('hidden'); }
-function closeModal(){ $('impModal').classList.add('hidden'); }
+function closeModal(){ $('impModal').classList.add('hidden'); $('impModal').querySelector('.box').classList.remove('xwide'); }
 function cleanItems(bq){ return bq.items.map(function(x){ return {item_id:x.item_id,bill:x.bill,page:x.page,item:x.item,heading:x.heading,description:x.description,unit:x.unit,qty:x.qty,rate:x.rate,amount:x.amount,remarks:x.remarks,source:x.source}; }); }
 
 /* ---------- import: new tender from a workbook ---------- */
@@ -2039,6 +2699,9 @@ function showView(v){
   closeMenus(); mobileNav(false);
   $('vMain').classList.toggle('hidden', v!=='tenders'); $('vRep').classList.toggle('hidden', v!=='reports'); $('vAB').classList.toggle('hidden', v!=='asbuilt'); $('vRV').classList.toggle('hidden', v!=='rev'); $('vUS').classList.toggle('hidden', v!=='users');
   $('vDB').classList.toggle('hidden', v!=='dash'); $('vLB').classList.toggle('hidden', v!=='library'); $('vML').classList.toggle('hidden', v!=='master');
+  $('vSP').classList.toggle('hidden', v!=='suppliers'); $('vRQ').classList.toggle('hidden', v!=='queue'); $('vCS').classList.toggle('hidden', v!=='company');
+  if(v==='suppliers'){ var had=!!PR.data; renderSuppliers(); if(had) prLoad().then(function(){ if(S.view==='suppliers') renderSuppliers(); }).catch(function(){}); return; }
+  if(v==='queue'){ renderQueue(); return; } if(v==='company'){ renderCompany(); return; }
   if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else if(v==='rev') renderRV(); else if(v==='users') renderUsers();
   else if(v==='dash') renderDash(); else if(v==='library') renderLib(); else if(v==='master') renderMaster(); else render();
 }
@@ -3098,6 +3761,463 @@ function exportXlsx(){
   var ws=XLSX.utils.json_to_sheet(rows,{header:cols}), wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Tender register');
   XLSX.writeFile(wb,'QS CRM tender register '+today()+'.xlsx');
 }
+
+/* ---------- v3.1.0: Procurement — suppliers, review queue, company & letterhead (standards: supplier-crm/v3.0-standards.md) ---------- */
+var PR={ data:null, f:{q:'',cat:'',zone:'',country:'',ver:'',status:'Active'}, sort:{k:'supplier_id',dir:1}, Q:null, qs:'Pending', sel:{}, set:null, dns:false };
+var ZONE_TXT={1:'1 Brunei',2:'2 Borneo',3:'3 MY/SG',4:'4 China / Vietnam',5:'5 Other countries'};
+function prNeedDb(el,e){ var m=String(e&&e.message||e);
+  if(/crm_procdata|crm_queue|crm_settings|function .* does not exist|schema cache/i.test(m)){ el.innerHTML='<div class="note w">Procurement is not in the database yet. After the v3.1.0 pull request is merged, the <b>Database</b> workflow applies <code>supabase/schema.sql</code> (GitHub › Actions). Reload this page when it is green.</div>'; return true; }
+  el.innerHTML='<div class="note w">'+esc(m)+'</div>'; if(e&&e.auth) fail(e); return true; }
+function prLoad(){ return api('procdata').then(function(d){ PR.data=d; prBadge(d.pending); return d; }); }
+function prBadge(n){ var b=$('nbQueue'); if(!b) return; b.textContent=n?String(n):''; b.classList.toggle('hidden',!n); }
+function catName(c){ return Procure.categoryName(c)||c; }
+function vChip(v){ return '<span class="chip vf-'+esc(v||'Unverified')+'" title="'+esc({Unverified:'imported, not checked yet',Checked:'automatic checks pass (format + mail server / website)',Verified:'real reply, website match or successful call',Failed:'email bounced and no working number'}[v]||'')+'">'+esc(v||'Unverified')+'</span>'; }
+function sChip(s){ return s&&s!=='Active' ? '<span class="chip ss-'+esc(s)+'">'+esc(s)+'</span>' : ''; }
+function zChip(z,cc){ return z ? '<span class="zn z'+z+'" title="Sourcing zone '+esc(ZONE_TXT[z]||'')+'">'+esc(Procure.zoneLabel(+z,cc))+'</span>' : '<span class="zn">?</span>'; }
+function catChips(cats){ return (cats||[]).map(function(c){ var code=c.code||c; return '<span class="cat" title="'+esc(catName(code)+(c.specialty?' — '+c.specialty:''))+'">'+esc(code)+'</span>'; }).join(' '); }
+function telLink(e164){ return 'tel:'+String(e164||'').replace(/[^\d+]/g,''); }
+function rcLink(email){ return Procure.composeLink(email,'',''); }
+function contactBtns(c){
+  var h='';
+  if(c.email) h+='<a class="btn sm cb" href="'+esc(rcLink(c.email))+'" target="_blank" rel="noopener" title="Open Roundcube with the To: field filled">Email</a>';
+  if(c.whatsapp) h+='<a class="btn sm cb wa" href="'+esc(Procure.waLink(c.whatsapp,''))+'" target="_blank" rel="noopener" title="WhatsApp chat with '+esc(c.whatsapp)+'">WhatsApp</a>';
+  var ph=c.phone||c.whatsapp; if(ph && /^\+?\d{6,}$/.test(String(ph).replace(/\s/g,''))) h+='<a class="btn sm cb" href="'+esc(telLink(ph))+'" title="Call '+esc(ph)+'">Call</a>';
+  return h;
+}
+function supContactsSum(s){ var c=s.contacts||[], e=c.filter(function(x){return x.email;}).length, w=c.filter(function(x){return x.whatsapp;}).length, p=c.filter(function(x){return x.phone;}).length;
+  return [e?'✉ '+e:'', w?'WA '+w:'', p?'☎ '+p:''].filter(Boolean).join(' · ')||'<span class="n">none</span>'; }
+
+/* ----- Suppliers ----- */
+function renderSuppliers(){
+  var el=$('vSP'); if(needLive(el,'Procurement')) return;
+  if(!PR.data){ el.innerHTML='<div class="empty"><span class="spin"></span> Loading suppliers…</div>'; prLoad().then(renderSuppliers).catch(function(e){ prNeedDb(el,e); }); return; }
+  var D=PR.data, all=D.suppliers||[], f=PR.f;
+  var countries={}; all.forEach(function(s){ countries[s.country]=1; });
+  var opt=function(list,v,blank){ return '<option value="">'+esc(blank)+'</option>'+list.map(function(x){ var arr=Array.isArray(x), val=arr?x[0]:x, lab=arr?x[1]:x; return '<option value="'+esc(val)+'"'+(String(val)===String(v)?' selected':'')+'>'+esc(lab)+'</option>'; }).join(''); };
+  var act=all.filter(function(s){ return s.status==='Active'; });
+  var kp=[['Suppliers', act.length, all.length-act.length ? (all.length-act.length)+' inactive / blacklisted' : 'all active'],
+    ['Checked / verified', act.filter(function(s){ return s.verification==='Checked'||s.verification==='Verified'; }).length, act.filter(function(s){ return s.verification==='Verified'; }).length+' verified (real reply / call)'],
+    ['Unverified', act.filter(function(s){ return s.verification==='Unverified'; }).length, 'imported, not checked yet'],
+    ['With WhatsApp', act.filter(function(s){ return (s.contacts||[]).some(function(c){ return c.whatsapp; }); }).length, 'one-tap follow-up'],
+    ['Review queue', D.pending||0, D.pending?'waiting for your decision':'nothing waiting', 'queue']];
+  el.innerHTML='<div class="bar"><div><h2>Suppliers</h2><div class="scope">Own supplier database: contacts, categories, sourcing zone and verification. New suppliers from AI discovery come in through the Review queue.</div></div><span style="flex:1"></span>'+
+      '<button class="btn exp" id="spExp" title="Download the suppliers (as filtered) to Excel">Export</button>'+(canWrite()?'<button class="btn imp" id="spImp" title="Import a discovery file / Gemini directory into the review queue">Import</button><button class="btn pri" id="spNew">+ New supplier</button>':'')+'</div>'+
+    kpiRow(kp)+
+    '<div class="bar"><input type="search" id="spQ" placeholder="Search name, alias, city, specialty, email, phone…" value="'+esc(f.q)+'">'+
+      '<select id="spCat">'+opt(Procure.CATEGORIES.map(function(c){ return [c[0],c[0]+' — '+c[1]]; }),f.cat,'All categories')+'</select>'+
+      '<select id="spZone">'+opt([1,2,3,4,5].map(function(z){ return [z,ZONE_TXT[z]]; }),f.zone,'All zones')+'</select>'+
+      '<select id="spCty">'+opt(Object.keys(countries).sort().map(function(c){ return [c,Procure.countryName(c)]; }),f.country,'All countries')+'</select>'+
+      '<select id="spVer">'+opt(Procure.VERIFICATION,f.ver,'Any verification')+'</select>'+
+      '<select id="spSt">'+opt(['Active','Inactive','Blacklisted'],f.status,'All statuses')+'</select>'+
+    '</div><div class="bar" style="margin:-2px 0 8px"><span class="scope" id="spScope"></span><span class="count" id="spCount"></span></div>'+
+    '<div class="tbl"><table class="mlt"><thead><tr><th data-sk="supplier_id">ID</th><th data-sk="name">Supplier</th><th data-sk="country">Country / city</th><th data-sk="zone">Zone</th><th>Categories</th><th>Contacts</th><th data-sk="verification">Verification</th><th data-sk="updated_at">Updated</th></tr></thead><tbody id="spRows"></tbody></table></div>';
+  ['spQ','spCat','spZone','spCty','spVer','spSt'].forEach(function(id){ $(id).oninput=function(){ PR.f={q:$('spQ').value,cat:$('spCat').value,zone:$('spZone').value,country:$('spCty').value,ver:$('spVer').value,status:$('spSt').value}; drawSuppliers(); }; });
+  el.querySelectorAll('th[data-sk]').forEach(function(th){ th.onclick=function(){ var k=th.dataset.sk; PR.sort=PR.sort.k===k?{k:k,dir:-PR.sort.dir}:{k:k,dir:k==='updated_at'?-1:1}; drawSuppliers(); }; });
+  $('spRows').onclick=function(e){ if(e.target.closest('a')) return; var tr=e.target.closest('tr[data-id]'); if(tr) openSupplier(tr.dataset.id); };
+  $('spExp').onclick=exportSuppliers;
+  if($('spNew')) $('spNew').onclick=function(){ editSupplier(null); };
+  if($('spImp')) $('spImp').onclick=function(){ $('rqFile').click(); };
+  el.querySelector('.kpis').onclick=function(e){ var k=e.target.closest('[data-go]'); if(k) showView(k.dataset.go); };
+  drawSuppliers();
+}
+function supFiltered(){
+  var f=PR.f, q=String(f.q||'').trim().toLowerCase();
+  return (PR.data.suppliers||[]).filter(function(s){
+    if(f.status && s.status!==f.status) return false;
+    if(f.ver && s.verification!==f.ver) return false;
+    if(f.zone && String(s.zone)!==String(f.zone)) return false;
+    if(f.country && s.country!==f.country) return false;
+    if(f.cat && !(s.categories||[]).some(function(c){ return c.code===f.cat; })) return false;
+    if(q){ var hay=[s.supplier_id,s.name,s.aliases,s.city,s.address,s.specialty,s.notes,s.website,s.type,Procure.countryName(s.country)].concat((s.contacts||[]).map(function(c){ return [c.name,c.email,c.phone,c.whatsapp].join(' '); }))
+        .concat((s.categories||[]).map(function(c){ return c.code+' '+catName(c.code)+' '+(c.specialty||''); })).join(' ').toLowerCase();
+      if(q.split(/\s+/).some(function(w){ return hay.indexOf(w)<0; })) return false; }
+    return true;
+  }).sort(function(a,b){ var k=PR.sort.k, x=a[k], z=b[k]; if(k==='zone'){ x=+x||9; z=+z||9; } else { x=String(x||'').toLowerCase(); z=String(z||'').toLowerCase(); } return (x<z?-1:x>z?1:0)*PR.sort.dir; });
+}
+function drawSuppliers(){
+  var rows=supFiltered(), tb=$('spRows'); if(!tb) return;
+  $('spCount').textContent=rows.length+' of '+(PR.data.suppliers||[]).length+' supplier'+((PR.data.suppliers||[]).length===1?'':'s');
+  var f=PR.f, note=[f.cat&&f.cat+' '+catName(f.cat), f.zone&&ZONE_TXT[f.zone], f.country&&Procure.countryName(f.country), f.ver, f.status, f.q&&'"'+f.q+'"'].filter(Boolean).join(' · ');
+  $('spScope').textContent=note?'Filter: '+note:'';
+  tb.innerHTML=rows.length ? rows.map(function(s){
+    return '<tr data-id="'+esc(s.supplier_id)+'"'+(s.status!=='Active'?' class="void"':'')+'><td class="no">'+esc(s.supplier_id)+'</td>'+
+      '<td class="dsc"><b>'+esc(s.name)+'</b>'+(s.aliases?' <span class="n">('+esc(s.aliases)+')</span>':'')+' '+sChip(s.status)+(s.specialty?'<div class="sub2" title="'+esc(s.specialty)+'">'+esc(s.specialty.length>110?s.specialty.slice(0,107)+'…':s.specialty)+'</div>':'')+'</td>'+
+      '<td class="nw">'+esc(Procure.countryName(s.country))+(s.city?'<div class="sub2">'+esc(s.city)+'</div>':'')+'</td><td class="nw">'+zChip(s.zone,s.country)+'</td>'+
+      '<td>'+catChips(s.categories)+'</td><td class="nw">'+supContactsSum(s)+'</td><td>'+vChip(s.verification)+'</td><td class="dt">'+esc(fmtDate(String(s.updated_at||'').slice(0,10)))+'</td></tr>';
+  }).join('') : '<tr><td colspan="8" class="empty">'+((PR.data.suppliers||[]).length?'No supplier matches the filter.':'No suppliers yet. Import the discovery files (RFQ send list, Gemini directory) into the Review queue and approve them, or add one with + New supplier.')+'</td></tr>';
+}
+function supById(id){ return ((PR.data&&PR.data.suppliers)||[]).filter(function(s){ return s.supplier_id===id; })[0]; }
+function supReplace(s){ var a=PR.data.suppliers, i=a.findIndex(function(x){ return x.supplier_id===s.supplier_id; }); if(i>=0) a[i]=s; else a.push(s); }
+function pmodal(title, body, foot){ $('impModal').querySelector('.box').classList.add('xwide'); modal(title, body, foot); }
+function openSupplier(id){
+  var s=supById(id); if(!s) return;
+  var dl=function(rows){ return '<dl class="rec">'+rows.filter(function(r){ return r[1]; }).map(function(r){ return '<dt>'+esc(r[0])+'</dt><dd>'+r[1]+'</dd>'; }).join('')+'</dl>'; };
+  var link=function(u){ u=String(u||'').trim(); if(!u) return ''; var href=/^[a-z]+:\/\//i.test(u)?u:'https://'+u; return '<a href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(u.length>70?u.slice(0,67)+'…':u)+'</a>'; };
+  var links=function(t){ return String(t||'').split(/\s+\/\s+/).filter(Boolean).map(link).join('<br>'); };
+  var dns=s.dns||{}, dnsTxt=s.dns?[dns.mx_domain?'mail server for '+esc(dns.mx_domain)+': '+(dns.mx===true?'yes':dns.mx===false?'<b class="neg">none</b>':'not checked'):'', dns.a_domain?'website '+esc(dns.a_domain)+': '+(dns.a===true?'resolves':dns.a===false?'<b class="neg">does not resolve</b>':'not checked'):''].filter(Boolean).join(' · '):'';
+  var cons=s.contacts||[];
+  var body='<div class="prhead">'+vChip(s.verification)+' '+sChip(s.status)+' '+zChip(s.zone,s.country)+(s.type?' <span class="chip st-Prospect">'+esc(s.type)+'</span>':'')+'</div>'+
+    '<div class="grid2"><div>'+dl([['Country / city', esc(Procure.countryName(s.country)+(s.city?' · '+s.city:''))],['Address', esc(s.address||'')],['Website', link(s.website)],['Platform links', links(s.platform_links)],
+      ['Categories', (s.categories||[]).map(function(c){ return '<b>'+esc(c.code)+'</b> '+esc(catName(c.code))+(c.specialty&&c.specialty!==s.specialty?' — '+esc(c.specialty):''); }).join('<br>')],['Specialty', esc(s.specialty||'')]])+'</div>'+
+      '<div>'+dl([['Found by', esc([s.found_by,s.found_on?fmtDate(s.found_on):''].filter(Boolean).join(' · '))],['Source', links(s.source_url)],['Automatic checks', dnsTxt],
+        ['Verification note', esc(s.verification_note||'')],['Status reason', esc(s.status_reason||'')],['Notes', esc(s.notes||'')],['Added', esc(fmtDate(String(s.created_at||'').slice(0,10)))]])+'</div></div>'+
+    '<h4 class="psec">Contacts</h4>'+(cons.length?'<div class="tbl"><table class="mini"><thead><tr><th>Name / role</th><th>Email</th><th>Phone</th><th>WhatsApp</th><th></th></tr></thead><tbody>'+cons.map(function(c){
+      return '<tr style="cursor:default"><td>'+esc(c.name||'—')+(c.role?'<div class="sub2">'+esc(c.role)+'</div>':'')+(c.preferred?'<div class="sub2">prefers '+esc(c.preferred)+'</div>':'')+'</td><td>'+esc(c.email||'')+'</td><td class="nw">'+esc(c.phone||'')+'</td><td class="nw">'+esc(c.whatsapp||'')+'</td><td class="nw r">'+contactBtns(c)+'</td></tr>'; }).join('')+'</tbody></table></div>':'<div class="note w">No contact details — add an email or phone (Edit).</div>')+
+    '<p class="n">Email opens Roundcube (qs@arzabrunei.com) with the To: field filled; Roundcube adds your signature and Bcc. WhatsApp opens a chat; landlines get no WhatsApp button.</p>'+
+    '<h4 class="psec">History</h4><div id="spLog" class="n"><span class="spin"></span> Loading…</div>';
+  var w=canWrite();
+  pmodal(s.supplier_id+' — '+s.name, body, '<span class="msg">'+esc(s.supplier_id)+'</span>'+(w?'<button class="btn" id="spState">Verification / status…</button><button class="btn" id="spEdit">Edit</button>':'')+'<button class="btn pri" id="spClose">Close</button>');
+  $('spClose').onclick=closeModal;
+  if(w){ $('spEdit').onclick=function(){ editSupplier(s.supplier_id); }; $('spState').onclick=function(){ supState(s.supplier_id); }; }
+  api('supplier',{supplier_id:id}).then(function(d){ var lg=d.log||[], el=$('spLog'); if(!el) return;
+    el.innerHTML=lg.length?'<ul class="log">'+lg.slice().reverse().map(function(x){ return '<li><span class="t">'+esc(x.timestamp)+'</span><span class="a">'+esc(x.user||'')+'</span><span>'+esc(x.detail)+'</span></li>'; }).join('')+'</ul>':'No history yet.';
+    if(d.supplier){ supReplace(d.supplier); } }).catch(function(e){ var el=$('spLog'); if(el) el.textContent=e.message; });
+}
+function supState(id){
+  var s=supById(id); if(!s) return;
+  var o=function(list,v){ return list.map(function(x){ return '<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>'; }).join(''); };
+  pmodal('Verification and status — '+s.supplier_id, '<div class="form"><div class="f"><label for="ssV">Verification</label><select id="ssV">'+o(Procure.VERIFICATION,s.verification)+'</select><div class="hint">Verified = real reply, website match confirmed or a successful call. Failed = email bounced and no working number.</div></div>'+
+    '<div class="f"><label for="ssS">Status</label><select id="ssS">'+o(['Active','Inactive','Blacklisted'],s.status)+'</select><div class="hint">Blacklisted needs a reason. Suppliers are never deleted, so their history stays.</div></div>'+
+    '<div class="f full"><label for="ssN">Note / reason</label><input id="ssN" maxlength="300" placeholder="e.g. replied to RFQ-2611-002 on 10 Nov · call OK · email bounced"></div></div>',
+    '<button class="btn" id="ssC">Cancel</button><button class="btn pri" id="ssGo">Save</button>');
+  $('ssC').onclick=function(){ openSupplier(id); };
+  $('ssGo').onclick=function(){ var btn=$('ssGo'); busy(btn,true);
+    api('setSupplierState',{supplier_id:id, verification:$('ssV').value, status:$('ssS').value, note:$('ssN').value.trim()}).then(function(r){ supReplace(r.supplier); toast('Saved '+id); openSupplier(id); drawSuppliers(); })
+      .catch(function(e){ busy(btn,false); fail(e); }); };
+}
+/* supplier form (new, edit, or a review-queue row): fields + categories + contacts */
+function supForm(s){
+  s=s||{}; var cats={}; (s.categories||[]).forEach(function(c){ cats[c.code]=c.specialty||''; });
+  var o=function(list,v,blank){ return (blank!=null?'<option value="">'+esc(blank)+'</option>':'')+list.map(function(x){ var arr=Array.isArray(x), val=arr?x[0]:x, lab=arr?x[1]:x; return '<option value="'+esc(val)+'"'+(String(val)===String(v||'')?' selected':'')+'>'+esc(lab)+'</option>'; }).join(''); };
+  var fv=function(k){ return esc(s[k]==null?'':s[k]); };
+  var ctys=Object.keys(Procure.COUNTRIES).map(function(c){ return [c,Procure.countryName(c)+' ('+c+')']; }).sort(function(a,b){ return a[1]<b[1]?-1:1; });
+  var cons=(s.contacts&&s.contacts.length?s.contacts:[{}]);
+  return '<div class="form">'+
+    '<div class="f"><label for="sf_name">Company name</label><input id="sf_name" maxlength="200" value="'+fv('name')+'"></div>'+
+    '<div class="f"><label for="sf_aliases">Also known as <span class="hint">alias, brand, Chinese name</span></label><input id="sf_aliases" maxlength="200" value="'+fv('aliases')+'"></div>'+
+    '<div class="f"><label for="sf_country">Country</label><select id="sf_country">'+o(ctys,s.country,'— choose —')+'</select></div>'+
+    '<div class="f"><label for="sf_city">City / area</label><input id="sf_city" maxlength="200" value="'+fv('city')+'" placeholder="e.g. Miri, Sarawak · Foshan"></div>'+
+    '<div class="f full"><label for="sf_address">Address</label><input id="sf_address" maxlength="400" value="'+fv('address')+'"></div>'+
+    '<div class="f"><label>Sourcing zone <span class="hint">from country + city</span></label><input id="sf_zone" readonly></div>'+
+    '<div class="f"><label for="sf_type">Type</label><select id="sf_type">'+o(Procure.SUPPLIER_TYPES,s.type,'—')+'</select></div>'+
+    '<div class="f"><label for="sf_website">Website</label><input id="sf_website" maxlength="300" value="'+fv('website')+'" placeholder="https://…"></div>'+
+    '<div class="f"><label for="sf_platform_links">Platform links <span class="hint">Alibaba, Made-in-China… separate with " / "</span></label><input id="sf_platform_links" maxlength="1000" value="'+fv('platform_links')+'"></div>'+
+    '<div class="f"><label for="sf_found_by">Found by</label><select id="sf_found_by">'+o(Procure.FOUND_BY,s.found_by,'—')+'</select></div>'+
+    '<div class="f"><label for="sf_found_on">Found on</label><input id="sf_found_on" type="date" value="'+fv('found_on')+'"></div>'+
+    '<div class="f full"><label for="sf_source_url">Source <span class="hint">where the details came from</span></label><input id="sf_source_url" maxlength="1000" value="'+fv('source_url')+'"></div>'+
+    '<div class="f full"><label>Material categories <span class="hint">tick one or more</span></label><div class="catgrid">'+Procure.CATEGORIES.map(function(c){
+      return '<label title="'+esc(c[2])+'"><input type="checkbox" class="sf_cat" value="'+c[0]+'"'+(c[0] in cats?' checked':'')+' data-sp="'+esc(cats[c[0]]||'')+'"><b>'+c[0]+'</b> '+esc(c[1])+'</label>'; }).join('')+'</div></div>'+
+    '<div class="f full"><label for="sf_specialty">Specialty <span class="hint">what they actually sell</span></label><input id="sf_specialty" maxlength="1000" value="'+fv('specialty')+'"></div>'+
+    '<div class="f full"><label for="sf_notes">Notes</label><textarea id="sf_notes" maxlength="4000">'+fv('notes')+'</textarea></div>'+
+    '</div><h4 class="psec">Contacts <span class="hint">phones in any form (+673 …, 0757-…, "WA +86 …"); saved as +country code</span></h4>'+
+    '<div class="tbl"><table class="mini sfc"><thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Phone</th><th>WhatsApp</th><th>Prefers</th><th></th></tr></thead><tbody id="sfCons">'+cons.map(conRow).join('')+'</tbody></table></div>'+
+    '<button class="btn sm" id="sfAdd" type="button" style="margin-top:6px">+ Contact</button>';
+}
+function conRow(c){ c=c||{}; var v=function(k){ return esc(c[k]||''); };
+  return '<tr style="cursor:default"><td><input class="ed txt" data-k="name" value="'+v('name')+'"></td><td><input class="ed txt" data-k="role" value="'+v('role')+'"></td><td><input class="ed txt" data-k="email" value="'+v('email')+'"></td>'+
+    '<td><input class="ed txt" data-k="phone" value="'+v('phone')+'"></td><td><input class="ed txt" data-k="whatsapp" value="'+v('whatsapp')+'" placeholder="mobile"></td>'+
+    '<td><select data-k="preferred">'+['','email','whatsapp','phone'].map(function(x){ return '<option value="'+x+'"'+(x===(c.preferred||'')?' selected':'')+'>'+(x||'—')+'</option>'; }).join('')+'</select></td><td><button class="dbtn sfDel" type="button" title="Remove">×</button></td></tr>'; }
+function supFormWire(){
+  var zone=function(){ var cc=$('sf_country').value; $('sf_zone').value=cc?Procure.zoneLabel(Procure.zoneOf(cc,$('sf_city').value+' '+$('sf_address').value),cc):''; };
+  ['sf_country','sf_city','sf_address'].forEach(function(id){ $(id).oninput=zone; }); zone();
+  $('sfAdd').onclick=function(){ $('sfCons').insertAdjacentHTML('beforeend',conRow({})); };
+  $('sfCons').onclick=function(e){ var b=e.target.closest('.sfDel'); if(b) b.closest('tr').remove(); };
+}
+/* read the form -> {fields, categories, contacts, keys} or throw */
+function supFormRead(){
+  var g=function(id){ return $(id).value.trim(); }, cc=g('sf_country');
+  var f={ name:g('sf_name'), aliases:g('sf_aliases'), country:cc, city:g('sf_city'), address:g('sf_address'), type:g('sf_type'), website:g('sf_website'),
+    platform_links:g('sf_platform_links'), found_by:g('sf_found_by'), found_on:g('sf_found_on'), source_url:g('sf_source_url'), specialty:g('sf_specialty'), notes:g('sf_notes') };
+  if(!f.name) throw new Error('Give the company name.');
+  if(!cc) throw new Error('Choose the country.');
+  f.zone=Procure.zoneOf(cc,f.city+' '+f.address);
+  if(f.website && !/^[a-z]+:\/\//i.test(f.website)) f.website='https://'+f.website;
+  var cats=Array.prototype.map.call(document.querySelectorAll('.sf_cat:checked'),function(x){ return {code:x.value, specialty:x.dataset.sp||f.specialty}; });
+  if(!cats.length) throw new Error('Tick at least one material category.');
+  var cons=[], cname=Procure.countryName(cc);
+  Array.prototype.forEach.call(document.querySelectorAll('#sfCons tr'),function(tr){
+    var c={}; tr.querySelectorAll('[data-k]').forEach(function(x){ c[x.dataset.k]=x.value.trim(); });
+    if(!(c.name||c.email||c.phone||c.whatsapp)) return;
+    if(c.email){ var em=Procure.splitEmails(c.email); if(em.length!==1) throw new Error('Email "'+c.email+'" is not valid (one email per contact row).'); c.email=em[0]; }
+    if(c.phone){ var p=Procure.parsePhones(c.phone,cname)[0]; if(p&&p.e164) c.phone=p.e164; }
+    if(c.whatsapp){ var w=Procure.parsePhones(c.whatsapp,cname)[0]; if(!w||!w.e164||w.kind==='invalid') throw new Error('WhatsApp "'+c.whatsapp+'" is not a valid number for '+cname+'.'); c.whatsapp=w.e164; }
+    if(!c.preferred) c.preferred=c.email?'email':c.whatsapp?'whatsapp':c.phone?'phone':'';
+    cons.push(c);
+  });
+  var keys=Procure.dedupKeys(Procure.supplierAsRow(Object.assign({},f,{contacts:cons,categories:cats})));
+  return { fields:f, categories:cats, contacts:cons, keys:keys };
+}
+function dupText(d){ return (d||[]).map(function(x){ return x.supplier_id+' '+x.name+' (same '+(x.keys||[]).map(function(k){ return k.split(':')[0].replace('dom','domain').replace('tel','phone'); }).filter(function(v,i,a){ return a.indexOf(v)===i; }).join(', ')+')'; }).join('\n'); }
+function editSupplier(id){
+  var s=id?supById(id):{ found_on:today(), found_by:'', country:'BN' };
+  pmodal(id?'Edit '+id+' — '+s.name:'New supplier', supForm(s)+(id?'':'<p class="n">Saved straight to the database as Unverified (you are adding it yourself). AI-found suppliers should go through the Review queue instead.</p>'),
+    '<button class="btn" id="sfC">Cancel</button><button class="btn pri" id="sfGo">'+(id?'Save':'Add supplier')+'</button>');
+  supFormWire();
+  $('sfC').onclick=function(){ if(id) openSupplier(id); else closeModal(); };
+  $('sfGo').onclick=function(){
+    var d; try{ d=supFormRead(); }catch(e){ toast(e.message,true); return; }
+    var btn=$('sfGo'); busy(btn,true);
+    var go=function(force){ return api('saveSupplier',Object.assign({supplier_id:id||'', force:!!force},d)).then(function(r){
+      if(r.saved===false){ busy(btn,false); if(confirm('This looks like a supplier you already have:\n\n'+dupText(r.dups)+'\n\nAdd it anyway as a separate supplier?')){ busy(btn,true); return go(true); } return; }
+      supReplace(r.supplier); toast((id?'Saved ':'Added ')+r.supplier.supplier_id); openSupplier(r.supplier.supplier_id); drawSuppliers(); }); };
+    go(false).catch(function(e){ busy(btn,false); fail(e); });
+  };
+}
+function exportSuppliers(){
+  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  var rows=supFiltered(), wb=XLSX.utils.book_new(), uniq=function(a){ return a.filter(function(v,i){ return v&&a.indexOf(v)===i; }).join(' / '); };
+  var main=rows.map(function(s){ var c=s.contacts||[]; return { 'ID':s.supplier_id, 'Supplier':s.name, 'Also known as':s.aliases||'', 'Country':Procure.countryName(s.country), 'City':s.city||'', 'Zone':s.zone?Procure.zoneLabel(+s.zone,s.country):'',
+    'Type':s.type||'', 'Categories':(s.categories||[]).map(function(x){ return x.code; }).join(', '), 'Specialty':s.specialty||'', 'Email':uniq(c.map(function(x){ return x.email; })),
+    'Phone':uniq(c.map(function(x){ return x.phone; })), 'WhatsApp':uniq(c.map(function(x){ return x.whatsapp; })), 'Contact person':uniq(c.map(function(x){ return x.name; })), 'Website':s.website||'', 'Platform links':s.platform_links||'',
+    'Verification':s.verification, 'Status':s.status, 'Found by':s.found_by||'', 'Found on':s.found_on||'', 'Source':s.source_url||'', 'Address':s.address||'', 'Notes':s.notes||'' }; });
+  var ws=XLSX.utils.json_to_sheet(main); ws['!cols']=[8,36,18,12,18,14,12,12,40,30,26,16,18,28,28,12,10,10,11,30,36,40].map(function(w){ return {wch:w}; });
+  XLSX.utils.book_append_sheet(wb,ws,'Suppliers');
+  var cons=[]; rows.forEach(function(s){ (s.contacts||[]).forEach(function(c){ cons.push({ 'ID':s.supplier_id, 'Supplier':s.name, 'Name':c.name, 'Role':c.role, 'Email':c.email, 'Phone':c.phone, 'WhatsApp':c.whatsapp, 'Prefers':c.preferred }); }); });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cons.length?cons:[{ID:''}]),'Contacts');
+  var disc=rows.map(Procure.supplierAsRow).map(function(r){ var o={}; Procure.DISCOVERY_COLS.forEach(function(k){ o[k]=r[k]||''; }); return o; });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(disc,{header:Procure.DISCOVERY_COLS}),'Discovery (import)');
+  XLSX.writeFile(wb,'QS CRM suppliers '+today()+'.xlsx');
+}
+
+/* ----- Review queue: discovery files -> checks -> approve / merge / reject ----- */
+function renderQueue(){
+  var el=$('vRQ'); if(needLive(el,'Procurement')) return;
+  var st=PR.qs, w=canWrite();
+  el.innerHTML='<div class="bar"><div><h2>Review queue</h2><div class="scope">Suppliers found by Claude / Gemini / Google wait here as <b>Unverified</b> until you approve them. Automatic checks: format (offline), mail server and website (DNS), duplicates. Nothing is contacted from here.</div></div><span style="flex:1"></span>'+
+    (w?'<button class="btn" id="rqDns" title="Look up the mail server (MX) of each email domain and the website domain (A) - free DNS-over-HTTPS">Run DNS checks</button><button class="btn imp" id="rqImp" title="Discovery CSV / sheet (17 columns), RFQ send list (Discovery (import) sheet) or the Gemini supplier directory">Import file…</button>':'')+'</div>'+
+    '<div class="tabs abtabs" id="rqTabs">'+['Pending','Approved','Merged','Rejected','All'].map(function(t){ return '<a data-s="'+t+'"'+(t===st?' class="on"':'')+'>'+t+' <span class="n" data-c="'+t+'"></span></a>'; }).join('')+'</div>'+
+    '<div id="rqBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
+  $('rqTabs').onclick=function(e){ var a=e.target.closest('a[data-s]'); if(!a) return; PR.qs=a.dataset.s; PR.sel={}; renderQueue(); };
+  if(w){ $('rqImp').onclick=function(){ $('rqFile').click(); }; $('rqDns').onclick=function(){ queueDns(true); }; }
+  var need=PR.data?Promise.resolve(PR.data):prLoad();
+  need.then(function(){ return api('queue',{status:st}); }).then(function(Q){ PR.Q=Q; prBadge(Q.counts.Pending); drawQueue(); if(st==='Pending' && w && !PR.dns && Q.rows.some(function(r){ return !r.dns; })) queueDns(false); })
+    .catch(function(e){ prNeedDb($('rqBody'),e); });
+}
+function qCheck(r){ // fresh offline checks + category
+  var d=r.data||{}, c=Procure.offlineChecks(d), cats=Procure.categoryCodes(d.category);
+  if(!cats.length) c.issues.push('no material category - choose one'), c.ok=false;
+  return c;
+}
+function dnsCell(r){ if(!r.dns) return '<span class="n">not checked</span>'; var d=r.dns, t=Procure.dnsTargets(r.data||{}), out=[];
+  if(t.mx) out.push('<span class="'+(d.mx===true?'pos':d.mx===false?'neg':'n')+'" title="mail server (MX) for '+esc(t.mx)+'">MX '+(d.mx===true?'✓':d.mx===false?'✗':'?')+'</span>');
+  if(t.a) out.push('<span class="'+(d.a===true?'pos':d.a===false?'neg':'n')+'" title="website '+esc(t.a)+'">Web '+(d.a===true?'✓':d.a===false?'✗':'?')+'</span>');
+  return out.join(' ')||'<span class="n">nothing to look up</span>'; }
+function drawQueue(){
+  var Q=PR.Q, b=$('rqBody'); if(!Q||!b) return; var w=canWrite(), pend=PR.qs==='Pending';
+  Object.keys(Q.counts).forEach(function(k){ var x=document.querySelector('#rqTabs [data-c="'+k+'"]'); if(x) x.textContent=Q.counts[k]?'('+Q.counts[k]+')':''; });
+  var rows=Q.rows||[];
+  if(!rows.length){ b.innerHTML='<div class="empty">'+(pend?'Nothing waiting. Import a discovery file: the RFQ send list ("Discovery (import)" sheet), the Gemini supplier directory, or a CSV with the 17 discovery columns.':'No rows.')+'</div>'; return; }
+  var clean=rows.filter(function(r){ return !(r.dups||[]).length && !(r.qdups||[]).length && qCheck(r).ok && !(r.dns && (r.dns.mx===false || r.dns.a===false)); });
+  b.innerHTML=(pend&&w?'<div class="edbar" style="position:static;margin:0 0 10px"><label class="chkrow" style="margin:0"><input type="checkbox" id="rqAll"> select all</label>'+
+      '<button class="btn sm" id="rqClean">Select the '+clean.length+' without problems</button><span class="tot" id="rqSelN"></span><span style="flex:1"></span>'+
+      '<button class="btn sm warn" id="rqRej">Reject selected</button><button class="btn sm pri" id="rqApp">Approve selected as new suppliers</button></div>':'')+
+    '<div id="rqDnsMsg" class="n"></div><div class="tbl"><table class="mlt"><thead><tr>'+(pend&&w?'<th></th>':'')+'<th>#</th><th>Company</th><th>Country / zone</th><th>Category</th><th>Contacts</th><th>Checks</th><th>'+(pend?'Duplicates':'Result')+'</th><th></th></tr></thead><tbody>'+
+    rows.map(function(r){ var d=r.data||{}, c=qCheck(r), cats=Procure.categoryCodes(d.category), dups=r.dups||[], qd=r.qdups||[];
+      var em=Procure.splitEmails(d.email), ph=Procure.parsePhones(d.phone,d.country);
+      return '<tr data-id="'+r.id+'" style="cursor:default">'+(pend&&w?'<td><input type="checkbox" class="rqSel"'+(PR.sel[r.id]?' checked':'')+'></td>':'')+'<td class="no">'+r.id+'</td>'+
+        '<td class="dsc"><b>'+esc(d.alias?String(d.company_name).replace('('+d.alias+')','').trim():d.company_name)+'</b>'+(d.alias?' <span class="n">('+esc(d.alias)+')</span>':'')+'<div class="sub2">'+esc((r.source_file||r.batch)+(r.row_no?' · row '+r.row_no:'')+(d.found_by?' · '+d.found_by:''))+'</div>'+(d.specialty?'<div class="sub2" title="'+esc(d.specialty)+'">'+esc(d.specialty.slice(0,90))+'</div>':'')+'</td>'+
+        '<td class="nw">'+esc(d.country)+(d.city?'<div class="sub2">'+esc(d.city)+'</div>':'')+'<div class="sub2">'+esc(d.zone||'')+'</div></td>'+
+        '<td>'+(cats.length?catChips(cats):'<span class="chip st-Lost">none</span>')+'</td>'+
+        '<td class="nw" style="font-size:12px">'+em.map(esc).join('<br>')+(ph.length?(em.length?'<br>':'')+ph.map(function(p){ return esc(p.e164||p.raw)+(p.whatsapp&&p.kind==='mobile'?' <b title="WhatsApp">WA</b>':''); }).join('<br>'):'')+'</td>'+
+        '<td style="font-size:12px">'+(c.ok?'<span class="pos">format OK</span>':'<span class="neg">to fix</span>')+(c.issues.length?'<div class="sub2">'+c.issues.map(esc).join('<br>')+'</div>':'')+'<div>'+dnsCell(r)+'</div></td>'+
+        '<td style="font-size:12px">'+(pend?(dups.length?dups.map(function(x){ return '<a href="#" class="rqSup" data-sup="'+esc(x.supplier_id)+'">'+esc(x.supplier_id)+'</a> '+esc(x.name); }).join('<br>'):'')+(qd.length?'<div class="sub2">also in the queue: #'+qd.join(', #')+'</div>':'')+(!dups.length&&!qd.length?'<span class="n">none</span>':'')
+          :('<span class="chip '+(r.status==='Rejected'?'st-Lost':'st-Won')+'">'+esc(r.status)+'</span> '+(r.supplier_id?'<a href="#" class="rqSup" data-sup="'+esc(r.supplier_id)+'">'+esc(r.supplier_id)+'</a>':'')+(r.reason?'<div class="sub2">'+esc(r.reason)+'</div>':'')+'<div class="sub2">'+esc(r.decided_at||'')+'</div>'))+'</td>'+
+        '<td class="nw">'+(pend&&w?'<button class="btn sm rqRev">Review…</button>':(r.status==='Rejected'&&w?'<button class="btn sm rqReopen">Reopen</button>':''))+'</td></tr>'; }).join('')+'</tbody></table></div>';
+  var upd=function(){ var n=Object.keys(PR.sel).filter(function(k){ return PR.sel[k]; }).length; if($('rqSelN')) $('rqSelN').textContent=n?n+' selected':''; };
+  b.onclick=function(e){
+    var a=e.target.closest('.rqSup'); if(a){ e.preventDefault(); var sid=a.dataset.sup; if(supById(sid)) openSupplier(sid); else toast(sid+' is not loaded - open Suppliers and refresh.',true); return; }
+    var tr=e.target.closest('tr[data-id]'); if(!tr) return; var id=+tr.dataset.id;
+    if(e.target.classList.contains('rqSel')){ PR.sel[id]=e.target.checked; upd(); return; }
+    if(e.target.closest('.rqRev')) reviewRow(id);
+    if(e.target.closest('.rqReopen')) queueDecide([{id:id, action:'reopen'}]);
+  };
+  if(pend&&w){
+    $('rqAll').onchange=function(){ var on=this.checked; rows.forEach(function(r){ PR.sel[r.id]=on; }); b.querySelectorAll('.rqSel').forEach(function(x){ x.checked=on; }); upd(); };
+    $('rqClean').onclick=function(){ PR.sel={}; clean.forEach(function(r){ PR.sel[r.id]=true; }); b.querySelectorAll('tr[data-id]').forEach(function(tr){ var x=tr.querySelector('.rqSel'); if(x) x.checked=!!PR.sel[+tr.dataset.id]; }); upd(); };
+    $('rqApp').onclick=function(){ var ids=rows.filter(function(r){ return PR.sel[r.id]; }); if(!ids.length){ toast('Select rows first.',true); return; }
+      if(!confirm('Approve '+ids.length+' row'+(ids.length>1?'s':'')+' as new suppliers?\nRows that look like an existing supplier are held back (open them with Review… to merge).')) return;
+      queueDecide(ids.map(function(r){ return approveItem(r); })); };
+    $('rqRej').onclick=function(){ var ids=rows.filter(function(r){ return PR.sel[r.id]; }); if(!ids.length){ toast('Select rows first.',true); return; }
+      var why=prompt('Reject '+ids.length+' row'+(ids.length>1?'s':'')+'. Reason (optional, kept in the log):',''); if(why==null) return;
+      queueDecide(ids.map(function(r){ return {id:r.id, action:'reject', reason:why.trim()}; })); };
+    upd();
+  }
+}
+function approveItem(r, edited){
+  var d=r.data||{}, s=edited||Procure.toSupplier(d), c=Procure.offlineChecks(d);
+  return Object.assign({id:r.id, action:'approve', verification:Procure.autoVerification(c, r.dns, s.contacts.some(function(x){ return x.email; }))}, s);
+}
+function queueDecide(items){
+  return api('queueDecide',{items:items}).then(function(r){
+    var res=r.results||[], okN=res.filter(function(x){ return x.ok; }).length, bad=res.filter(function(x){ return !x.ok; });
+    (r._log||[]).forEach(function(l){ S.log.push(l); }); PR.sel={}; prBadge(r.pending);
+    if(bad.length){ var byId={}; (PR.Q.rows||[]).forEach(function(q){ byId[q.id]=q; });
+      pmodal('Some rows were not done', '<p>'+okN+' done, '+bad.length+' not done:</p><ul class="plain">'+bad.map(function(x){ var q=byId[x.id]; return '<li><b>#'+esc(x.id)+' '+esc(q&&q.data?q.data.company_name:'')+'</b>: '+esc(x.error)+'</li>'; }).join('')+'</ul><p class="n">Open a held-back row with Review… to merge it into the existing supplier, fix it, or approve it anyway.</p>',
+        '<button class="btn pri" id="qdOk">OK</button>'); $('qdOk').onclick=closeModal; }
+    else { closeModal(); toast(okN+' row'+(okN===1?'':'s')+' done'); }
+    return prLoad().then(renderQueue);
+  }).catch(fail);
+}
+function reviewRow(id){
+  var r=(PR.Q.rows||[]).filter(function(x){ return x.id===id; })[0]; if(!r) return;
+  var d=r.data||{}, s=Procure.toSupplier(d), c=qCheck(r), dups=r.dups||[];
+  var form=Object.assign({}, s.fields, {categories:s.categories, contacts:s.contacts});
+  pmodal('Review #'+r.id+' — '+d.company_name,
+    (dups.length?'<div class="note w"><b>Looks like a supplier you already have.</b> Merge adds the new emails / phones / categories to it and fills its blank fields.<br>'+dups.map(function(x){ return '<button class="btn sm rvMerge" data-sup="'+esc(x.supplier_id)+'" style="margin:6px 6px 0 0">Merge into '+esc(x.supplier_id)+' '+esc(x.name)+'</button> <span class="n">same '+esc((x.keys||[]).join(', '))+'</span>'; }).join('<br>')+'</div>':'')+
+    (c.issues.length?'<div class="issues">'+c.issues.map(esc).join('<br>')+'</div>':'')+
+    '<div class="n">From '+esc(r.source_file||r.batch)+(r.row_no?' row '+r.row_no:'')+'. Checks: '+dnsCell(r)+'. It is saved as <b>'+esc(Procure.autoVerification(Procure.offlineChecks(d), r.dns, s.contacts.some(function(x){ return x.email; })))+'</b> (Checked = format OK and mail server / website found).</div>'+
+    supForm(form),
+    '<button class="btn warn" id="rvRej">Reject</button><span style="flex:1"></span><button class="btn" id="rvC">Cancel</button><button class="btn pri" id="rvGo">Approve as new supplier</button>');
+  supFormWire();
+  $('rvC').onclick=closeModal;
+  $('rvRej').onclick=function(){ var why=prompt('Reason for rejecting (optional, kept in the log):',''); if(why==null) return; queueDecide([{id:id, action:'reject', reason:why.trim()}]); };
+  var read=function(){ try{ return supFormRead(); }catch(e){ toast(e.message,true); return null; } };
+  $('rvGo').onclick=function(){ var e=read(); if(!e) return; var it=approveItem(r,e);
+    if(dups.length){ if(!confirm('Approve as a NEW supplier although it looks like:\n\n'+dupText(dups)+'\n\n(Cancel and use Merge to add it to the existing one.)')) return; it.force=true; }
+    busy($('rvGo'),true); queueDecide([it]); };
+  document.querySelectorAll('.rvMerge').forEach(function(bt){ bt.onclick=function(){ var e=read(); if(!e) return; busy(bt,true,'Merging…');
+    queueDecide([{id:id, action:'merge', supplier_id:bt.dataset.sup, fields:e.fields, categories:e.categories, contacts:e.contacts, keys:e.keys}]); }; });
+}
+/* DNS-over-HTTPS for the pending rows (free; Google, then Cloudflare). all=true re-checks rows already checked. */
+function queueDns(all){
+  var rows=((PR.Q&&PR.Q.rows)||[]).filter(function(r){ return r.status==='Pending' && (all||!r.dns); });
+  if(!rows.length){ if(all) toast('Nothing to check.'); return Promise.resolve(); }
+  PR.dns=true; var done=0, out=[], msg=function(t){ var m=$('rqDnsMsg'); if(m) m.innerHTML=t; }, cache={};
+  var look=function(dom){ if(!dom) return Promise.resolve({mx:null,a:null}); if(!cache[dom]) cache[dom]=Procure.checkDns(dom); return cache[dom]; };
+  var one=function(r){ var t=Procure.dnsTargets(r.data||{});
+    return Promise.all([look(t.mx), t.a===t.mx?look(t.mx):look(t.a)]).then(function(x){ r.dns={ mx:t.mx?x[0].mx:null, a:t.a?x[1].a:null, mx_domain:t.mx, a_domain:t.a, at:new Date().toISOString().slice(0,16).replace('T',' ') };
+      out.push({id:r.id, dns:r.dns}); done++; msg('<span class="spin"></span> DNS checks '+done+' / '+rows.length+'…'); }); };
+  var i=0, worker=function(){ if(i>=rows.length) return Promise.resolve(); var r=rows[i++]; return one(r).then(worker, worker); };
+  msg('<span class="spin"></span> DNS checks 0 / '+rows.length+'…');
+  return Promise.all([worker(),worker(),worker(),worker()]).then(function(){
+    var bad=out.filter(function(x){ return x.dns.mx===false || x.dns.a===false; }).length, none=out.filter(function(x){ return x.dns.mx===null && x.dns.a===null && (x.dns.mx_domain||x.dns.a_domain); }).length;
+    return api('queueDns',{rows:out}).then(function(){ drawQueue(); msg('DNS checks done for '+out.length+' row'+(out.length===1?'':'s')+(bad?' — <b class="neg">'+bad+' with no mail server or website</b>':'')+(none?' — '+none+' could not be looked up (offline or blocked?)':'')+'.'); });
+  }).catch(function(e){ msg('DNS checks stopped: '+esc(e.message)); }).then(function(){ PR.dns=false; });
+}
+/* read a discovery file in the browser -> discovery rows */
+function readDiscovery(file){
+  return file.arrayBuffer().then(function(buf){
+    var wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true}), names=wb.SheetNames, out={kind:'', rows:[], skipped:0, note:''};
+    var json=function(n,range){ return XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:'',raw:false,range:range||0,dateNF:'yyyy-mm-dd'}); };
+    var find=function(n){ var a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''}); for(var i=0;i<Math.min(a.length,8);i++) if(a[i].map(function(x){ return String(x).trim().toLowerCase(); }).indexOf('company_name')>=0) return i; return -1; };
+    var disc=names.filter(function(n){ return /^discovery/i.test(n); })[0];
+    if(disc!=null || names.some(function(n){ return find(n)>=0; })){
+      var sh=disc!=null&&find(disc)>=0?disc:names.filter(function(n){ return find(n)>=0; })[0];
+      out.kind=sh==='Sheet1'||/\.csv$/i.test(file.name)?'Discovery CSV (17 columns)':'Discovery sheet "'+sh+'"';
+      out.rows=json(sh,find(sh)).map(function(r,i){ var o={}; Object.keys(r).forEach(function(k){ o[String(k).trim().toLowerCase()]=r[k]; }); return {row_no:find(sh)+i+2, raw:o}; }).filter(function(x){ return String(x.raw.company_name||'').trim(); });
+      out.rows.forEach(function(x){ x.data=Procure.discoveryRow(x.raw,{found_on:today()}); });
+    } else if(names.indexOf('All Suppliers')>=0){
+      out.kind='Gemini supplier directory';
+      var gem=function(n){ var a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''}), h=-1; for(var i=0;i<Math.min(a.length,8);i++) if(a[i].indexOf('Company Name')>=0){ h=i; break; } if(h<0) return [];
+        return a.slice(h+1).map(function(r,i){ var o={}; a[h].forEach(function(k,j){ if(k) o[k]=r[j]; }); if(!o.Country) o.Country=n; return {row_no:h+i+2, sheet:n, raw:o}; }).filter(function(x){ return String(x.raw['Company Name']||'').trim(); }); };
+      var all=[]; ['All Suppliers'].concat(names.filter(function(n){ return n!=='All Suppliers'; })).forEach(function(n){ all=all.concat(gem(n)); });
+      all.forEach(function(x){ x.data=Procure.discoveryRow(Procure.fromGeminiDirectory(x.raw,{found_on:today(), source:file.name}),{found_on:today()}); });
+      // the country sheets repeat the rows of "All Suppliers": keep the first of each duplicate group
+      var drop={}; Procure.findDuplicates(all.map(function(x){ return x.data; })).forEach(function(p){ if(!drop[p.a]) drop[p.b]=true; });
+      out.rows=all.filter(function(x,i){ return !drop[i]; }); out.skipped=all.length-out.rows.length;
+      out.note=out.skipped?out.skipped+' rows on the country sheets repeat "All Suppliers" and were skipped.':'';
+      out.rows.forEach(function(x){ x.row_no=x.sheet==='All Suppliers'?x.row_no:x.sheet+' row '+x.row_no; });
+    } else throw new Error('Not a discovery file. Use a sheet / CSV with the 17 discovery columns (company_name, country, city, …), the "Discovery (import)" sheet of an RFQ send list, or the Gemini directory ("All Suppliers").');
+    return out;
+  });
+}
+function showQueueImport(file){
+  if(!PR.data){ prLoad().then(function(){ showQueueImport(file); }).catch(function(e){ toast(e.message,true); }); return; }
+  readDiscovery(file).then(function(R){
+    var sups=(PR.data.suppliers||[]).map(Procure.supplierAsRow), base=sups.length;
+    var nocat=R.rows.filter(function(x){ return !Procure.categoryCodes(x.data.category).length; }).length;
+    var inDb=function(rows){ var all=sups.concat(rows.map(function(x){ return x.data; })), hit={}; Procure.findDuplicates(all).forEach(function(p){ if(p.a<base && p.b>=base) hit[p.b-base]=all[p.a].company_name; }); return hit; };
+    var hit=inDb(R.rows), nHit=Object.keys(hit).length;
+    var inFile={}; Procure.findDuplicates(R.rows.map(function(x){ return x.data; })).forEach(function(p){ inFile[p.b]=p.a; });
+    var rowNo=function(x){ return typeof x.row_no==='number'?'row '+x.row_no:x.row_no; };
+    var draw=function(){
+      var def=$('qiCat')?$('qiCat').value:'';
+      var probs=R.rows.map(function(x,i){ var d=Procure.discoveryRow(x.data,{category:def}); var c=Procure.offlineChecks(d); if(!Procure.categoryCodes(d.category).length) c.issues.push('no category'), c.ok=false; return {i:i, x:x, c:c}; }).filter(function(p){ return !p.c.ok||p.c.issues.length||hit[p.i]||inFile[p.i]!=null; });
+      $('qiList').innerHTML=probs.length?'<div class="tbl" style="max-height:300px"><table class="mini"><thead><tr><th>Row</th><th>Company</th><th>Note</th></tr></thead><tbody>'+probs.map(function(p){
+        return '<tr style="cursor:default"><td class="nw">'+esc(rowNo(p.x))+'</td><td>'+esc(p.x.data.company_name)+'</td><td style="font-size:12px">'+(p.c.ok?'':'<b class="neg">to fix</b> ')+esc(p.c.issues.join('; '))+(hit[p.i]?'<br><b>already in the database:</b> '+esc(hit[p.i]):'')+(inFile[p.i]!=null?'<br>same as '+esc(rowNo(R.rows[inFile[p.i]]))+' in this file':'')+'</td></tr>'; }).join('')+'</tbody></table></div>':'<div class="ok">All rows pass the offline checks; none is in the database yet.</div>';
+    };
+    pmodal('Import to the review queue — '+file.name,
+      '<div class="kpis" style="grid-template-columns:repeat(4,1fr)">'+[['Rows',R.rows.length,R.kind],['In the database',nHit,'possible duplicates'],['No category',nocat,nocat?'choose one below':'all have one'],['Skipped',R.skipped,'repeated rows']].map(function(k){ return '<div class="kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+esc(k[2])+'</div></div>'; }).join('')+'</div>'+
+      (R.note?'<div class="note">'+esc(R.note)+'</div>':'')+
+      '<div class="form"><div class="f"><label for="qiCat">Category for rows without a known one</label><select id="qiCat"><option value="">— leave blank (choose per row) —</option>'+Procure.CATEGORIES.map(function(c){ return '<option value="'+c[0]+'">'+c[0]+' — '+esc(c[1])+'</option>'; }).join('')+'</select><div class="hint">Free text such as "Stainless steel - railing tubes" is read as MW automatically.</div></div>'+
+      '<div class="f"><label>What happens</label><div class="n" style="margin:4px 0">All rows go to the review queue as <b>Unverified</b>. Then the mail-server / website lookups run, and you approve, merge or reject each one. Nothing is sent to suppliers.</div></div></div>'+
+      '<div id="qiList"></div>',
+      '<button class="btn" id="qiC">Cancel</button><button class="btn pri" id="qiGo">Add '+R.rows.length+' to the review queue</button>');
+    draw(); $('qiCat').onchange=draw; $('qiC').onclick=closeModal;
+    $('qiGo').onclick=function(){
+      var def=$('qiCat').value, btn=$('qiGo'); busy(btn,true,'Adding…');
+      var rows=R.rows.map(function(x){ var d=Procure.discoveryRow(x.data,{category:def}); return {row_no:typeof x.row_no==='number'?x.row_no:null, data:d, checks:Procure.offlineChecks(d), keys:Procure.dedupKeys(d)}; });
+      api('queueAdd',{source_file:file.name, rows:rows}).then(function(r){ closeModal(); toast(r.added+' added to the review queue'+(r.skipped?', '+r.skipped+' already waiting':'')); PR.qs='Pending'; PR.dns=false; return prLoad().then(function(){ showView('queue'); }); })
+        .catch(function(e){ busy(btn,false); fail(e); });
+    };
+  }).catch(function(e){ toast('Could not read '+file.name+': '+e.message,true); });
+}
+
+/* ----- Company & letterhead, approval addressee, public holidays (admin) ----- */
+var CO_FIELDS=[['name','Company name','ARZA SDN BHD'],['reg_no','Registration no.',''],['address','Address','Bandar Seri Begawan, Brunei Darussalam'],['phone','Office phone','+673 …'],['email','Office email','qs@arzabrunei.com'],['website','Website',''],
+  ['sender_name','Sender name (RFQ contact)','Gemar C. Tubalado'],['sender_designation','Sender designation','Quantity Surveyor'],['sender_phone','Sender phone','+673 …'],['sender_email','Sender email','qs@arzabrunei.com']];
+function letterhead(c){ c=c||{};
+  var line=[c.address, c.phone?'Tel '+c.phone:'', c.email, c.website].filter(Boolean).map(esc).join(' · ');
+  return '<div class="lh">'+(c.logo?'<img src="'+esc(c.logo)+'" alt="">':'')+'<div><div class="lhn">'+esc(c.name||'ARZA SDN BHD')+'</div>'+(c.reg_no?'<div class="lhs">Reg. no. '+esc(c.reg_no)+'</div>':'')+(line?'<div class="lhs">'+line+'</div>':'')+'</div></div>'; }
+function renderCompany(){
+  var el=$('vCS'); if(needLive(el,'Company settings')) return;
+  if(!isAdmin()){ el.innerHTML='<div class="empty">Only the admin can change the company settings.</div>'; return; }
+  el.innerHTML='<div class="empty"><span class="spin"></span> Loading…</div>';
+  api('settings').then(function(st){
+    PR.set=st; var c=Object.assign({},st.company||{}), a=st.approval||{};
+    el.innerHTML='<div class="bar"><div><h2>Company &amp; settings</h2><div class="scope">Letterhead for RFQs and approval packs, the approval addressee and Brunei public holidays (RFQ reminders skip Fridays, Sundays and these days).</div></div></div>'+
+      '<div class="grid2"><div class="card"><h3>Company &amp; letterhead</h3><div class="form">'+CO_FIELDS.map(function(f){ return '<div class="f'+(f[0]==='address'?' full':'')+'"><label for="co_'+f[0]+'">'+esc(f[1])+'</label><input id="co_'+f[0]+'" maxlength="300" value="'+esc(c[f[0]]||'')+'" placeholder="'+esc(f[2])+'"></div>'; }).join('')+
+        '<div class="f full"><label>Logo <span class="hint">PNG / JPG; resized to fit 600 × 200 px</span></label><div class="fl"><button class="btn" id="coLogo" type="button">Choose logo…</button><button class="btn" id="coNoLogo" type="button">Remove</button><span class="n" id="coLogoN">'+esc(c.logo?(c.logo_name||'logo set')+(c.logo_link?' · copy in Drive':''):'no logo yet')+'</span></div></div></div>'+
+        '<h4 class="psec">Preview</h4><div id="coPrev"></div><p class="n">Until the details are filled, RFQ PDFs print a plain "ARZA SDN BHD" header and leave out blank fields.</p>'+
+        '<div class="pact"><button class="btn" id="coTest">Print test page</button><button class="btn pri" id="coSave">Save company</button></div></div>'+
+      '<div><div class="card"><h3>Approval pack addressee</h3><div class="form"><div class="f"><label for="ap_to">To</label><input id="ap_to" value="'+esc(a.to||'Quantity Surveyor')+'"></div><div class="f"><label for="ap_email">Email</label><input id="ap_email" value="'+esc(a.email||'qs@arzabrunei.com')+'"></div>'+
+        '<div class="f full"><label for="ap_cc">Cc <span class="hint">optional</span></label><input id="ap_cc" value="'+esc(a.cc||'')+'"></div></div><p class="n">Used on the 3-quote comparison / approval PDF (v3.1.2).</p><div class="pact"><button class="btn pri" id="apSave">Save addressee</button></div></div>'+
+      '<div class="card"><h3>Brunei public holidays</h3><div id="hoList"></div><div class="form" style="margin-top:8px"><div class="f full"><label for="hoAdd">Add holidays <span class="hint">one per line: YYYY-MM-DD name</span></label><textarea id="hoAdd" placeholder="2026-12-25 Christmas Day&#10;2027-01-01 New Year\'s Day"></textarea></div></div>'+
+        '<p class="n">From the official gazette, once a year. Fridays and Sundays are always off.</p><div class="pact"><button class="btn pri" id="hoSave">Add</button></div></div></div></div>'+
+      '<div class="card"><h3>Material categories</h3><div class="tbl"><table class="mini"><thead><tr><th>Code</th><th>Category</th><th>Examples</th><th>Masterlist prefix</th></tr></thead><tbody>'+Procure.CATEGORIES.map(function(x){ return '<tr style="cursor:default"><td class="no">'+x[0]+'</td><td>'+esc(x[1])+'</td><td class="n">'+esc(x[2])+'</td><td>'+esc(x[3]||'new')+'</td></tr>'; }).join('')+'</tbody></table></div><p class="n">Standards §3. Fixed for now; ask for a change in the next version.</p></div>';
+    var read=function(){ CO_FIELDS.forEach(function(f){ c[f[0]]=$('co_'+f[0]).value.trim(); }); return c; };
+    var prev=function(){ $('coPrev').innerHTML=letterhead(read()); };
+    CO_FIELDS.forEach(function(f){ $('co_'+f[0]).oninput=prev; }); prev();
+    $('coLogo').onclick=function(){ $('logoFile').click(); };
+    $('coNoLogo').onclick=function(){ c.logo=''; c.logo_name=''; c.logo_link=''; $('coLogoN').textContent='no logo (save to apply)'; prev(); };
+    $('logoFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return;
+      if(!/^image\/(png|jpeg|webp)$/.test(f.type)){ toast('Choose a PNG, JPG or WebP image.',true); return; }
+      $('coLogoN').innerHTML='<span class="spin"></span> reading…';
+      logoData(f).then(function(url){ c.logo=url; c.logo_name=f.name; prev(); $('coLogoN').textContent=f.name+' ('+Math.round(url.length*0.75/1024)+' KB) — saving a copy in Drive…';
+        return f.arrayBuffer().then(function(buf){ return driveCall('procUpload',{folder:'Company', file:{name:f.name,type:f.type,data:b64(buf)}}); })
+          .then(function(d){ c.logo_link=d.url; $('coLogoN').textContent=f.name+' · copy in Drive (save to apply)'; },
+                function(e){ $('coLogoN').textContent=f.name+' (save to apply) · Drive copy not stored: '+e.message; });
+      }).catch(function(e){ toast('Could not read the image: '+e.message,true); $('coLogoN').textContent=''; }); };
+    $('coSave').onclick=function(){ var btn=this; busy(btn,true); api('setSettings',{key:'company', value:read()}).then(function(r){ PR.set.company=r.value; busy(btn,false); toast('Company & letterhead saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+    $('coTest').onclick=function(){ printLetterTest(read()); };
+    $('apSave').onclick=function(){ var btn=this; busy(btn,true); api('setSettings',{key:'approval', value:{to:$('ap_to').value.trim(), email:$('ap_email').value.trim(), cc:$('ap_cc').value.trim()}}).then(function(){ busy(btn,false); toast('Approval addressee saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+    var hol=function(list){ $('hoList').innerHTML=list.length?'<div class="tbl"><table class="mini"><tbody>'+list.map(function(h){ return '<tr style="cursor:default"><td class="nw">'+esc(Procure.longDate(h.date))+'</td><td>'+esc(h.label)+'</td><td class="r"><button class="dbtn hoDel" data-d="'+esc(h.date)+'" title="Remove">×</button></td></tr>'; }).join('')+'</tbody></table></div>':'<div class="note w">No holidays entered yet — reminders count every Mon–Thu and Sat as a working day.</div>'; };
+    hol(st.holidays||[]);
+    $('hoList').onclick=function(e){ var b=e.target.closest('.hoDel'); if(!b) return; api('setHolidays',{remove:[b.dataset.d]}).then(function(s){ hol(s.holidays||[]); toast('Removed'); }).catch(fail); };
+    $('hoSave').onclick=function(){ var add=[], bad=[]; $('hoAdd').value.split(/\n/).forEach(function(l){ l=l.trim(); if(!l) return; var m=l.match(/^(\d{4}-\d{2}-\d{2})\s*[-–:,]?\s*(.*)$/); if(m) add.push({date:m[1], label:m[2]}); else bad.push(l); });
+      if(bad.length){ toast('Use YYYY-MM-DD name: '+bad[0],true); return; } if(!add.length){ toast('Type the holidays first.',true); return; }
+      var btn=this; busy(btn,true); api('setHolidays',{add:add}).then(function(s){ busy(btn,false); $('hoAdd').value=''; hol(s.holidays||[]); toast(add.length+' holiday'+(add.length>1?'s':'')+' saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+  }).catch(function(e){ prNeedDb(el,e); });
+}
+/* image -> data: URL that fits 600 x 200 (PNG keeps transparency; JPG for photos), under ~300 KB */
+function logoData(file){
+  return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ var im=new Image(); im.onload=function(){
+      var k=Math.min(1,600/im.width,200/im.height), w=Math.max(1,Math.round(im.width*k)), h=Math.max(1,Math.round(im.height*k)), cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(im,0,0,w,h);
+      var url=cv.toDataURL(file.type==='image/jpeg'?'image/jpeg':'image/png',0.9); if(url.length>420000) url=cv.toDataURL('image/jpeg',0.82);
+      if(url.length>420000) rej(new Error('image is still too large after resizing')); else res(url); };
+    im.onerror=function(){ rej(new Error('not an image')); }; im.src=fr.result; }; fr.onerror=function(){ rej(fr.error); }; fr.readAsDataURL(file); });
+}
+function printLetterTest(c){
+  var w=window.open('','_blank'); if(!w){ toast('Allow pop-ups to print / save as PDF.',true); return; }
+  var who=[c.sender_name||'Gemar C. Tubalado', c.sender_designation||'Quantity Surveyor', c.sender_email||'qs@arzabrunei.com', c.sender_phone].filter(Boolean).map(esc).join(' · ');
+  w.document.open(); w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Letterhead test</title><style>@page{size:A4 portrait;margin:16mm}body{font:12px/1.45 Arial,sans-serif;color:#111}'+
+    '.lh{display:flex;gap:16px;align-items:center;border-bottom:2px solid #120377;padding-bottom:10px}.lh img{max-height:64px;max-width:220px}.lhn{font-size:18px;font-weight:700;color:#120377}.lhs{font-size:11px;color:#444}'+
+    'h1{font-size:16px;letter-spacing:1px;text-align:center;margin:22px 0}.ft{position:fixed;bottom:0;left:0;right:0;font-size:10px;color:#666;text-align:center}</style></head><body>'+letterhead(c)+
+    '<h1>REQUEST FOR QUOTATION</h1><p>Test page: this is how the header of RFQ PDFs (v3.1.1) and approval packs will look.</p><p>Contact: '+who+'</p><div class="ft">Please quote RFQ no. in your reply</div>'+
+    '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>'); w.document.close();
+}
+$('rqFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return; if(ro()){ toast('Read-only account.',true); return; } showQueueImport(f); };
 
 /* ---------- events ---------- */
 $('btnLogin').onclick=signIn;

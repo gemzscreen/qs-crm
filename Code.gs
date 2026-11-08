@@ -1,9 +1,10 @@
 /**
- * QS CRM — Google Drive file service (Apps Script), v2.2.0
+ * QS CRM — Google Drive file service (Apps Script), v3.1.0
  * From v2.1.0 the data lives in Supabase. This script only:
  *   - stores tender files in Google Drive (one sub-folder per tender) and returns the links;
  *   - optionally creates sign-in accounts for the Users page (needs the Supabase service key);
  *   - v2.2.0: reads the pricing masterlist (Google Sheet, Rates + Res tabs) for the Masterlist page — read only, signed-in users only.
+ *   - v3.1.0: stores Procurement files in <tender files folder>/Procurement/<folder> (company logo now; RFQ PDFs and quotes later).
  * Every call carries the user's Supabase session token; the script asks Supabase who it is (crm_me) and
  * only QS / admin users may upload, only the admin may create users.
  *
@@ -64,7 +65,7 @@ function setMasterlist() {
 
 function doGet() {
   var p = PropertiesService.getScriptProperties();
-  return json_({ ok: true, app: 'QS CRM file service', version: '2.2.0', supabase: !!p.getProperty('SUPABASE_URL'), drive: !!p.getProperty('DRIVE_ROOT_ID'),
+  return json_({ ok: true, app: 'QS CRM file service', version: '3.1.0', supabase: !!p.getProperty('SUPABASE_URL'), drive: !!p.getProperty('DRIVE_ROOT_ID'),
     users: !!p.getProperty('SUPABASE_SERVICE'), masterlist: !!p.getProperty('MASTERLIST_ID') });
 }
 
@@ -82,7 +83,7 @@ function doPost(e) {
 }
 
 var ACTIONS = {
-  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), version: '2.2.0' }; },
+  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), version: '3.1.0' }; },
 
   /* v2.2.0: pricing masterlist, read only (any active signed-in user). Tabs Rates + Res, header row = the row starting with "Code" */
   masterlist: function (req, me) {
@@ -115,6 +116,23 @@ var ACTIONS = {
     var lock = LockService.getScriptLock(); lock.waitLock(20000);
     try {
       var folder = tenderFolder_(req.arza_no, req.tender_ref, req.folder_link);
+      var blob = Utilities.newBlob(Utilities.base64Decode(req.file.data), req.file.type || 'application/octet-stream', req.file.name);
+      var f = folder.createFile(blob);
+      return { folder_link: folder.getUrl(), url: f.getUrl(), name: f.getName() };
+    } finally { lock.releaseLock(); }
+  },
+
+  /* v3.1.0: one Procurement file: req.folder (e.g. "Company", later "RFQ-2611-003 - SS304 railing tubes"), req.file {name, type, data(base64)} */
+  procUpload: function (req, me) {
+    if (['admin', 'qs'].indexOf(me.role) < 0) throw new Error('Read-only account - only QS and admin users can store files');
+    if (!req.file || !req.file.data) throw new Error('No file');
+    var name = String(req.folder || '').replace(/[\/\\:*?"<>|]+/g, '-').trim().slice(0, 120);
+    if (!name) throw new Error('Folder name missing');
+    var lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try {
+      var root;
+      try { root = rootFolder_(); } catch (e) { throw new Error('Google Drive is not set up yet (' + e.message + '). In Apps Script run setDriveFolder(), then deploy a New version.'); }
+      var folder = subFolder_(subFolder_(root, 'Procurement'), name);
       var blob = Utilities.newBlob(Utilities.base64Decode(req.file.data), req.file.type || 'application/octet-stream', req.file.name);
       var f = folder.createFile(blob);
       return { folder_link: folder.getUrl(), url: f.getUrl(), name: f.getName() };
@@ -179,4 +197,5 @@ function tenderFolder_(no, ref, link) {
   var same = root.getFoldersByName(name);
   return same.hasNext() ? same.next() : root.createFolder(name);
 }
+function subFolder_(parent, name) { var it = parent.getFoldersByName(name); return it.hasNext() ? it.next() : parent.createFolder(name); }
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }

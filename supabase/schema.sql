@@ -1,5 +1,5 @@
 -- =====================================================================================================
--- QS CRM (ARZA SDN BHD) — Supabase database, v2.3.0
+-- QS CRM (ARZA SDN BHD) — Supabase database, v3.1.0
 -- Run the whole file once in Supabase › SQL Editor › New query › Run. Safe to run again (upgrades in place).
 --
 -- Security model
@@ -794,6 +794,470 @@ begin
       from won w left join lastset l on l.arza_no = w.arza_no left join agg on agg.arza_no = w.arza_no), '[]'));
 end $$;
 
+-- =====================================================================================================
+-- v3.1.0: Procurement (QS CRM v3) — supplier database, review queue, company & letterhead, holidays
+-- Standards: supplier-crm/v3.0-standards.md. Phones are stored as E.164, emails in lower case. Normalising, de-dup keys,
+-- offline checks and DNS-over-HTTPS lookups are done in the browser by src/procure-std.js; these functions store the
+-- result, check the role and the rules, find duplicates by shared keys and write the activity log (arza_no = SUP-…).
+-- =====================================================================================================
+alter table public.lists add column if not exists label text;
+
+create table if not exists public.settings (
+  key text primary key, value jsonb not null default '{}',
+  updated_at timestamptz default now(), updated_by uuid
+);
+
+create table if not exists public.categories (
+  code text primary key check (code ~ '^[A-Z]{2}$'), name text not null, examples text, ml_prefix text, sort int default 0
+);
+-- standards §3 (same list as Procure.CATEGORIES in src/procure-std.js; test/t_procure.js compares them)
+insert into public.categories (code, name, examples, ml_prefix, sort) values
+  ('CC', 'Cement, concrete & aggregates', 'cement, ready-mix, sand, aggregate, admixtures', 'CN', 1),
+  ('RB', 'Reinforcement', 'rebar, BRC mesh, tie wire, spacers', 'RB', 2),
+  ('FW', 'Formwork & timber', 'plywood, timber, props', 'FW', 3),
+  ('BW', 'Blocks & bricks', 'hollow blocks, bricks, lintels', 'BW', 4),
+  ('MW', 'Structural steel & metalwork', 'sections, plates, hollow sections, SS tubes & railings, gratings', '', 5),
+  ('RF', 'Roofing, cladding & rainwater', 'metal deck, insulation, foil, gutters, downpipes', '', 6),
+  ('DW', 'Doors, windows & glazing', 'doors, frames, alu windows, glass, ironmongery sets', '', 7),
+  ('TI', 'Tiles & stone', 'floor/wall tiles, adhesive, grout', 'TI', 8),
+  ('FN', 'Finishes', 'plaster, skim, ceiling boards, partitions', 'FN', 9),
+  ('PT', 'Paint & coatings', 'emulsion, weather-shield, primers, epoxy floor', 'FN', 10),
+  ('WP', 'Waterproofing & sealants', 'membranes, coatings, sealants, waterstops', 'WP', 11),
+  ('RP', 'Concrete repair & chemicals', 'repair mortar, bonding agent, epoxy injection, anti-corrosion', '', 12),
+  ('PL', 'Plumbing, sanitary & tanks', 'pipes & fittings, sanitary ware, tanks, pumps', 'PL', 13),
+  ('DR', 'Drainage & precast', 'uPVC/RC pipes, precast U-drains, manholes, gratings, culverts', '', 14),
+  ('EL', 'Electrical & lighting', 'cables, DBs, switches, lights, conduits', 'EL', 15),
+  ('HV', 'HVAC / aircon & ducting', 'GI ducting, copper pipe, insulation, aircon units', '', 16),
+  ('FP', 'Fire protection & safety systems', 'extinguishers, hose reels, detectors, signage', '', 17),
+  ('FF', 'Furniture, fit-out & equipment', 'furniture, blinds, TVs, projectors, signage', '', 18),
+  ('HW', 'Hardware & fixings', 'anchors, bolts, screws, adhesives', '', 19),
+  ('CS', 'Consumables, tools & PPE', 'discs, welding rods, small tools, PPE', '', 20),
+  ('PH', 'Plant & equipment hire', 'excavator, lorry, scaffold, generator', 'P', 21),
+  ('SV', 'Services & subcontract', 'testing labs, transport, freight forwarding, specialist sub-con', 'S', 22),
+  ('EW', 'External works & landscaping', 'fencing, paving, kerbs, turfing', '', 23)
+on conflict (code) do update set name = excluded.name, examples = excluded.examples, ml_prefix = excluded.ml_prefix, sort = excluded.sort;
+
+-- lists used by Procurement (urgency classes set by Gemz 8 Nov 2026; holidays are added by the admin each year)
+insert into public.lists (list, value, sort, label)
+select l, v, o, lb from (values
+  ('urgency','SUPER URGENT',1,'1–2 days'),('urgency','URGENT',2,'3–7 days'),('urgency','NORMAL',3,'8–14 days'),
+  ('urgency','NEEDED SOON',4,'15–29 days'),('urgency','RESTOCK',5,'30+ days or no date'),
+  ('verification','Unverified',1,'imported, not checked'),('verification','Checked',2,'automatic checks pass'),
+  ('verification','Verified',3,'real reply, website match or successful call'),('verification','Failed',4,'email bounced and no working number'),
+  ('supplier_status','Active',1,null),('supplier_status','Inactive',2,null),('supplier_status','Blacklisted',3,'reason required'),
+  ('supplier_type','Manufacturer',1,null),('supplier_type','Exporter',2,null),('supplier_type','Stockist',3,null),('supplier_type','Dealer',4,null),
+  ('supplier_type','Fabricator',5,null),('supplier_type','Sub-con',6,null),('supplier_type','Service',7,null),
+  ('found_by','Claude',1,null),('found_by','Gemini',2,null),('found_by','Google',3,null),('found_by','Referral',4,null),
+  ('found_by','Marketplace',5,null),('found_by','Walk-in',6,null),('found_by','Other',7,null),
+  ('rfq_status','Draft',1,null),('rfq_status','Sent',2,null),('rfq_status','Chasing',3,null),('rfq_status','Comparison',4,'3 or more valid quotes'),
+  ('rfq_status','Short',5,'goal guard on'),('rfq_status','Approval sent',6,null),('rfq_status','Awarded',7,null),('rfq_status','Cancelled',8,null),
+  ('recipient_status','Not contacted',1,null),('recipient_status','Emailed',2,null),('recipient_status','WhatsApp sent',3,null),
+  ('recipient_status','Reminder 1',4,null),('recipient_status','Reminder 2',5,null),('recipient_status','Replied',6,'responded'),
+  ('recipient_status','Quoted',7,'responded'),('recipient_status','Declined',8,'responded'),('recipient_status','No reply',9,null),('recipient_status','Bounced',10,null)
+) x(l, v, o, lb)
+on conflict (list, value) do update set sort = excluded.sort, label = excluded.label;
+
+create table if not exists public.suppliers (
+  supplier_id text primary key check (supplier_id ~ '^SUP-\d{4,}$'),
+  name text not null check (btrim(name) <> ''),
+  aliases text, country text not null check (country ~ '^[A-Z]{2}$'), city text, address text,
+  zone int check (zone between 1 and 5),
+  type text, website text, platform_links text, specialty text, source_url text, found_by text, found_on date,
+  verification text not null default 'Unverified' check (verification in ('Unverified', 'Checked', 'Verified', 'Failed')),
+  verification_note text, verified_at timestamptz,
+  status text not null default 'Active' check (status in ('Active', 'Inactive', 'Blacklisted')), status_reason text,
+  notes text, dns jsonb, dedup_keys text[] not null default '{}', candidate_id bigint,
+  created_at timestamptz default now(), updated_at timestamptz default now(), created_by uuid, updated_by uuid
+);
+create index if not exists suppliers_keys on public.suppliers using gin (dedup_keys);
+
+create table if not exists public.supplier_contacts (
+  id bigint generated by default as identity primary key,
+  supplier_id text not null references public.suppliers (supplier_id) on update cascade on delete cascade,
+  name text, role text, email text, phone text, whatsapp text,
+  preferred text not null default '' check (preferred in ('', 'email', 'whatsapp', 'phone')), notes text, sort int default 0
+);
+create index if not exists supplier_contacts_sup on public.supplier_contacts (supplier_id);
+
+create table if not exists public.supplier_categories (
+  supplier_id text not null references public.suppliers (supplier_id) on update cascade on delete cascade,
+  code text not null references public.categories (code) on update cascade,
+  specialty text,
+  primary key (supplier_id, code)
+);
+
+/* review queue: discovery files (Claude / Gemini / RFQ send lists) wait here until approved, merged or rejected */
+create table if not exists public.discovery_candidates (
+  id bigint generated by default as identity primary key,
+  batch text not null, source_file text, row_no int,
+  data jsonb not null,                       -- discovery row (standards §5: 17 columns + alias, type)
+  checks jsonb,                              -- offline checks {ok, issues[]}
+  dns jsonb,                                 -- DNS-over-HTTPS {mx, a, mx_domain, a_domain, at}
+  keys text[] not null default '{}',
+  status text not null default 'Pending' check (status in ('Pending', 'Approved', 'Merged', 'Rejected')),
+  supplier_id text, reason text,
+  created_at timestamptz default now(), created_by uuid, decided_at timestamptz, decided_by uuid
+);
+create index if not exists discovery_status on public.discovery_candidates (status);
+create index if not exists discovery_keys on public.discovery_candidates using gin (keys);
+
+-- ---------- helpers ----------
+create or replace function public.crm_supj(s public.suppliers) returns jsonb language sql stable security definer set search_path = public as $$
+  select to_jsonb(s) - 'created_by' - 'updated_by' - 'dedup_keys' || jsonb_build_object(
+    'found_on', crm_fd(s.found_on), 'verified_at', crm_ftz(s.verified_at), 'created_at', crm_ftz(s.created_at), 'updated_at', crm_ftz(s.updated_at),
+    'contacts', coalesce((select jsonb_agg(jsonb_build_object('id', c.id, 'name', coalesce(c.name, ''), 'role', coalesce(c.role, ''), 'email', coalesce(c.email, ''),
+        'phone', coalesce(c.phone, ''), 'whatsapp', coalesce(c.whatsapp, ''), 'preferred', c.preferred, 'notes', coalesce(c.notes, '')) order by c.sort, c.id)
+      from supplier_contacts c where c.supplier_id = s.supplier_id), '[]'),
+    'categories', coalesce((select jsonb_agg(jsonb_build_object('code', sc.code, 'specialty', coalesce(sc.specialty, '')) order by k.sort)
+      from supplier_categories sc join categories k on k.code = sc.code where sc.supplier_id = s.supplier_id), '[]'))
+$$;
+create or replace function public.crm_sup(p_id text) returns public.suppliers language plpgsql stable security definer set search_path = public as $$
+declare s suppliers;
+begin
+  select * into s from suppliers where supplier_id = upper(btrim(coalesce(p_id, '')));
+  if not found then raise exception 'Supplier % not found', coalesce(p_id, '(blank)'); end if;
+  return s;
+end $$;
+/* SUP-0001 …: 4 digits, never reused (suppliers are never deleted - Inactive / Blacklisted instead) */
+create or replace function public.crm_next_sup() returns text language plpgsql volatile security definer set search_path = public as $$
+declare n int;
+begin
+  perform pg_advisory_xact_lock(hashtext('qscrm.suppliers'));
+  select coalesce(max((substring(supplier_id from '^SUP-(\d+)$'))::int), 0) + 1 into n from suppliers;
+  return 'SUP-' || lpad(n::text, greatest(4, length(n::text)), '0');
+end $$;
+/* suppliers sharing any de-dup key (email, phone, web/email domain, name+country) */
+create or replace function public.crm_supdups(p_keys text[], p_except text default null) returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('supplier_id', s.supplier_id, 'name', s.name, 'country', s.country, 'status', s.status, 'verification', s.verification,
+      'keys', (select coalesce(jsonb_agg(k), '[]') from unnest(s.dedup_keys) k where k = any (p_keys))) order by s.supplier_id), '[]')
+  from suppliers s where s.dedup_keys && coalesce(p_keys, '{}') and s.supplier_id is distinct from p_except
+$$;
+create or replace function public.crm_textarr(j jsonb) returns text[] language sql immutable as $$
+  select coalesce((select array_agg(distinct btrim(x)) from jsonb_array_elements_text(case when jsonb_typeof(j) = 'array' then j else '[]' end) x where btrim(x) <> ''), '{}')
+$$;
+create or replace function public.crm_supfields() returns text[] language sql immutable as $$
+  select array['name', 'aliases', 'country', 'city', 'address', 'zone', 'type', 'website', 'platform_links', 'specialty', 'source_url', 'found_by', 'found_on', 'notes']
+$$;
+/* check one supplier payload: fields, categories [{code, specialty}], contacts [{name, role, email, phone, whatsapp, preferred, notes}] */
+create or replace function public.crm_supcheck(f jsonb, cats jsonb, cons jsonb, p_partial boolean default false) returns void language plpgsql stable security definer set search_path = public as $$
+declare bad text; k text; mx int;
+begin
+  if not p_partial then   -- a merge (p_partial) only adds contacts / categories to an existing supplier
+    if btrim(coalesce(f ->> 'name', '')) = '' then raise exception 'Give the supplier name'; end if;
+    if coalesce(f ->> 'country', '') !~ '^[A-Z]{2}$' then raise exception 'Country "%" is not known - choose it from the list', coalesce(f ->> 'country', ''); end if;
+    if coalesce(f ->> 'zone', '') !~ '^[1-5]$' then raise exception 'Sourcing zone must be 1 to 5'; end if;
+  end if;
+  if coalesce(f ->> 'found_on', '') <> '' and f ->> 'found_on' !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'Found on must be a date (YYYY-MM-DD)'; end if;
+  foreach k in array crm_supfields() loop
+    mx := 400; if k in ('notes', 'specialty', 'address', 'platform_links', 'source_url') then mx := 4000; end if;
+    if length(coalesce(f ->> k, '')) > mx then raise exception '% is too long', replace(k, '_', ' '); end if;
+  end loop;
+  if jsonb_typeof(coalesce(cats, '[]')) <> 'array' or jsonb_typeof(coalesce(cons, '[]')) <> 'array' then raise exception 'Bad supplier data'; end if;
+  if jsonb_array_length(coalesce(cats, '[]')) = 0 and not p_partial then raise exception 'Give at least one material category'; end if;
+  select c ->> 'code' into bad from jsonb_array_elements(coalesce(cats, '[]')) c where not exists (select 1 from categories kc where kc.code = c ->> 'code') limit 1;
+  if found then raise exception 'Unknown category %', coalesce(bad, '(blank)'); end if;
+  select c ->> 'email' into bad from jsonb_array_elements(coalesce(cons, '[]')) c where coalesce(c ->> 'email', '') <> '' and lower(c ->> 'email') !~ '^[^@\s<>(),;]+@[a-z0-9-]+(\.[a-z0-9-]+)+$' limit 1;
+  if found then raise exception 'Email % is not valid', bad; end if;
+  select c ->> 'whatsapp' into bad from jsonb_array_elements(coalesce(cons, '[]')) c where coalesce(c ->> 'whatsapp', '') <> '' and c ->> 'whatsapp' !~ '^\+\d{7,15}$' limit 1;
+  if found then raise exception 'WhatsApp number % must be in international form (+country code…)', bad; end if;
+  select coalesce(c ->> 'preferred', '') into bad from jsonb_array_elements(coalesce(cons, '[]')) c where coalesce(c ->> 'preferred', '') not in ('', 'email', 'whatsapp', 'phone') limit 1;
+  if found then raise exception 'Preferred channel must be email, whatsapp or phone'; end if;
+  if jsonb_array_length(coalesce(cons, '[]')) > 30 then raise exception 'Too many contacts (30 max)'; end if;
+end $$;
+/* write a supplier row (new id or existing) + replace its contacts and categories */
+create or replace function public.crm_supwrite(p_id text, f jsonb, cats jsonb, cons jsonb, p_keys text[], me public.profiles) returns public.suppliers
+language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare s suppliers; isnew boolean := p_id is null;
+begin
+  perform crm_supcheck(f, cats, cons);
+  if isnew then
+    p_id := crm_next_sup();
+    insert into suppliers (supplier_id, name, created_at, created_by, country) values (p_id, btrim(f ->> 'name'), now(), me.id, f ->> 'country');
+  end if;
+  update suppliers set name = btrim(f ->> 'name'), aliases = nullif(btrim(coalesce(f ->> 'aliases', '')), ''), country = f ->> 'country',
+    city = nullif(btrim(coalesce(f ->> 'city', '')), ''), address = nullif(btrim(coalesce(f ->> 'address', '')), ''), zone = (f ->> 'zone')::int,
+    type = nullif(btrim(coalesce(f ->> 'type', '')), ''), website = nullif(btrim(coalesce(f ->> 'website', '')), ''),
+    platform_links = nullif(btrim(coalesce(f ->> 'platform_links', '')), ''), specialty = nullif(btrim(coalesce(f ->> 'specialty', '')), ''),
+    source_url = nullif(btrim(coalesce(f ->> 'source_url', '')), ''), found_by = nullif(btrim(coalesce(f ->> 'found_by', '')), ''),
+    found_on = nullif(f ->> 'found_on', '')::date, notes = nullif(btrim(coalesce(f ->> 'notes', '')), ''),
+    dedup_keys = coalesce(p_keys, '{}'), updated_at = now(), updated_by = me.id
+  where supplier_id = p_id returning * into s;
+  delete from supplier_contacts where supplier_id = p_id;
+  insert into supplier_contacts (supplier_id, name, role, email, phone, whatsapp, preferred, notes, sort)
+  select p_id, nullif(btrim(coalesce(c ->> 'name', '')), ''), nullif(btrim(coalesce(c ->> 'role', '')), ''), nullif(lower(btrim(coalesce(c ->> 'email', ''))), ''),
+    nullif(btrim(coalesce(c ->> 'phone', '')), ''), nullif(btrim(coalesce(c ->> 'whatsapp', '')), ''), coalesce(c ->> 'preferred', ''),
+    nullif(btrim(coalesce(c ->> 'notes', '')), ''), o::int
+  from jsonb_array_elements(coalesce(cons, '[]')) with ordinality x(c, o)
+  where btrim(coalesce(c ->> 'name', '') || coalesce(c ->> 'email', '') || coalesce(c ->> 'phone', '') || coalesce(c ->> 'whatsapp', '')) <> '';
+  delete from supplier_categories where supplier_id = p_id;
+  insert into supplier_categories (supplier_id, code, specialty)
+  select distinct on (c ->> 'code') p_id, c ->> 'code', nullif(btrim(coalesce(c ->> 'specialty', '')), '') from jsonb_array_elements(cats) c;
+  return s;
+end $$;
+create or replace function public.crm_supsummary(s public.suppliers) returns text language sql stable security definer set search_path = public as $$
+  select s.name || ' (' || s.country || coalesce(', ' || s.city, '') || ', zone ' || coalesce(s.zone::text, '?') || '; '
+    || coalesce((select string_agg(code, ', ' order by code) from supplier_categories where supplier_id = s.supplier_id), '-') || '; '
+    || (select count(*) from supplier_contacts where supplier_id = s.supplier_id) || ' contact(s))'
+$$;
+create or replace function public.crm_qj(c public.discovery_candidates) returns jsonb language sql stable security definer set search_path = public as $$
+  select jsonb_build_object('id', c.id, 'batch', c.batch, 'source_file', c.source_file, 'row_no', c.row_no, 'data', c.data, 'checks', c.checks, 'dns', c.dns,
+    'keys', to_jsonb(c.keys), 'status', c.status, 'supplier_id', c.supplier_id, 'reason', c.reason, 'created_at', crm_ftz(c.created_at), 'decided_at', crm_ftz(c.decided_at),
+    'dups', case when c.status = 'Pending' then crm_supdups(c.keys) else '[]'::jsonb end,
+    'qdups', case when c.status = 'Pending' then coalesce((select jsonb_agg(o.id order by o.id) from discovery_candidates o
+      where o.status = 'Pending' and o.id <> c.id and o.keys && c.keys), '[]') else '[]'::jsonb end)
+$$;
+
+-- ---------- API ----------
+/* everything the Suppliers page needs in one call */
+create or replace function public.crm_procdata(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  perform crm_need(false);
+  return jsonb_build_object(
+    'suppliers', coalesce((select jsonb_agg(crm_supj(s) order by s.supplier_id) from suppliers s), '[]'),
+    'categories', coalesce((select jsonb_agg(jsonb_build_object('code', code, 'name', name, 'examples', examples, 'ml_prefix', ml_prefix) order by sort) from categories), '[]'),
+    'lists', coalesce((select jsonb_object_agg(list, vals) from (select list, jsonb_agg(jsonb_build_object('value', value, 'label', label) order by sort, value) vals
+      from lists where list in ('urgency', 'verification', 'supplier_status', 'supplier_type', 'found_by', 'rfq_status', 'recipient_status', 'holiday') group by list) x), '{}'),
+    'pending', (select count(*) from discovery_candidates where status = 'Pending'));
+end $$;
+
+create or replace function public.crm_supplier(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare s suppliers;
+begin
+  perform crm_need(false); s := crm_sup(p ->> 'supplier_id');
+  return jsonb_build_object('supplier', crm_supj(s),
+    'log', coalesce((select jsonb_agg(crm_lj(l) order by l.id) from activity_log l where l.arza_no = s.supplier_id), '[]'),
+    'sources', coalesce((select jsonb_agg(jsonb_build_object('id', c.id, 'batch', c.batch, 'source_file', c.source_file, 'status', c.status, 'decided_at', crm_ftz(c.decided_at)) order by c.id)
+      from discovery_candidates c where c.supplier_id = s.supplier_id), '[]'));
+end $$;
+
+/* new (no supplier_id) or update. New: returns {saved:false, dups} when it shares a key with a supplier, unless p.force */
+create or replace function public.crm_savesupplier(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare me profiles := crm_need(true); v_id text := nullif(upper(btrim(coalesce(p ->> 'supplier_id', ''))), ''); old suppliers; s suppliers;
+  f jsonb := coalesce(p -> 'fields', '{}'); v_keys text[] := crm_textarr(p -> 'keys'); d jsonb; k text; ch text[] := '{}';
+begin
+  if v_id is null then
+    d := crm_supdups(v_keys);
+    if jsonb_array_length(d) > 0 and not coalesce((p ->> 'force')::boolean, false) then return jsonb_build_object('saved', false, 'dups', d); end if;
+    s := crm_supwrite(null, f, p -> 'categories', p -> 'contacts', v_keys, me);
+    perform crm_log('supplier', s.supplier_id, 'New supplier ' || crm_supsummary(s) || case when jsonb_array_length(d) > 0
+      then '; kept although it shares details with ' || (select string_agg(x ->> 'supplier_id', ', ') from jsonb_array_elements(d) x) else '' end);
+  else
+    old := crm_sup(v_id);
+    s := crm_supwrite(old.supplier_id, f, p -> 'categories', p -> 'contacts', v_keys, me);
+    foreach k in array crm_supfields() loop
+      if coalesce(to_jsonb(old) ->> k, '') <> coalesce(to_jsonb(s) ->> k, '') then ch := ch || (k || ': ' || crm_short(to_jsonb(old) ->> k) || ' -> ' || crm_short(to_jsonb(s) ->> k)); end if;
+    end loop;
+    perform crm_log('supplier', s.supplier_id, 'Updated ' || s.name || case when cardinality(ch) > 0 then ': ' || array_to_string(ch, '; ') else ' (contacts / categories)' end);
+  end if;
+  return crm_out(jsonb_build_object('saved', true, 'supplier', crm_supj(crm_sup(s.supplier_id))));
+end $$;
+
+/* verification (Verified / Failed need a note) and status (Blacklisted needs a reason) */
+create or replace function public.crm_setsupplierstate(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_need(true); s suppliers := crm_sup(p ->> 'supplier_id'); v text := nullif(p ->> 'verification', ''); st text := nullif(p ->> 'status', '');
+  note text := btrim(coalesce(p ->> 'note', '')); msg text[] := '{}';
+begin
+  if v is not null and v not in ('Unverified', 'Checked', 'Verified', 'Failed') then raise exception 'Unknown verification %', v; end if;
+  if st is not null and st not in ('Active', 'Inactive', 'Blacklisted') then raise exception 'Unknown status %', st; end if;
+  if v in ('Verified', 'Failed') and v is distinct from s.verification and length(note) < 5 then
+    raise exception 'Say how it was %: e.g. "replied to RFQ-2611-002", "call OK 9 Nov", "email bounced, phone dead"', lower(v); end if;
+  if st = 'Blacklisted' and st is distinct from s.status and length(note) < 5 then raise exception 'Give the reason for blacklisting'; end if;
+  if v is not null and v is distinct from s.verification then
+    update suppliers set verification = v, verification_note = nullif(note, ''), verified_at = case when v = 'Verified' then now() else verified_at end,
+      updated_at = now(), updated_by = me.id where supplier_id = s.supplier_id;
+    msg := msg || ('verification ' || s.verification || ' -> ' || v);
+  end if;
+  if st is not null and st is distinct from s.status then
+    update suppliers set status = st, status_reason = case when st = 'Active' then null else nullif(note, '') end, updated_at = now(), updated_by = me.id where supplier_id = s.supplier_id;
+    msg := msg || ('status ' || s.status || ' -> ' || st);
+  end if;
+  if cardinality(msg) > 0 then perform crm_log('supplier', s.supplier_id, s.name || ': ' || array_to_string(msg, ', ') || coalesce(' - ' || nullif(note, ''), '')); end if;
+  return crm_out(jsonb_build_object('supplier', crm_supj(crm_sup(s.supplier_id))));
+end $$;
+
+/* review queue (default: Pending) with duplicates against the database and inside the queue */
+create or replace function public.crm_queue(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare st text := coalesce(nullif(p ->> 'status', ''), 'Pending'); lim int := least(greatest(coalesce((p ->> 'limit')::int, 500), 1), 2000);
+begin
+  perform crm_need(false);
+  return jsonb_build_object(
+    'rows', coalesce((select jsonb_agg(crm_qj(c) order by c.id) from (select * from discovery_candidates where st = 'All' or status = st order by id desc limit lim) c), '[]'),
+    'counts', (select jsonb_build_object('Pending', count(*) filter (where status = 'Pending'), 'Approved', count(*) filter (where status = 'Approved'),
+      'Merged', count(*) filter (where status = 'Merged'), 'Rejected', count(*) filter (where status = 'Rejected')) from discovery_candidates));
+end $$;
+
+/* add discovery rows to the queue: p {batch, source_file, rows:[{row_no, data, checks, keys}]}. A row whose keys equal a Pending row's is skipped. */
+create or replace function public.crm_queueadd(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare me profiles := crm_need(true); r jsonb; v_keys text[]; added int := 0; skipped int := 0; b text := btrim(coalesce(p ->> 'batch', ''));
+begin
+  if b = '' then b := coalesce(nullif(p ->> 'source_file', ''), 'import') || ' ' || to_char(now(), 'YYYY-MM-DD HH24:MI'); end if;
+  if jsonb_typeof(p -> 'rows') <> 'array' or jsonb_array_length(p -> 'rows') = 0 then raise exception 'No rows to add'; end if;
+  if jsonb_array_length(p -> 'rows') > 1000 then raise exception 'Too many rows at once (1,000 max)'; end if;
+  for r in select * from jsonb_array_elements(p -> 'rows') loop
+    if jsonb_typeof(r -> 'data') <> 'object' or btrim(coalesce(r #>> '{data,company_name}', '')) = '' then raise exception 'Row % has no company name', coalesce(r ->> 'row_no', '?'); end if;
+    v_keys := crm_textarr(r -> 'keys');
+    if exists (select 1 from discovery_candidates c where c.status = 'Pending' and c.keys @> v_keys and v_keys @> c.keys and cardinality(v_keys) > 0) then skipped := skipped + 1; continue; end if;
+    insert into discovery_candidates (batch, source_file, row_no, data, checks, keys, created_by)
+    values (b, nullif(p ->> 'source_file', ''), nullif(r ->> 'row_no', '')::int, r -> 'data', r -> 'checks', v_keys, me.id);
+    added := added + 1;
+  end loop;
+  perform crm_log('queue', null, 'Review queue: ' || added || ' supplier(s) added from ' || coalesce(nullif(p ->> 'source_file', ''), b)
+    || case when skipped > 0 then ', ' || skipped || ' already waiting (skipped)' else '' end);
+  return crm_out(jsonb_build_object('added', added, 'skipped', skipped, 'batch', b));
+end $$;
+
+/* DNS-over-HTTPS results from the browser: p {rows:[{id, dns}]} */
+create or replace function public.crm_queuedns(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_need(true); n int;
+begin
+  update discovery_candidates c set dns = x.d -> 'dns' from jsonb_array_elements(coalesce(p -> 'rows', '[]')) x(d)
+    where c.id = (x.d ->> 'id')::bigint and c.status = 'Pending' and jsonb_typeof(x.d -> 'dns') = 'object';
+  get diagnostics n = row_count;
+  return jsonb_build_object('updated', n);
+end $$;
+
+/* decisions on queue rows: p {items:[{id, action approve|merge|reject|reopen, supplier_id (merge target), fields, categories, contacts, keys,
+   verification (Unverified|Checked from the automatic checks), reason, force}]}. Each item is done on its own; errors are returned per item. */
+create or replace function public.crm_queuedecide(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare me profiles := crm_need(true); it jsonb; c discovery_candidates; s suppliers; t suppliers; act text; v_keys text[]; d jsonb; res jsonb := '[]'; v text;
+  f jsonb; k text; ncon int; ncat int; filled text[];
+begin
+  for it in select * from jsonb_array_elements(coalesce(p -> 'items', '[]')) loop
+    begin
+      act := coalesce(it ->> 'action', '');
+      select * into c from discovery_candidates where id = (it ->> 'id')::bigint for update;
+      if not found then raise exception 'Queue row % not found', it ->> 'id'; end if;
+      if act = 'reopen' then
+        if c.status <> 'Rejected' then raise exception 'Only rejected rows can be reopened'; end if;
+        update discovery_candidates set status = 'Pending', reason = null, decided_at = null, decided_by = null where id = c.id;
+        perform crm_log('queue', null, 'Reopened ' || (c.data ->> 'company_name'));
+        res := res || jsonb_build_object('id', c.id, 'ok', true, 'status', 'Pending'); continue;
+      end if;
+      if c.status <> 'Pending' then raise exception '% is already %', c.data ->> 'company_name', lower(c.status); end if;
+      v_keys := case when it ? 'keys' then crm_textarr(it -> 'keys') else c.keys end;
+      f := coalesce(it -> 'fields', '{}');
+      if act = 'reject' then
+        update discovery_candidates set status = 'Rejected', reason = nullif(btrim(coalesce(it ->> 'reason', '')), ''), decided_at = now(), decided_by = me.id where id = c.id;
+        perform crm_log('queue', null, 'Rejected ' || (c.data ->> 'company_name') || coalesce(' - ' || nullif(btrim(it ->> 'reason'), ''), ''));
+        res := res || jsonb_build_object('id', c.id, 'ok', true, 'status', 'Rejected');
+      elsif act = 'approve' then
+        d := crm_supdups(v_keys);
+        if jsonb_array_length(d) > 0 and not coalesce((it ->> 'force')::boolean, false) then
+          res := res || jsonb_build_object('id', c.id, 'ok', false, 'dups', d, 'error', 'Possible duplicate of ' || (select string_agg((x ->> 'supplier_id') || ' ' || (x ->> 'name'), ', ') from jsonb_array_elements(d) x));
+          continue;
+        end if;
+        v := case when it ->> 'verification' = 'Checked' then 'Checked' else 'Unverified' end;
+        s := crm_supwrite(null, f, it -> 'categories', it -> 'contacts', v_keys, me);
+        update suppliers set verification = v, dns = c.dns, candidate_id = c.id where supplier_id = s.supplier_id returning * into s;
+        update discovery_candidates set status = 'Approved', supplier_id = s.supplier_id, keys = v_keys, decided_at = now(), decided_by = me.id where id = c.id;
+        perform crm_log('supplier', s.supplier_id, 'Approved from the review queue (' || coalesce(c.source_file, c.batch) || '): ' || crm_supsummary(s) || ', ' || v
+          || case when jsonb_array_length(d) > 0 then '; kept although it shares details with ' || (select string_agg(x ->> 'supplier_id', ', ') from jsonb_array_elements(d) x) else '' end);
+        res := res || jsonb_build_object('id', c.id, 'ok', true, 'status', 'Approved', 'supplier_id', s.supplier_id);
+      elsif act = 'merge' then
+        t := crm_sup(it ->> 'supplier_id');
+        perform crm_supcheck(f, it -> 'categories', it -> 'contacts', true);
+        -- fill only the blank fields of the existing supplier; notes are added
+        filled := '{}';
+        foreach k in array array['aliases', 'city', 'address', 'type', 'website', 'platform_links', 'specialty', 'source_url', 'found_by'] loop
+          if coalesce(to_jsonb(t) ->> k, '') = '' and btrim(coalesce(f ->> k, '')) <> '' then filled := filled || k; end if;
+        end loop;
+        update suppliers set aliases = coalesce(nullif(aliases, ''), nullif(btrim(f ->> 'aliases'), '')), city = coalesce(nullif(city, ''), nullif(btrim(f ->> 'city'), '')),
+          address = coalesce(nullif(address, ''), nullif(btrim(f ->> 'address'), '')), type = coalesce(nullif(type, ''), nullif(btrim(f ->> 'type'), '')),
+          website = coalesce(nullif(website, ''), nullif(btrim(f ->> 'website'), '')), platform_links = coalesce(nullif(platform_links, ''), nullif(btrim(f ->> 'platform_links'), '')),
+          specialty = coalesce(nullif(specialty, ''), nullif(btrim(f ->> 'specialty'), '')), source_url = coalesce(nullif(source_url, ''), nullif(btrim(f ->> 'source_url'), '')),
+          found_by = coalesce(nullif(found_by, ''), nullif(btrim(f ->> 'found_by'), '')),
+          notes = case when btrim(coalesce(f ->> 'notes', '')) = '' or position(btrim(f ->> 'notes') in coalesce(notes, '')) > 0 then notes
+                       else coalesce(nullif(notes, '') || ' | ', '') || btrim(f ->> 'notes') end,
+          dns = coalesce(dns, c.dns),
+          dedup_keys = (select coalesce(array_agg(distinct x), '{}') from unnest(dedup_keys || v_keys) x), updated_at = now(), updated_by = me.id
+        where supplier_id = t.supplier_id;
+        -- contacts whose email / phone / WhatsApp the supplier does not have yet
+        insert into supplier_contacts (supplier_id, name, role, email, phone, whatsapp, preferred, notes, sort)
+        select t.supplier_id, nullif(btrim(coalesce(x ->> 'name', '')), ''), nullif(btrim(coalesce(x ->> 'role', '')), ''), nullif(lower(btrim(coalesce(x ->> 'email', ''))), ''),
+          nullif(btrim(coalesce(x ->> 'phone', '')), ''), nullif(btrim(coalesce(x ->> 'whatsapp', '')), ''), coalesce(x ->> 'preferred', ''), nullif(btrim(coalesce(x ->> 'notes', '')), ''),
+          100 + o::int
+        from jsonb_array_elements(coalesce(it -> 'contacts', '[]')) with ordinality y(x, o)
+        where btrim(coalesce(x ->> 'email', '') || coalesce(x ->> 'phone', '') || coalesce(x ->> 'whatsapp', '')) <> ''
+          and not exists (select 1 from supplier_contacts e where e.supplier_id = t.supplier_id and (
+            (coalesce(x ->> 'email', '') <> '' and lower(e.email) = lower(x ->> 'email')) or
+            (coalesce(x ->> 'phone', '') <> '' and (e.phone = x ->> 'phone' or e.whatsapp = x ->> 'phone')) or
+            (coalesce(x ->> 'whatsapp', '') <> '' and (e.whatsapp = x ->> 'whatsapp' or e.phone = x ->> 'whatsapp'))));
+        get diagnostics ncon = row_count;
+        insert into supplier_categories (supplier_id, code, specialty)
+        select distinct on (x ->> 'code') t.supplier_id, x ->> 'code', nullif(btrim(coalesce(x ->> 'specialty', '')), '') from jsonb_array_elements(coalesce(it -> 'categories', '[]')) x
+        on conflict (supplier_id, code) do nothing;
+        get diagnostics ncat = row_count;
+        update discovery_candidates set status = 'Merged', supplier_id = t.supplier_id, keys = v_keys, decided_at = now(), decided_by = me.id where id = c.id;
+        perform crm_log('supplier', t.supplier_id, 'Merged from the review queue (' || coalesce(c.source_file, c.batch) || '): ' || (c.data ->> 'company_name') || ' - '
+          || ncon || ' new contact(s), ' || ncat || ' new categor' || case when ncat = 1 then 'y' else 'ies' end
+          || case when cardinality(filled) > 0 then ', filled ' || array_to_string(filled, ', ') else '' end);
+        res := res || jsonb_build_object('id', c.id, 'ok', true, 'status', 'Merged', 'supplier_id', t.supplier_id);
+      else
+        raise exception 'Unknown action "%" (approve, merge, reject or reopen)', act;
+      end if;
+    exception when others then
+      res := res || jsonb_build_object('id', it ->> 'id', 'ok', false, 'error', sqlerrm);
+    end;
+  end loop;
+  return crm_out(jsonb_build_object('results', res, 'pending', (select count(*) from discovery_candidates where status = 'Pending')));
+end $$;
+
+-- ---------- settings: Company & letterhead, approval pack addressee, Brunei public holidays ----------
+create or replace function public.crm_settings(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  perform crm_need(false);
+  return jsonb_build_object(
+    'company', coalesce((select value from settings where key = 'company'), '{}'),
+    'approval', coalesce((select value from settings where key = 'approval'), '{"to":"Quantity Surveyor","email":"qs@arzabrunei.com"}'::jsonb),
+    'holidays', coalesce((select jsonb_agg(jsonb_build_object('date', value, 'label', coalesce(label, '')) order by value) from lists where list = 'holiday'), '[]'),
+    'updated', (select jsonb_object_agg(key, crm_ftz(updated_at)) from settings));
+end $$;
+
+/* admin: p {key: company | approval, value {...}} - only the known fields are kept; logo = small image as a data: URL (resized in the browser) */
+create or replace function public.crm_setsettings(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_need(false, true); k text := p ->> 'key'; v jsonb := coalesce(p -> 'value', '{}'); allowed text[]; out jsonb; old jsonb; f text; ch text[] := '{}';
+begin
+  allowed := case k
+    when 'company' then array['name', 'address', 'reg_no', 'phone', 'email', 'website', 'sender_name', 'sender_designation', 'sender_phone', 'sender_email', 'logo', 'logo_name', 'logo_link']
+    when 'approval' then array['to', 'email', 'cc']
+    else null end;
+  if allowed is null then raise exception 'Unknown setting %', coalesce(k, '(blank)'); end if;
+  if jsonb_typeof(v) <> 'object' then raise exception 'Bad setting value'; end if;
+  select coalesce(jsonb_object_agg(e.key, to_jsonb(btrim(e.value #>> '{}'))), '{}') into out from jsonb_each(v) e where e.key = any (allowed) and jsonb_typeof(e.value) in ('string', 'number');
+  foreach f in array allowed loop
+    if f <> 'logo' and length(coalesce(out ->> f, '')) > 600 then raise exception '% is too long', replace(f, '_', ' '); end if;
+  end loop;
+  if coalesce(out ->> 'logo', '') <> '' then
+    if out ->> 'logo' !~ '^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$' then raise exception 'Logo must be a PNG, JPG or WebP image'; end if;
+    if length(out ->> 'logo') > 450000 then raise exception 'Logo image is too large (about 300 KB max after resizing)'; end if;
+  end if;
+  select value into old from settings where key = k;
+  foreach f in array allowed loop
+    if coalesce(old ->> f, '') <> coalesce(out ->> f, '') then ch := ch || case when f = 'logo' then case when coalesce(out ->> f, '') = '' then 'logo removed' else 'logo' end else replace(f, '_', ' ') end; end if;
+  end loop;
+  insert into settings (key, value, updated_at, updated_by) values (k, out, now(), me.id)
+  on conflict (key) do update set value = excluded.value, updated_at = excluded.updated_at, updated_by = excluded.updated_by;
+  if cardinality(ch) > 0 then perform crm_log('settings', null, case k when 'company' then 'Company & letterhead' else 'Approval pack addressee' end || ': ' || array_to_string(ch, ', ')); end if;
+  return crm_out(jsonb_build_object('key', k, 'value', out));
+end $$;
+
+/* admin: Brunei public holidays (from the official gazette), p {add:[{date, label}], remove:[date]} */
+create or replace function public.crm_setholidays(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_need(false, true); x jsonb; d text; nadd int := 0; ndel int := 0;
+begin
+  for x in select * from jsonb_array_elements(coalesce(p -> 'add', '[]')) loop
+    d := btrim(coalesce(x ->> 'date', ''));
+    if d !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'Holiday date "%" must be YYYY-MM-DD', d; end if;
+    perform d::date;
+    insert into lists (list, value, sort, label) values ('holiday', d, 0, nullif(btrim(coalesce(x ->> 'label', '')), ''))
+    on conflict (list, value) do update set label = excluded.label;
+    nadd := nadd + 1;
+  end loop;
+  delete from lists where list = 'holiday' and value in (select jsonb_array_elements_text(coalesce(p -> 'remove', '[]'))); get diagnostics ndel = row_count;
+  if nadd + ndel > 0 then perform crm_log('settings', null, 'Public holidays: ' || nadd || ' added / updated, ' || ndel || ' removed'); end if;
+  return crm_out(crm_settings('{}'));
+end $$;
+
 -- ---------- new sign-in accounts -> profile (first account = admin) ----------
 create or replace function public.crm_on_new_user() returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -818,10 +1282,17 @@ alter table public.asbuilt_items enable row level security;
 alter table public.revisions enable row level security;
 alter table public.activity_log enable row level security;
 alter table public.lists enable row level security;
+alter table public.settings enable row level security;
+alter table public.categories enable row level security;
+alter table public.suppliers enable row level security;
+alter table public.supplier_contacts enable row level security;
+alter table public.supplier_categories enable row level security;
+alter table public.discovery_candidates enable row level security;
 do $$
 declare t text;
 begin
-  foreach t in array array['tenders', 'bq_items', 'asbuilt_items', 'revisions', 'activity_log', 'lists'] loop
+  foreach t in array array['tenders', 'bq_items', 'asbuilt_items', 'revisions', 'activity_log', 'lists',
+                           'settings', 'categories', 'suppliers', 'supplier_contacts', 'supplier_categories', 'discovery_candidates'] loop
     execute format('drop policy if exists crm_read on public.%I', t);
     execute format('create policy crm_read on public.%I for select to authenticated using (public.crm_can_read())', t);
   end loop;
@@ -831,6 +1302,8 @@ create policy crm_read_own on public.profiles for select to authenticated using 
 
 revoke all on public.profiles, public.tenders, public.bq_items, public.asbuilt_items, public.revisions, public.activity_log, public.lists from anon, authenticated;
 grant select on public.profiles, public.tenders, public.bq_items, public.asbuilt_items, public.revisions, public.activity_log, public.lists to authenticated;
+revoke all on public.settings, public.categories, public.suppliers, public.supplier_contacts, public.supplier_categories, public.discovery_candidates from anon, authenticated;
+grant select on public.settings, public.categories, public.suppliers, public.supplier_contacts, public.supplier_categories, public.discovery_candidates to authenticated;
 
 -- functions: nothing for anon; signed-in users may call only the API functions (each checks the role itself)
 do $$
@@ -843,7 +1316,9 @@ begin
            where n.nspname = 'public' and p.proname in ('crm_ping', 'crm_me', 'crm_list', 'crm_get', 'crm_save', 'crm_importtender', 'crm_setfile', 'crm_uploadfile',
              'crm_asbuiltdata', 'crm_importasbuilt', 'crm_deletemeasureset', 'crm_lock', 'crm_unlock', 'crm_result', 'crm_revdata', 'crm_saverevision',
              'crm_approverevision', 'crm_deleterevision', 'crm_voidrevision', 'crm_users', 'crm_setuser', 'crm_migrate', 'crm_can_read',
-             'crm_library', 'crm_dashboard', 'crm_setprofile') loop
+             'crm_library', 'crm_dashboard', 'crm_setprofile',
+             'crm_procdata', 'crm_supplier', 'crm_savesupplier', 'crm_setsupplierstate', 'crm_queue', 'crm_queueadd', 'crm_queuedns', 'crm_queuedecide',
+             'crm_settings', 'crm_setsettings', 'crm_setholidays') loop
     execute format('grant execute on function %s to authenticated', f.sig);
   end loop;
 end $$;
