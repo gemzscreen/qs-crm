@@ -4,6 +4,7 @@
  * normalisation, de-duplication keys, Brunei working days, Roundcube / WhatsApp links,
  * message templates.
  * v3.1.0: material categories (standards §3), discovery import rows -> supplier records + contacts.
+ * v3.1.2: import templates, item lists (MR), RFQ texts that fit the link, reminders, chase list, discovery prompt, RFQ KPIs.
  * Works in the browser (global Procure) and in Node (module.exports). No dependencies.
  */
 (function (root) {
@@ -436,7 +437,7 @@
   ];
   // keyword guesses for free-text categories ("Stainless steel - railing tubes & fittings" -> MW); first match wins
   var CAT_WORDS = [
-    ['HV', /\b(hvac|air[\s-]?con|aircond|ducting|duct|refrigera|copper (pipe|tube)|chiller)\w*/i],
+    ['HV', /\b(hvac|air[\s-]?con|aircond|ducting|duct|refrigera|copper (pipe|tube)|chiller|nbr|armaflex|insulation tube)\w*/i],
     ['FP', /\b(fire|extinguisher|hose reel|sprinkler|smoke detector)\w*/i],
     ['RB', /\b(rebar|reinforc|brc|tie wire|y\d{2}\b)\w*/i],
     ['MW', /\b(stainless|ss30[46]|steel|metal ?work|railing|hollow section|grating|beam|channel|angle bar|plate)\w*/i],
@@ -583,6 +584,169 @@
     return { mx: mx, a: w };
   }
 
+  /* ---------- v3.1.2: import templates, RFQ texts, chase list, discovery prompt, KPIs ---------- */
+  // supplier import template = the 17 discovery columns + 2 optional ones the importer also reads
+  var TEMPLATE_COLS = DISCOVERY_COLS.concat(['alias', 'type']);
+  var TEMPLATE_HELP = {
+    company_name: ['Company name (required)', 'Foshan Vinmay Stainless Steel Co., Ltd.'],
+    country: ['Country name or 2-letter code (required)', 'China'],
+    city: ['City / area - Miri, Limbang, Kota Kinabalu etc. decide zone 2 Borneo', 'Sanshui, Foshan'],
+    address: ['Full address', 'No. 8 Industrial Rd, Sanshui, Foshan, Guangdong'],
+    website: ['Company website (not Alibaba)', 'https://vinssco.com'],
+    category: ['Category code or name (see Categories sheet); several codes as "HV, PL"', 'MW'],
+    specialty: ['What they sell', 'SS304 ornamental tubes + handrail fittings'],
+    contact_person: ['Contact person', 'Ms Lily Chen'],
+    email: ['Email(s), separate with " / "', 'sales@vinssco.com / marketing@vinssco.com'],
+    phone: ['Phone(s) with country code, separate with " / "; mark WhatsApp with "WA"', '+86 757 8543 6751 / WA +86 131 4327 6868'],
+    whatsapp: ['WhatsApp number (optional - else the first mobile is used)', '+86 131 4327 6868'],
+    source_url: ['Where the details came from (page link)', 'https://vinssco.com/contact'],
+    notes: ['Anything useful', 'Exports to 100+ countries'],
+    found_by: ['Claude / Gemini / Google / Referral / Marketplace / Walk-in / Other', 'Google'],
+    found_on: ['Date found (YYYY-MM-DD)', '2026-11-09'],
+    verification: ['Leave blank - always imported as Unverified', ''],
+    zone: ['Leave blank - worked out from country + city', ''],
+    alias: ['Other name / brand (optional)', 'Vinmay'],
+    type: ['Manufacturer / Exporter / Stockist / Dealer / Fabricator / Sub-con / Service (optional)', 'Manufacturer']
+  };
+  // requisition (MR) / item list: one row per item (standards §5)
+  var MR_COLS = ['line', 'description', 'spec_brand', 'qty', 'unit', 'required_date', 'category', 'res_code', 'only_overseas', 'notes'];
+  var MR_HELP = {
+    line: ['Line no. (optional)', 1], description: ['Item (required)', 'SS304 round tube 25.4mm OD x 1.5mm, hairline, 6m'],
+    spec_brand: ['Specification / brand / standard', 'ASTM A554, SS304'], qty: ['Quantity (blank = ask MOQ + price at MOQ)', 120],
+    unit: ['Unit', 'lengths'], required_date: ['Required on site (YYYY-MM-DD)', '2026-12-15'],
+    category: ['Category code (optional - guessed from the description)', 'MW'], res_code: ['Masterlist resource code (optional)', ''],
+    only_overseas: ['Y if only made overseas (e.g. China)', ''], notes: ['Notes', '']
+  };
+  function num(v) { if (v == null || v === '') return null; var n = +String(v).replace(/[, ]/g, ''); return isFinite(n) ? n : null; }
+  function dateIso(v) {
+    if (v == null || v === '') return '';
+    if (v instanceof Date) return iso(v);
+    var s = String(v).trim(), m;
+    if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s))) return m[1] + '-' + pad(m[2], 2) + '-' + pad(m[3], 2);
+    if ((m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/.exec(s))) { var y = +m[3] < 100 ? 2000 + +m[3] : +m[3]; return y + '-' + pad(m[2], 2) + '-' + pad(m[1], 2); } // d/m/y (Brunei)
+    var d = new Date(s); return isNaN(d) ? '' : iso(d);
+  }
+  // one item row from an MR sheet / pasted text -> clean item (category guessed when blank)
+  function mrItem(r) {
+    var o = {}; Object.keys(r || {}).forEach(function (k) { o[String(k).trim().toLowerCase().replace(/[\s\/]+/g, '_')] = r[k]; });
+    var desc = str(o.description || o.item || o.resource || o.material), cat = categoryCode(o.category) || categoryCode(desc + ' ' + str(o.spec_brand));
+    return { line: num(o.line), description: desc, spec_brand: str(o.spec_brand || o.spec || o.brand), qty: num(o.qty || o.quantity), unit: str(o.unit),
+      required_date: dateIso(o.required_date || o.required || o.date), category: cat, res_code: str(o.res_code || o.code),
+      only_overseas: /^(y|yes|true|1)$/i.test(str(o.only_overseas)), notes: str(o.notes) };
+  }
+  // pasted from Excel (tab separated) or typed one per line: description [tab spec] [tab qty] [tab unit] [tab required date]
+  function parsePasted(text) {
+    var rows = String(text || '').replace(/\r/g, '').split('\n').filter(function (l) { return l.trim(); });
+    if (!rows.length) return [];
+    var first = rows[0].toLowerCase(), hasHead = /description|item/.test(first) && /qty|quantity|unit/.test(first);
+    var head = hasHead ? rows.shift().split('\t').map(function (h) { return h.trim(); }) : ['description', 'spec_brand', 'qty', 'unit', 'required_date'];
+    return rows.map(function (l) {
+      var c = l.split('\t'), r = {};
+      if (!hasHead && c.length === 1) { var m = /^(.*?)(?:\s+[-–x×]\s*|\s+)(\d+(?:\.\d+)?)\s*([a-zA-Z.]+)?\s*$/.exec(l.trim()); if (m && m[1].length > 2) { r = { description: m[1], qty: m[2], unit: m[3] || '' }; return mrItem(r); } }
+      head.forEach(function (h, i) { r[h] = c[i]; }); return mrItem(r);
+    }).filter(function (x) { return x.description; });
+  }
+  function shortDesc(items) {
+    var s = items.map(function (it) { return it.short || it.description || it.desc; }).filter(Boolean);
+    var t = s.slice(0, 3).join('; ') + (s.length > 3 ? ' and ' + (s.length - 3) + ' more item' + (s.length > 4 ? 's' : '') : '');
+    return t.length > 160 ? t.slice(0, 157) + '...' : t;
+  }
+  // items as the templates want them: desc = description + spec/brand
+  function rfqItems(items) {
+    return (items || []).map(function (it) {
+      var d = str(it.description || it.desc), sp = str(it.spec_brand);
+      return { desc: sp && d.toLowerCase().indexOf(sp.toLowerCase()) < 0 ? d + ' (' + sp + ')' : d, short: str(it.short) || d, qty: it.qty == null ? '' : it.qty, unit: str(it.unit) };
+    });
+  }
+  // RFQ record (+ items) -> the object buildEmail / buildWhatsApp expect
+  function rfqForTemplates(r, items, sender) {
+    var it = rfqItems(items);
+    return { rfq_no: r.rfq_no, title: r.title, short_desc: r.short_desc || shortDesc(it), items: it,
+      qtyMode: r.qty_mode || (it.some(function (x) { return x.qty === '' || x.qty == null; }) ? 'moq' : 'firm'),
+      deadline: r.deadline, delivery_place: r.delivery_place, certs: r.certs, sender: sender || 'Gemar', sent_date: r.sent_date, close_date: r.close_date };
+  }
+  // email that fits the Roundcube link (≤ 1,600 chars); longer RFQs: short body + attach the RFQ PDF
+  function buildEmailFit(rfq, sup) {
+    var e = buildEmail(rfq, sup);
+    if (!e.tooLong) return e;
+    var a = audienceOf(sup.zone), v = vars(rfq, sup);
+    var body = [fill(T['open_' + a], v).replace(/ for the following(, delivered to [^:]*)?:$/, ' for the items in the attached RFQ ' + rfq.rfq_no + ' (' + rfq.items.length + ' items)$1.'),
+      'Please quote unit prices ' + v.currency + ' for every item, and include ' + (a === 'O' ? 'FOB / CIF Muara, production lead time, packing, payment terms and quote validity.' : 'stock availability, delivery lead time and charges, payment terms and quote validity.'),
+      fill(T.close, v)].join('\n\n') + '\n';
+    var link = sup.email ? composeLink(sup.email, e.subject, body) : '';
+    return { subject: e.subject, body: body, link: link, tooLong: link.length > LINK_MAX, attach: true };
+  }
+  // reminder by email (same channel as the first contact)
+  function buildReminderEmail(kind, rfq, sup, extra) {
+    var w = buildWhatsApp(kind, rfq, sup, extra), subject = (kind === 'reminder2' ? 'Final reminder: ' : 'Reminder: ') + fill(T.subject, vars(rfq, sup));
+    var body = 'Dear ' + (sup.greeting || 'Sir/Madam') + ',\n\n' + w.text.replace(/^Good day, this is [^.]*\. /, 'Good day. ') + '\n';
+    return { subject: subject, body: body, link: sup.email ? composeLink(sup.email, subject, body) : '' };
+  }
+  // what to chase for one recipient now: reminder1 | reminder2 | noreply | '' (and when it was due)
+  var CHASE_OPEN = ['Emailed', 'WhatsApp sent', 'Reminder 1', 'Reminder 2'];
+  function chaseDue(rec, rfq, now, holidays) {
+    if (CHASE_OPEN.indexOf(rec.status) < 0) return { due: '' };
+    var first = [rec.emailed_at, rec.whatsapp_at].filter(Boolean).sort()[0]; if (!first) return { due: '' };
+    var t = timetable(toDate(String(first).replace(' ', 'T')), { urgency: rfq.urgency, holidays: holidays, deadline: rfq.deadline || null });
+    var n = toDate(now || new Date()), at = function (s) { return toDate(/\d{2}:\d{2}/.test(s) ? s.replace(' ', 'T') : s); };
+    var after = function (s) { return /\d{2}:\d{2}/.test(s) ? n >= at(s) : iso(n) >= s; };
+    if (rec.status === 'Reminder 2') return after(t.noReply) ? { due: 'noreply', at: t.noReply, t: t } : { due: '', t: t };
+    if (rec.status === 'Reminder 1') return after(t.reminder2) ? { due: 'reminder2', at: t.reminder2, t: t } : { due: '', t: t };
+    return after(t.reminder1) ? { due: 'reminder1', at: t.reminder1, t: t } : { due: '', t: t };
+  }
+  // prompt for Claude / Gemini to find more suppliers in the template columns
+  function discoveryPrompt(rfq, items, opts) {
+    opts = opts || {};
+    var zones = (opts.zones || []).map(function (z) { return ZONES[z] + (z === 2 ? ' (Miri, Limbang, Lawas, Kota Kinabalu, Labuan)' : z === 4 ? ' (China first, then Vietnam)' : ''); });
+    var cats = []; (items || []).forEach(function (it) { if (it.category && cats.indexOf(it.category) < 0) cats.push(it.category); });
+    return ['Find ' + (opts.count || 10) + ' real suppliers for this request for quotation from ARZA SDN BHD, a construction company in Brunei Darussalam.',
+      '', 'RFQ ' + (rfq.rfq_no || '') + ' - ' + (rfq.title || ''), 'Items:',
+      (items || []).map(function (it, i) { return (i + 1) + '. ' + it.description + (it.spec_brand ? ' (' + it.spec_brand + ')' : '') + (it.qty ? ' - ' + it.qty + ' ' + (it.unit || '') : ''); }).join('\n'),
+      'Material category: ' + cats.map(function (c) { return c + ' ' + categoryName(c); }).join(', '),
+      'Search in: ' + (zones.join('; ') || 'any country') + (rfq.urgency ? ' (urgency ' + rfq.urgency + ')' : '') + '.',
+      (opts.exclude && opts.exclude.length ? 'Leave out these suppliers I already have: ' + opts.exclude.join('; ') + '.' : ''),
+      '', 'Rules: only companies you can find on a real web page; give the page in source_url; never invent emails or phone numbers - leave them blank if not published; phone numbers with country code; mark WhatsApp numbers with "WA".',
+      'Answer as a table (CSV) with exactly these columns, header first:', TEMPLATE_COLS.join(','),
+      'verification and zone: leave blank. found_by: your name (Claude / Gemini). found_on: today\'s date (YYYY-MM-DD). category: ' + (cats[0] || 'the category code') + '.'
+    ].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; }).join('\n');
+  }
+  // read the "RFQ Text" sheet of an Excel send list (RFQ-2611-002 format) -> RFQ header + items
+  function rfqFromTextSheet(t) {
+    var ref = str(t['RFQ ref']), subj = str(t['Email subject']), body = str(t['Email body - China'] || t['Email body - Brunei/Borneo/MY'] || '');
+    var title = subj.replace(ref + ' - ', '').replace(/\s*-\s*ARZA SDN BHD\s*$/, '');
+    var dl = str(t['Quote deadline']), d = /(\d{1,2}) (\w+) (\d{4})/.exec(dl), deadline = d ? d[3] + '-' + pad(MONTHS.indexOf(d[2]) + 1, 2) + '-' + pad(d[1], 2) : '';
+    var items = body.split('\n').filter(function (l) { return /^\d+\.\s/.test(l); }).map(function (l, i) { var x = l.replace(/^\d+\.\s*/, ''); return { line: i + 1, description: x, category: categoryCode(x) }; });
+    var wa = str(t['WhatsApp full RFQ (no email)']).split('\n').filter(function (l) { return /^\d+\)\s/.test(l); }).map(function (l) { return l.replace(/^\d+\)\s*/, ''); });
+    items.forEach(function (it, i) { if (wa[i]) it.short = wa[i]; });
+    var follow = /for (.*?)\. Kindly check/.exec(str(t['WhatsApp follow-up (after email)']));
+    var place = /delivered to ([^:]+):/.exec(str(t['Email body - Brunei/Borneo/MY']));
+    var certs = /validity, and (.*?)\.\s*$/m.exec(body);
+    return { rfq_no: ref, title: title, deadline: deadline, qty_mode: /Minimum Order Quantity/.test(body) ? 'moq' : 'firm', short_desc: follow ? follow[1] : '',
+      delivery_place: place ? place[1] : '', certs: certs ? certs[1] : '', notes: str(t['SOURCING RULE USED']), items: items };
+  }
+  // KPIs over RFQs (standards §9): rfqs [{rfq_no, rfq_date, categories[], recipients:[{status, valid_quote, emailed_at, whatsapp_at, replied_at, zone, country}]}]
+  function rfqKpis(rfqs) {
+    var rec = [], ok = 0, sent = 0;
+    rfqs.forEach(function (r) {
+      var rs = (r.recipients || []).map(function (x) { return Object.assign({}, x, { first_contact: [x.emailed_at, x.whatsapp_at].filter(Boolean).sort()[0] || '', first_reply: x.replied_at || '' }); });
+      rs.forEach(function (x) { rec.push(x); });
+      if (rs.some(function (x) { return x.status !== 'Not contacted'; })) { sent++; if (rs.filter(function (x) { return x.status === 'Quoted' && x.valid_quote; }).length >= 3) ok++; }
+    });
+    var fix = function (a) { return a.map(function (x) { return Object.assign({}, x, { first_contact: x.first_contact ? String(x.first_contact).replace(' ', 'T') : '', first_reply: x.first_reply ? String(x.first_reply).replace(' ', 'T') : '' }); }); };
+    var k = kpis(fix(rec)), hrs = fix(rec).filter(function (x) { return x.first_contact && x.first_reply && RESPONDED.indexOf(x.status) >= 0; })
+      .map(function (x) { return (toDate(x.first_reply) - toDate(x.first_contact)) / 3600000; }).sort(function (a, b) { return a - b; });
+    k.rfqs = rfqs.length; k.rfqsSent = sent; k.rfqSuccess = sent ? ok / sent : 0; k.rfqsOk = ok;
+    k.validRate = k.contacted ? k.valid / k.contacted : 0;
+    k.medianResponseHours = hrs.length ? (hrs.length % 2 ? hrs[(hrs.length - 1) / 2] : (hrs[hrs.length / 2 - 1] + hrs[hrs.length / 2]) / 2) : null;
+    return k;
+  }
+  // match a send-list row to a supplier in the database by the de-dup keys; returns supplier_id or ''
+  function matchSupplier(row, suppliers) {
+    var keys = dedupKeys(row), best = '', n = 0;
+    (suppliers || []).forEach(function (s) { var sk = dedupKeys(supplierAsRow(s)), c = keys.filter(function (k) { return sk.indexOf(k) >= 0; }).length; if (c > n) { n = c; best = s.supplier_id; } });
+    return best;
+  }
+
   var api = {
     rfqNo: rfqNo, mrNo: mrNo, parseDocNo: parseDocNo, nextDocNo: nextDocNo, supplierId: supplierId, parseSupplierId: parseSupplierId,
     COUNTRIES: COUNTRIES, countryCode: countryCode, ZONES: ZONES, zoneOf: zoneOf, zoneLabel: zoneLabel,
@@ -598,7 +762,10 @@
     CATEGORIES: CATEGORIES, categoryName: categoryName, categoryCode: categoryCode, categoryCodes: categoryCodes, countryName: countryName,
     FOUND_BY: FOUND_BY, foundBy: foundBy, SUPPLIER_TYPES: SUPPLIER_TYPES, supplierType: supplierType,
     DISCOVERY_COLS: DISCOVERY_COLS, discoveryRow: discoveryRow, contactsOf: contactsOf, toSupplier: toSupplier, supplierAsRow: supplierAsRow,
-    autoVerification: autoVerification, dnsTargets: dnsTargets, digits: digits
+    autoVerification: autoVerification, dnsTargets: dnsTargets, digits: digits,
+    TEMPLATE_COLS: TEMPLATE_COLS, TEMPLATE_HELP: TEMPLATE_HELP, MR_COLS: MR_COLS, MR_HELP: MR_HELP, dateIso: dateIso, mrItem: mrItem, parsePasted: parsePasted,
+    shortDesc: shortDesc, rfqItems: rfqItems, rfqForTemplates: rfqForTemplates, buildEmailFit: buildEmailFit, buildReminderEmail: buildReminderEmail,
+    CHASE_OPEN: CHASE_OPEN, chaseDue: chaseDue, discoveryPrompt: discoveryPrompt, rfqFromTextSheet: rfqFromTextSheet, rfqKpis: rfqKpis, matchSupplier: matchSupplier
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Procure = api;

@@ -2,6 +2,18 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v3.1.2 — 8 Nov 2026
+
+- RFQ › RFQs: the RFQ register with KPIs and a Chase today list (reminders due, per the urgency timetable and Brunei working days).
+- New RFQ: type the boss's list into a fill-in-the-blanks table (Enter moves down), paste it from Excel, or import an item-list file (template provided). Category is guessed from each item; urgency and the quote deadline follow from the earliest required-on-site date. RFQ numbers RFQ-YYMM-NNN, restarting each month.
+- Add suppliers: proposed from your supplier database by category and the zones allowed by the urgency (urgent = Brunei + Borneo first, restock = China first …), ranked by verification and past replies, with a contact target of about 10. Find more suppliers gives a ready prompt for Claude / Gemini in the import-template columns; Quick-add puts a supplier you know straight on the list.
+- Send list: per supplier ① Email (Roundcube opens with the RFQ written) and ② WhatsApp (follow-up written, or the full RFQ when there is no email). Every click is recorded with date and time. Long RFQs (link too long) get a short email + "attach the RFQ PDF". Reminder 1 and the final reminder by email or WhatsApp, highlighted when due.
+- Status per supplier (Replied, Quoted + valid quote tick, Declined, No reply, Bounced). A reply makes the supplier Verified; a bounced email with no phone on file makes it Failed. RFQ status follows automatically (Draft → Sent → Chasing → Comparison at 3 valid quotes) or is set by hand (Short, Approval sent, Awarded, Cancelled).
+- RFQ PDF with the company letterhead (print / save as PDF). Import an existing Excel send list (e.g. RFQ-2611-002) with its statuses and dates.
+- Reports is now a menu: Tender reports (as before) and RFQ reports — reply rate, quote rate, valid quotes, RFQs with 3+ valid quotes, response time; by category, zone, country, channel and per RFQ; Excel export.
+- Review queue: Download template — Excel with the import columns, help and examples, categories and countries; example rows (starting "e.g." / "Example") are skipped on import.
+- Database: new tables rfqs, rfq_items, rfq_recipients, rfq_clicks. Applied by the Database workflow after merge. No Code.gs change.
+
 ## v3.1.1 — 8 Nov 2026
 
 - The Procurement menu is now called RFQ (Suppliers, Review queue).
