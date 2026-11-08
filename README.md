@@ -1,4 +1,4 @@
-# ARZA QS CRM SYSTEM — v2.2.0 (Supabase)
+# ARZA QS CRM SYSTEM — v3.1.0 (Supabase)
 
 ## How updates work (from v2.1.1)
 Claude opens a **pull request** with each change. You review it and click **Merge**. Then, automatically:
@@ -67,7 +67,8 @@ Everyone can change their password by clicking their name (top right). Forgot pa
 | `config.js` | Supabase URL + anon key + Drive service URL |
 | `supabase/schema.sql` | tables, row-level security, roles, all business rules (crm_* functions) |
 | `Code.gs` | Apps Script: Google Drive file service (+ add users) |
-| `src/*.js` | modules embedded in index.html: itemid, bq-read, tender-info, bqty-read (as-built), revision |
+| `src/*.js` | modules embedded in index.html: itemid, bq-read, tender-info, bqty-read (as-built), revision, procure-std (Procurement standards: IDs, zones, phones, de-dup, templates) |
+| `test/` | `node test/t_procure.js` (Procurement helpers; the parts using Gemz's workbooks need local fixtures from `test/make_fixture.py`, never committed) · `bash test/db/run.sh` (schema.sql twice on a local PostgreSQL + crm_* procurement tests; also run by the Check workflow) |
 | `Breakdown_QTY_Template.xlsx` | standard site measurement template |
 
 ## What it does
@@ -79,3 +80,4 @@ Everyone can change their password by clicking their name (top right). Forgot pa
 - **BQ Library**: every priced BQ line across tenders with rate history (min / median / avg / max / latest, won vs lost, by client, chart).
 - **Masterlist**: the pricing masterlist Google Sheet, read only (Rates + Resources), with History links into the BQ Library.
 - Reports and charts; activity log with the user's name; read-only mode from an .xlsx copy.
+- **Procurement (v3.1.0)**: supplier database (SUP-0001…, contacts, categories, sourcing zones, verification), review queue for AI-found suppliers (offline + DNS checks, duplicates, approve / merge / reject), one-click Email (Roundcube) / WhatsApp / Call, Excel export; Company & settings (letterhead + logo, approval addressee, public holidays).

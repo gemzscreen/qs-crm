@@ -1,5 +1,6 @@
 # Runs on every pull request (and push to main): version numbers agree, changelog current, JavaScript parses,
-# and an app / database / Apps Script change must come with a new VERSION.
+# an app / database / Apps Script change must come with a new VERSION, the Procurement helper tests pass,
+# and supabase/schema.sql runs twice on a fresh PostgreSQL with the crm_* procurement tests (test/db).
 name: Check
 on:
   pull_request:
@@ -8,6 +9,13 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
       - uses: actions/checkout@v4
         with:
@@ -17,6 +25,14 @@ jobs:
           node-version: 20
       - name: Versions, changelog, syntax
         run: node scripts/version.mjs check
+      - name: Procurement helper tests (src/procure-std.js)
+        run: node test/t_procure.js
+      - name: Database script + crm_* tests on a fresh PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: bash test/db/run.sh
       - name: App change needs a new version
         if: github.event_name == 'pull_request'
         run: |

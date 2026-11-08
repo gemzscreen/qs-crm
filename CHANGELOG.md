@@ -2,6 +2,17 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v3.1.0 — 8 Nov 2026
+
+- Procurement (QS CRM v3) starts: new Procurement menu with Suppliers and Review queue.
+- Suppliers: own supplier database with IDs SUP-0001 …, country, city, sourcing zone (1 Brunei · 2 Borneo · 3 MY/SG · 4 China/Vietnam · 5 other), material categories (23, mapped to the masterlist), specialty, contacts and verification (Unverified → Checked → Verified / Failed). Search and filter by category, zone, country, verification and status; Excel export (Suppliers, Contacts and a Discovery sheet that imports again).
+- Supplier card: contacts with one-click Email (Roundcube compose, To: filled), WhatsApp (mobiles only) and Call buttons; history of every change. Mark Verified / Failed with a note; Inactive or Blacklisted (with a reason) instead of deleting.
+- Review queue: import a discovery CSV / sheet (17 columns), the "Discovery (import)" sheet of an RFQ send list, or the Gemini supplier directory. Rows are checked automatically — format, phone numbers by country, free-mail and platform-only notes, mail server (MX) and website (A) by free DNS lookups, duplicates against the database and the file — then you approve, merge into an existing supplier, or reject. Rows that pass the checks are saved as Checked, the rest as Unverified.
+- Duplicate check on every new supplier (same email, phone, company web / email domain, or name + country): you choose to merge or keep both.
+- Company & settings (admin, under your name): company and letterhead details with logo upload (resized; a copy goes to Drive), test print of the letterhead, approval-pack addressee (default Quantity Surveyor, qs@arzabrunei.com), Brunei public holidays for RFQ reminders, and the category list.
+- Database: new tables suppliers, supplier_contacts, categories, supplier_categories, discovery_candidates, settings (+ lists for urgency classes, statuses, holidays). Applied by the Database workflow after merge.
+- Apps Script (Code.gs) changed: new procUpload action stores procurement files (now the logo) in Drive › Procurement. Paste Code.gs in Apps Script and Deploy › Manage deployments › Edit › New version. Without it everything else works; only the Drive copy of the logo is skipped.
+
 ## v2.3.0 — 7 Nov 2026
 
 - New header: one line, grouped menus — Dashboard · Tenders · Contract (Rationalized BQ, As-built) · Pricing (BQ Library, Masterlist) · Reports. On small screens the menu folds into a ☰ button.
