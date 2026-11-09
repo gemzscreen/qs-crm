@@ -1,5 +1,5 @@
 -- =====================================================================================================
--- QS CRM (ARZA SDN BHD) — Supabase database, v3.1.2
+-- QS CRM (ARZA SDN BHD) — Supabase database, v3.1.3
 -- Run the whole file once in Supabase › SQL Editor › New query › Run. Safe to run again (upgrades in place).
 --
 -- Security model
@@ -1088,7 +1088,7 @@ end $$;
 
 /* add discovery rows to the queue: p {batch, source_file, rows:[{row_no, data, checks, keys}]}. A row whose keys equal a Pending row's is skipped. */
 create or replace function public.crm_queueadd(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); r jsonb; v_keys text[]; added int := 0; skipped int := 0; b text := btrim(coalesce(p ->> 'batch', ''));
+declare me profiles := crm_need(true); r jsonb; v_keys text[]; added int := 0; skipped int := 0; b text := btrim(coalesce(p ->> 'batch', '')); nid bigint; ids jsonb := '[]';
 begin
   if b = '' then b := coalesce(nullif(p ->> 'source_file', ''), 'import') || ' ' || to_char(now(), 'YYYY-MM-DD HH24:MI'); end if;
   if jsonb_typeof(p -> 'rows') <> 'array' or jsonb_array_length(p -> 'rows') = 0 then raise exception 'No rows to add'; end if;
@@ -1098,12 +1098,12 @@ begin
     v_keys := crm_textarr(r -> 'keys');
     if exists (select 1 from discovery_candidates c where c.status = 'Pending' and c.keys @> v_keys and v_keys @> c.keys and cardinality(v_keys) > 0) then skipped := skipped + 1; continue; end if;
     insert into discovery_candidates (batch, source_file, row_no, data, checks, keys, created_by)
-    values (b, nullif(p ->> 'source_file', ''), nullif(r ->> 'row_no', '')::int, r -> 'data', r -> 'checks', v_keys, me.id);
-    added := added + 1;
+    values (b, nullif(p ->> 'source_file', ''), nullif(r ->> 'row_no', '')::int, r -> 'data', r -> 'checks', v_keys, me.id) returning id into nid;
+    added := added + 1; ids := ids || jsonb_build_object('i', coalesce(r ->> 'i', ''), 'id', nid);
   end loop;
   perform crm_log('queue', null, 'Review queue: ' || added || ' supplier(s) added from ' || coalesce(nullif(p ->> 'source_file', ''), b)
     || case when skipped > 0 then ', ' || skipped || ' already waiting (skipped)' else '' end);
-  return crm_out(jsonb_build_object('added', added, 'skipped', skipped, 'batch', b));
+  return crm_out(jsonb_build_object('added', added, 'skipped', skipped, 'batch', b, 'ids', ids));
 end $$;
 
 /* DNS-over-HTTPS results from the browser: p {rows:[{id, dns}]} */
@@ -1210,6 +1210,8 @@ begin
     'company', coalesce((select value from settings where key = 'company'), '{}'),
     'approval', coalesce((select value from settings where key = 'approval'), '{"to":"Quantity Surveyor","email":"qs@arzabrunei.com"}'::jsonb),
     'holidays', coalesce((select jsonb_agg(jsonb_build_object('date', value, 'label', coalesce(label, '')) order by value) from lists where list = 'holiday'), '[]'),
+    'connections', coalesce((select value from settings where key = 'connections'), '{}'),
+    'fx', coalesce((select value from settings where key = 'fx'), '{}'),
     'updated', (select jsonb_object_agg(key, crm_ftz(updated_at)) from settings));
 end $$;
 
@@ -1218,26 +1220,31 @@ create or replace function public.crm_setsettings(p jsonb default '{}') returns 
 declare me profiles := crm_need(false, true); k text := p ->> 'key'; v jsonb := coalesce(p -> 'value', '{}'); allowed text[]; out jsonb; old jsonb; f text; ch text[] := '{}';
 begin
   allowed := case k
-    when 'company' then array['name', 'address', 'reg_no', 'phone', 'email', 'website', 'sender_name', 'sender_designation', 'sender_phone', 'sender_email', 'logo', 'logo_name', 'logo_link']
+    when 'company' then array['name', 'address', 'reg_no', 'phone', 'email', 'website', 'sender_name', 'sender_designation', 'sender_phone', 'sender_email', 'logo', 'logo_name', 'logo_link', 'logo2', 'logo2_name']
     when 'approval' then array['to', 'email', 'cc']
+    when 'connections' then array['drive_url']
     else null end;
   if allowed is null then raise exception 'Unknown setting %', coalesce(k, '(blank)'); end if;
   if jsonb_typeof(v) <> 'object' then raise exception 'Bad setting value'; end if;
   select coalesce(jsonb_object_agg(e.key, to_jsonb(btrim(e.value #>> '{}'))), '{}') into out from jsonb_each(v) e where e.key = any (allowed) and jsonb_typeof(e.value) in ('string', 'number');
   foreach f in array allowed loop
-    if f <> 'logo' and length(coalesce(out ->> f, '')) > 600 then raise exception '% is too long', replace(f, '_', ' '); end if;
+    if f not in ('logo', 'logo2') and length(coalesce(out ->> f, '')) > 600 then raise exception '% is too long', replace(f, '_', ' '); end if;
   end loop;
-  if coalesce(out ->> 'logo', '') <> '' then
-    if out ->> 'logo' !~ '^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$' then raise exception 'Logo must be a PNG, JPG or WebP image'; end if;
-    if length(out ->> 'logo') > 450000 then raise exception 'Logo image is too large (about 300 KB max after resizing)'; end if;
-  end if;
+  foreach f in array array['logo', 'logo2'] loop
+    if coalesce(out ->> f, '') <> '' then
+      if out ->> f !~ '^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$' then raise exception 'Logo must be a PNG, JPG or WebP image'; end if;
+      if length(out ->> f) > 450000 then raise exception 'Logo image is too large (about 300 KB max after resizing)'; end if;
+    end if;
+  end loop;
+  if k = 'connections' and coalesce(out ->> 'drive_url', '') <> '' and out ->> 'drive_url' !~ '^https://script\.google\.com/macros/s/[A-Za-z0-9_-]+/exec$' then
+    raise exception 'The Drive file service link must look like https://script.google.com/macros/s/…/exec (Apps Script › Deploy › Manage deployments › Web app URL)'; end if;
   select value into old from settings where key = k;
   foreach f in array allowed loop
-    if coalesce(old ->> f, '') <> coalesce(out ->> f, '') then ch := ch || case when f = 'logo' then case when coalesce(out ->> f, '') = '' then 'logo removed' else 'logo' end else replace(f, '_', ' ') end; end if;
+    if coalesce(old ->> f, '') <> coalesce(out ->> f, '') then ch := ch || case when f in ('logo', 'logo2') then case when coalesce(out ->> f, '') = '' then f || ' removed' else f end else replace(f, '_', ' ') end; end if;
   end loop;
   insert into settings (key, value, updated_at, updated_by) values (k, out, now(), me.id)
   on conflict (key) do update set value = excluded.value, updated_at = excluded.updated_at, updated_by = excluded.updated_by;
-  if cardinality(ch) > 0 then perform crm_log('settings', null, case k when 'company' then 'Company & letterhead' else 'Approval pack addressee' end || ': ' || array_to_string(ch, ', ')); end if;
+  if cardinality(ch) > 0 then perform crm_log('settings', null, case k when 'company' then 'Company & letterhead' when 'connections' then 'Connections' else 'Approval pack addressee' end || ': ' || array_to_string(ch, ', ')); end if;
   return crm_out(jsonb_build_object('key', k, 'value', out));
 end $$;
 
@@ -1275,6 +1282,16 @@ create table if not exists public.rfqs (
   status_note text, sent_at timestamptz,
   created_at timestamptz default now(), updated_at timestamptz default now(), created_by uuid, updated_by uuid
 );
+-- v3.1.3: recommendation / approval / award
+alter table public.rfqs add column if not exists recommended_supplier text;
+alter table public.rfqs add column if not exists recommendation text;
+alter table public.rfqs add column if not exists approval_sent_at timestamptz;
+alter table public.rfqs add column if not exists fx_snapshot jsonb;
+alter table public.rfqs add column if not exists award_supplier text;
+alter table public.rfqs add column if not exists award_by text;
+alter table public.rfqs add column if not exists award_date date;
+alter table public.rfqs add column if not exists po_ref text;
+alter table public.rfqs add column if not exists award_note text;
 create table if not exists public.rfq_items (
   id bigint generated by default as identity primary key,
   rfq_no text not null references public.rfqs (rfq_no) on update cascade on delete cascade,
@@ -1316,6 +1333,7 @@ end $$;
 create or replace function public.crm_rfqj(r public.rfqs) returns jsonb language sql stable security definer set search_path = public as $$
   select to_jsonb(r) - 'created_by' - 'updated_by' || jsonb_build_object('rfq_date', crm_fd(r.rfq_date), 'required_date', crm_fd(r.required_date), 'deadline', crm_fd(r.deadline),
     'sent_at', crm_ftz(r.sent_at), 'created_at', crm_ftz(r.created_at), 'updated_at', crm_ftz(r.updated_at),
+    'approval_sent_at', crm_ftz(r.approval_sent_at), 'award_date', crm_fd(r.award_date),
     'created_by_name', (select coalesce(nullif(display_name, ''), full_name, email) from profiles where id = r.created_by))
 $$;
 create or replace function public.crm_recj(x public.rfq_recipients) returns jsonb language sql stable security definer set search_path = public as $$
@@ -1343,6 +1361,7 @@ begin
   perform crm_need(false);
   return jsonb_build_object('rfqs', coalesce((select jsonb_agg(crm_rfqj(r) || jsonb_build_object(
       'items_n', (select count(*) from rfq_items i where i.rfq_no = r.rfq_no),
+      'quotes_n', (select count(*) from quotes q where q.rfq_no = r.rfq_no and q.current),
       'categories', coalesce((select jsonb_agg(distinct i.category) from rfq_items i where i.rfq_no = r.rfq_no and i.category is not null), '[]'),
       'recipients', coalesce((select jsonb_agg(crm_recj(x) || jsonb_build_object('name', s.name, 'country', s.country) order by x.priority nulls last, x.zone, s.name)
         from rfq_recipients x join suppliers s on s.supplier_id = x.supplier_id where x.rfq_no = r.rfq_no), '[]'))
@@ -1363,7 +1382,10 @@ begin
     'clicks', coalesce((select jsonb_agg(jsonb_build_object('supplier_id', c.supplier_id, 'action', c.action, 'at', crm_ftz(c.at), 'user', c.user_name) order by c.id)
       from rfq_clicks c where c.rfq_no = r.rfq_no), '[]'),
     'log', coalesce((select jsonb_agg(crm_lj(l) order by l.id) from activity_log l where l.arza_no = r.rfq_no), '[]'),
-    'holidays', coalesce((select jsonb_agg(value order by value) from lists where list = 'holiday'), '[]'));
+    'holidays', coalesce((select jsonb_agg(value order by value) from lists where list = 'holiday'), '[]'),
+    'quotes', coalesce((select jsonb_agg(crm_quotej(q) order by q.supplier_id, q.rev) from quotes q where q.rfq_no = r.rfq_no), '[]'),
+    'fx', coalesce((select value from settings where key = 'fx'), '{}'),
+    'approval', coalesce((select value from settings where key = 'approval'), '{"to":"Quantity Surveyor","email":"qs@arzabrunei.com"}'::jsonb));
 end $$;
 
 /* new (no rfq_no, or an imported number) or update: p {rfq_no, new, header {...}, items [...]} */
@@ -1447,7 +1469,7 @@ end $$;
 create or replace function public.crm_rfqclick(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
 declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); a text := coalesce(p ->> 'action', ''); x rfq_recipients; resp boolean;
 begin
-  if a not in ('email', 'whatsapp', 'reminder1', 'reminder2', 'call') then raise exception 'Unknown action %', a; end if;
+  if a not in ('email', 'whatsapp', 'reminder1', 'reminder2', 'call', 'thanks', 'regret') then raise exception 'Unknown action %', a; end if;
   if r.status = 'Cancelled' then raise exception '% is cancelled', r.rfq_no; end if;
   select * into x from rfq_recipients where rfq_no = r.rfq_no and supplier_id = upper(p ->> 'supplier_id') for update;
   if not found then raise exception '% is not on the send list of %', p ->> 'supplier_id', r.rfq_no; end if;
@@ -1473,12 +1495,12 @@ end $$;
 /* status buttons: p {rfq_no, supplier_id, status, valid_quote, note, at}. Replied / Quoted / Declined -> supplier Verified (real reply);
    Bounced with no phone or WhatsApp on file -> supplier Failed. */
 create or replace function public.crm_setrecipient(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); x rfq_recipients; s suppliers; st text := coalesce(p ->> 'status', ''); old text; msg text;
+declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); x rfq_recipients; s suppliers; st text := coalesce(p ->> 'status', ''); old text; oldv boolean; msg text;
 begin
   if st not in ('Not contacted', 'Emailed', 'WhatsApp sent', 'Reminder 1', 'Reminder 2', 'Replied', 'Quoted', 'Declined', 'No reply', 'Bounced') then raise exception 'Unknown status %', st; end if;
   select * into x from rfq_recipients where rfq_no = r.rfq_no and supplier_id = upper(p ->> 'supplier_id') for update;
   if not found then raise exception '% is not on the send list of %', p ->> 'supplier_id', r.rfq_no; end if;
-  old := x.status; s := crm_sup(x.supplier_id);
+  old := x.status; oldv := x.valid_quote; s := crm_sup(x.supplier_id);
   update rfq_recipients set status = st,
     replied_at = case when st in ('Replied', 'Quoted', 'Declined') then coalesce(replied_at, nullif(p ->> 'at', '')::timestamptz, now()) when st in ('Not contacted', 'Emailed', 'WhatsApp sent', 'Reminder 1', 'Reminder 2', 'No reply', 'Bounced') then null else replied_at end,
     valid_quote = case when st <> 'Quoted' then null when p ? 'valid_quote' then (p ->> 'valid_quote')::boolean else coalesce(valid_quote, true) end,
@@ -1493,7 +1515,7 @@ begin
     update suppliers set verification = 'Failed', verification_note = 'email bounced (' || r.rfq_no || '), no phone on file', updated_at = now(), updated_by = me.id where supplier_id = s.supplier_id;
     perform crm_log('supplier', s.supplier_id, s.name || ': verification ' || s.verification || ' -> Failed - email bounced, no phone on file');
   end if;
-  perform crm_log('rfq', r.rfq_no, msg);
+  if old is distinct from st or oldv is distinct from x.valid_quote or nullif(btrim(coalesce(p ->> 'note', '')), '') is not null then perform crm_log('rfq', r.rfq_no, msg); end if;
   perform crm_rfqauto(r.rfq_no);
   return crm_out(jsonb_build_object('recipient', crm_recj(x), 'rfq_status', (select status from rfqs where rfq_no = r.rfq_no)));
 end $$;
@@ -1507,6 +1529,164 @@ begin
   update rfqs set status = case when st = 'auto' then 'Draft' else st end, status_note = nullif(note, ''), updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
   if st = 'auto' then perform crm_rfqauto(r.rfq_no); end if;
   perform crm_log('rfq', r.rfq_no, r.rfq_no || ': status ' || r.status || ' -> ' || (select status from rfqs where rfq_no = r.rfq_no) || coalesce(' - ' || nullif(note, ''), ''));
+  return crm_out(jsonb_build_object('rfq', crm_rfqj(crm_rfqget(r.rfq_no))));
+end $$;
+
+-- =====================================================================================================
+-- v3.1.3: quotes (one per supplier per RFQ, revisions kept), FX table, recommendation / approval / award
+-- Landed cost, comparison and the approval pack are computed in the browser (src/procure-std.js: landed, compareQuotes).
+-- =====================================================================================================
+
+create table if not exists public.quotes (
+  id bigint generated by default as identity primary key,
+  rfq_no text not null references public.rfqs (rfq_no) on update cascade on delete cascade,
+  supplier_id text not null references public.suppliers (supplier_id) on update cascade,
+  rev int not null default 1,
+  quote_ref text, quote_date date,
+  currency text not null default 'BND' check (currency ~ '^[A-Z]{3}$'),
+  incoterm text, freight numeric not null default 0, insurance numeric not null default 0, duty_pct numeric not null default 0,
+  clearing_bnd numeric not null default 0, delivery_bnd numeric not null default 0,
+  lead_days int, validity date, payment_terms text, brand_origin text, notes text,
+  file_link text, file_name text, valid boolean not null default true, current boolean not null default true,
+  created_at timestamptz default now(), created_by uuid, updated_at timestamptz default now(), updated_by uuid,
+  unique (rfq_no, supplier_id, rev)
+);
+create index if not exists quotes_rfq on public.quotes (rfq_no);
+create table if not exists public.quote_lines (
+  quote_id bigint not null references public.quotes (id) on delete cascade,
+  line int not null, unit_price numeric, qty numeric, moq numeric, unit text, brand text, compliant boolean not null default true, note text,
+  primary key (quote_id, line)
+);
+
+-- FX (B$ per 1 unit) — checked 9 Nov 2026 from public mid-market rates; confirm before an approval pack (Admin Settings › RFQ settings)
+insert into public.settings (key, value) values ('fx', '{"USD":{"rate":1.2813,"date":"2026-11-06","source":"exchange-rates.org mid-market - confirm"},"MYR":{"rate":0.3118,"date":"2026-11-09","source":"allratestoday.com mid-market - confirm"},"CNY":{"rate":0.1889,"date":"2026-11-09","source":"allratestoday.com mid-market - confirm"}}')
+on conflict (key) do nothing;
+
+create or replace function public.crm_quotej(q public.quotes) returns jsonb language sql stable security definer set search_path = public as $$
+  select to_jsonb(q) - 'created_by' - 'updated_by' || jsonb_build_object('quote_date', crm_fd(q.quote_date), 'validity', crm_fd(q.validity),
+    'created_at', crm_ftz(q.created_at), 'updated_at', crm_ftz(q.updated_at), 'ref', q.rfq_no || '/' || q.supplier_id || '/' || q.rev,
+    'lines', coalesce((select jsonb_agg(jsonb_build_object('line', l.line, 'unit_price', l.unit_price, 'qty', l.qty, 'moq', l.moq, 'unit', coalesce(l.unit, ''),
+      'brand', coalesce(l.brand, ''), 'compliant', l.compliant, 'note', coalesce(l.note, '')) order by l.line) from quote_lines l where l.quote_id = q.id), '[]'))
+$$;
+
+/* save a quote: p {rfq_no, supplier_id, id (edit) | new_rev true (revised quote), header {...}, lines [{line, unit_price, qty, moq, unit, brand, compliant, note}]}
+   -> the recipient becomes Quoted (valid tick = header.valid), the supplier Verified (real reply) */
+create or replace function public.crm_savequote(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); s suppliers := crm_sup(p ->> 'supplier_id'); h jsonb := coalesce(p -> 'header', '{}');
+  q quotes; v_id bigint := nullif(p ->> 'id', '')::bigint; v_rev int; bad text; n int; rc rfq_recipients;
+begin
+  if r.status in ('Awarded', 'Cancelled') then raise exception '% is % - quotes cannot change', r.rfq_no, lower(r.status); end if;
+  select * into rc from rfq_recipients where rfq_no = r.rfq_no and supplier_id = s.supplier_id;
+  if not found then raise exception '% is not on the send list of % - add it first', s.supplier_id, r.rfq_no; end if;
+  if coalesce(h ->> 'currency', 'BND') !~ '^[A-Z]{3}$' then raise exception 'Currency must be a 3-letter code (BND, USD, MYR …)'; end if;
+  select x ->> 'unit_price' into bad from jsonb_array_elements(coalesce(p -> 'lines', '[]')) x
+    where coalesce(x ->> 'unit_price', '') <> '' and (x ->> 'unit_price') !~ '^\d+(\.\d+)?$' limit 1;
+  if found then raise exception 'Unit price "%" is not a number', bad; end if;
+  foreach bad in array array['freight', 'insurance', 'duty_pct', 'clearing_bnd', 'delivery_bnd', 'lead_days'] loop
+    if coalesce(h ->> bad, '') <> '' and (h ->> bad) !~ '^\d+(\.\d+)?$' then raise exception '% must be a number', replace(bad, '_', ' '); end if;
+  end loop;
+  select count(*) into n from jsonb_array_elements(coalesce(p -> 'lines', '[]')) x where coalesce(x ->> 'unit_price', '') <> '';
+  if n = 0 then raise exception 'Enter at least one unit price'; end if;
+  if v_id is not null then
+    select * into q from quotes where id = v_id and rfq_no = r.rfq_no and supplier_id = s.supplier_id;
+    if not found then raise exception 'Quote % not found', v_id; end if;
+  else
+    select coalesce(max(rev), 0) + case when coalesce((p ->> 'new_rev')::boolean, false) or not exists (select 1 from quotes where rfq_no = r.rfq_no and supplier_id = s.supplier_id) then 1 else 0 end
+      into v_rev from quotes where rfq_no = r.rfq_no and supplier_id = s.supplier_id;
+    if v_rev = 0 then v_rev := 1; end if;
+    select * into q from quotes where rfq_no = r.rfq_no and supplier_id = s.supplier_id and rev = v_rev;
+    if not found then
+      update quotes set current = false where rfq_no = r.rfq_no and supplier_id = s.supplier_id;
+      insert into quotes (rfq_no, supplier_id, rev, created_by) values (r.rfq_no, s.supplier_id, v_rev, me.id) returning * into q;
+    end if;
+  end if;
+  update quotes set quote_ref = nullif(btrim(coalesce(h ->> 'quote_ref', '')), ''), quote_date = coalesce(nullif(h ->> 'quote_date', '')::date, current_date),
+    currency = coalesce(nullif(h ->> 'currency', ''), 'BND'), incoterm = nullif(btrim(coalesce(h ->> 'incoterm', '')), ''),
+    freight = coalesce(nullif(h ->> 'freight', '')::numeric, 0), insurance = coalesce(nullif(h ->> 'insurance', '')::numeric, 0),
+    duty_pct = coalesce(nullif(h ->> 'duty_pct', '')::numeric, 0), clearing_bnd = coalesce(nullif(h ->> 'clearing_bnd', '')::numeric, 0),
+    delivery_bnd = coalesce(nullif(h ->> 'delivery_bnd', '')::numeric, 0), lead_days = nullif(h ->> 'lead_days', '')::numeric::int,
+    validity = nullif(h ->> 'validity', '')::date, payment_terms = nullif(btrim(coalesce(h ->> 'payment_terms', '')), ''),
+    brand_origin = nullif(btrim(coalesce(h ->> 'brand_origin', '')), ''), notes = nullif(btrim(coalesce(h ->> 'notes', '')), ''),
+    file_link = coalesce(nullif(btrim(coalesce(h ->> 'file_link', '')), ''), file_link), file_name = coalesce(nullif(btrim(coalesce(h ->> 'file_name', '')), ''), file_name),
+    valid = coalesce((h ->> 'valid')::boolean, true), updated_at = now(), updated_by = me.id
+  where id = q.id returning * into q;
+  delete from quote_lines where quote_id = q.id;
+  insert into quote_lines (quote_id, line, unit_price, qty, moq, unit, brand, compliant, note)
+  select q.id, (x ->> 'line')::int, nullif(x ->> 'unit_price', '')::numeric, nullif(x ->> 'qty', '')::numeric, nullif(x ->> 'moq', '')::numeric,
+    nullif(btrim(coalesce(x ->> 'unit', '')), ''), nullif(btrim(coalesce(x ->> 'brand', '')), ''), coalesce((x ->> 'compliant')::boolean, true), nullif(btrim(coalesce(x ->> 'note', '')), '')
+  from jsonb_array_elements(coalesce(p -> 'lines', '[]')) x where coalesce(x ->> 'line', '') ~ '^\d+$'
+    and (coalesce(x ->> 'unit_price', '') <> '' or coalesce(x ->> 'moq', '') <> '');
+  -- the send list follows: Quoted + valid tick; supplier Verified (crm_setrecipient does both)
+  perform crm_setrecipient(jsonb_build_object('rfq_no', r.rfq_no, 'supplier_id', s.supplier_id, 'status', 'Quoted', 'valid_quote', q.valid));
+  perform crm_log('rfq', r.rfq_no, 'Quote ' || r.rfq_no || '/' || s.supplier_id || '/' || q.rev || ' from ' || s.name || ': ' || q.currency || ', ' || n || ' line(s) priced'
+    || coalesce(', lead ' || q.lead_days || ' d', '') || coalesce(', valid to ' || crm_fd(q.validity), '') || case when q.valid then '' else ' (not valid)' end);
+  return crm_out(jsonb_build_object('quote', crm_quotej(q)));
+end $$;
+
+create or replace function public.crm_deletequote(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_need(true); q quotes; r rfqs;
+begin
+  select * into q from quotes where id = nullif(p ->> 'id', '')::bigint;
+  if not found then raise exception 'Quote not found'; end if;
+  r := crm_rfqget(q.rfq_no);
+  if r.status in ('Awarded', 'Cancelled') then raise exception '% is % - quotes cannot change', r.rfq_no, lower(r.status); end if;
+  delete from quotes where id = q.id;
+  update quotes set current = true where id = (select id from quotes where rfq_no = q.rfq_no and supplier_id = q.supplier_id order by rev desc limit 1);
+  perform crm_log('rfq', q.rfq_no, 'Deleted quote ' || q.rfq_no || '/' || q.supplier_id || '/' || q.rev);
+  return crm_out(jsonb_build_object('deleted', q.id));
+end $$;
+
+/* FX table (B$ per 1 unit): p {rates: {USD: {rate, date, source}, ...}} - QS or admin */
+create or replace function public.crm_setfx(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_need(true); k text; v jsonb; out jsonb := '{}'; ch text[] := '{}'; old jsonb := coalesce((select value from settings where key = 'fx'), '{}');
+begin
+  for k, v in select * from jsonb_each(coalesce(p -> 'rates', '{}')) loop
+    if k !~ '^[A-Z]{3}$' or k in ('BND', 'SGD') then raise exception 'Currency % - use a 3-letter code (B$ and S$ are always 1:1)', k; end if;
+    if coalesce(v ->> 'rate', '') = '' then continue; end if;
+    if (v ->> 'rate') !~ '^\d+(\.\d+)?$' or (v ->> 'rate')::numeric <= 0 then raise exception 'FX rate for % must be a positive number', k; end if;
+    out := out || jsonb_build_object(k, jsonb_build_object('rate', (v ->> 'rate')::numeric, 'date', coalesce(nullif(v ->> 'date', ''), to_char(current_date, 'YYYY-MM-DD')),
+      'source', left(coalesce(v ->> 'source', ''), 200)));
+    if coalesce(old #>> array[k, 'rate'], '') <> (v ->> 'rate') then ch := ch || (k || ' ' || coalesce(old #>> array[k, 'rate'], '-') || ' -> ' || (v ->> 'rate')); end if;
+  end loop;
+  insert into settings (key, value, updated_at, updated_by) values ('fx', out, now(), me.id)
+  on conflict (key) do update set value = excluded.value, updated_at = excluded.updated_at, updated_by = excluded.updated_by;
+  if cardinality(ch) > 0 then perform crm_log('settings', null, 'FX (B$ per unit): ' || array_to_string(ch, ', ')); end if;
+  return crm_out(jsonb_build_object('fx', out));
+end $$;
+
+/* recommendation / approval sent / award: p {rfq_no, action recommend|approval_sent|award|reopen, supplier_id, reason, award_by, award_date, po_ref, note, fx} */
+create or replace function public.crm_rfqdecide(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); a text := coalesce(p ->> 'action', ''); s suppliers; msg text;
+begin
+  if r.status = 'Cancelled' then raise exception '% is cancelled', r.rfq_no; end if;
+  if a in ('recommend', 'award') then
+    s := crm_sup(p ->> 'supplier_id');
+    if not exists (select 1 from quotes where rfq_no = r.rfq_no and supplier_id = s.supplier_id) then raise exception '% has no quote on %', s.supplier_id, r.rfq_no; end if;
+  end if;
+  if a = 'recommend' then
+    if r.status = 'Awarded' then raise exception '% is already awarded', r.rfq_no; end if;
+    update rfqs set recommended_supplier = s.supplier_id, recommendation = nullif(btrim(coalesce(p ->> 'reason', '')), ''), updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
+    msg := 'Recommended ' || s.supplier_id || ' ' || s.name || coalesce(' - ' || nullif(btrim(p ->> 'reason'), ''), '');
+  elsif a = 'approval_sent' then
+    if r.status = 'Awarded' then raise exception '% is already awarded', r.rfq_no; end if;
+    if r.recommended_supplier is null then raise exception 'Choose the recommended supplier first'; end if;
+    update rfqs set status = 'Approval sent', approval_sent_at = now(), fx_snapshot = coalesce(p -> 'fx', (select value from settings where key = 'fx')), updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
+    msg := 'Approval pack sent (recommended ' || r.recommended_supplier || ')';
+  elsif a = 'award' then
+    if length(btrim(coalesce(p ->> 'award_by', ''))) < 2 then raise exception 'Who approved it? (e.g. the boss''s name)'; end if;
+    update rfqs set status = 'Awarded', award_supplier = s.supplier_id, award_by = btrim(p ->> 'award_by'), award_date = coalesce(nullif(p ->> 'award_date', '')::date, current_date),
+      po_ref = nullif(btrim(coalesce(p ->> 'po_ref', '')), ''), award_note = nullif(btrim(coalesce(p ->> 'note', '')), ''),
+      recommended_supplier = coalesce(recommended_supplier, s.supplier_id), updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
+    msg := 'Awarded to ' || s.supplier_id || ' ' || s.name || ' - approved by ' || btrim(p ->> 'award_by') || coalesce(', PO ' || nullif(btrim(p ->> 'po_ref'), ''), '')
+      || case when r.recommended_supplier is not null and r.recommended_supplier <> s.supplier_id then ' (recommended was ' || r.recommended_supplier || ')' else '' end;
+  elsif a = 'reopen' then
+    if r.status <> 'Awarded' and r.status <> 'Approval sent' then raise exception '% is not awarded / sent for approval', r.rfq_no; end if;
+    update rfqs set status = 'Draft', award_supplier = null, award_by = null, award_date = null, po_ref = null, award_note = null, approval_sent_at = null, updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
+    perform crm_rfqauto(r.rfq_no);
+    msg := 'Reopened (award / approval cleared)' || coalesce(' - ' || nullif(btrim(p ->> 'note'), ''), '');
+  else raise exception 'Unknown action % (recommend, approval_sent, award, reopen)', a;
+  end if;
+  perform crm_log('rfq', r.rfq_no, msg);
   return crm_out(jsonb_build_object('rfq', crm_rfqj(crm_rfqget(r.rfq_no))));
 end $$;
 
@@ -1544,12 +1724,14 @@ alter table public.rfqs enable row level security;
 alter table public.rfq_items enable row level security;
 alter table public.rfq_recipients enable row level security;
 alter table public.rfq_clicks enable row level security;
+alter table public.quotes enable row level security;
+alter table public.quote_lines enable row level security;
 do $$
 declare t text;
 begin
   foreach t in array array['tenders', 'bq_items', 'asbuilt_items', 'revisions', 'activity_log', 'lists',
                            'settings', 'categories', 'suppliers', 'supplier_contacts', 'supplier_categories', 'discovery_candidates',
-                           'rfqs', 'rfq_items', 'rfq_recipients', 'rfq_clicks'] loop
+                           'rfqs', 'rfq_items', 'rfq_recipients', 'rfq_clicks', 'quotes', 'quote_lines'] loop
     execute format('drop policy if exists crm_read on public.%I', t);
     execute format('create policy crm_read on public.%I for select to authenticated using (public.crm_can_read())', t);
   end loop;
@@ -1563,6 +1745,8 @@ revoke all on public.settings, public.categories, public.suppliers, public.suppl
 grant select on public.settings, public.categories, public.suppliers, public.supplier_contacts, public.supplier_categories, public.discovery_candidates to authenticated;
 revoke all on public.rfqs, public.rfq_items, public.rfq_recipients, public.rfq_clicks from anon, authenticated;
 grant select on public.rfqs, public.rfq_items, public.rfq_recipients, public.rfq_clicks to authenticated;
+revoke all on public.quotes, public.quote_lines from anon, authenticated;
+grant select on public.quotes, public.quote_lines to authenticated;
 
 -- functions: nothing for anon; signed-in users may call only the API functions (each checks the role itself)
 do $$
@@ -1578,7 +1762,8 @@ begin
              'crm_library', 'crm_dashboard', 'crm_setprofile',
              'crm_procdata', 'crm_supplier', 'crm_savesupplier', 'crm_setsupplierstate', 'crm_queue', 'crm_queueadd', 'crm_queuedns', 'crm_queuedecide',
              'crm_settings', 'crm_setsettings', 'crm_setholidays',
-             'crm_rfqs', 'crm_rfq', 'crm_saverfq', 'crm_setrecipients', 'crm_rfqclick', 'crm_setrecipient', 'crm_rfqstatus') loop
+             'crm_rfqs', 'crm_rfq', 'crm_saverfq', 'crm_setrecipients', 'crm_rfqclick', 'crm_setrecipient', 'crm_rfqstatus',
+             'crm_savequote', 'crm_deletequote', 'crm_setfx', 'crm_rfqdecide') loop
     execute format('grant execute on function %s to authenticated', f.sig);
   end loop;
 end $$;

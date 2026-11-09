@@ -175,6 +175,37 @@ const K = P.rfqKpis([{ rfq_no: 'A', recipients: [
 eq([K.rfqs, K.rfqsSent, K.rfqsOk, K.contacted, K.replied, K.quoted, K.valid, Math.round(K.replyRate * 100), Math.round(K.rfqSuccess * 100), K.avgResponseHours, K.medianResponseHours],
    [3, 2, 1, 6, 4, 3, 3, 67, 50, 7.75, 3], 'RFQ KPIs');
 
+/* ----- v3.1.3: AI answer tables, FXR, landed cost, comparison, budget ----- */
+const csv = 'Here are the suppliers:\n```\ncompany_name,country,city,email,phone,category\n"Lee Hardware, Gadong",Brunei,Gadong,sales@leehw.com.bn,+673 222 1111 / HP 871 2222,HW\ne.g. Example Co,Brunei,,,,\n```';
+const pt = P.parseTable(csv);
+eq([pt.rows.length, pt.rows[0].company_name, pt.rows[0].phone], [1, 'Lee Hardware, Gadong', '+673 222 1111 / HP 871 2222'], 'CSV answer with quotes, fences, example row');
+const mdt = P.parseTable('| company_name | country | email |\n|---|---|---|\n| **Acme Steel** | China | a@acme.cn |\n| Beta | Vietnam | b@beta.vn |');
+eq(mdt.rows.map(r => r.company_name + '/' + r.country), ['Acme Steel/China', 'Beta/Vietnam'], 'markdown table answer');
+eq(P.parseTable('Company_Name\tCountry\nX\tBrunei').rows[0].country, 'Brunei', 'tab-separated answer');
+eq(P.parseTable('no table here').error, 'no header row with company_name', 'no table');
+const FXR = { USD: { rate: 1.2813, date: '2026-11-06' }, MYR: { rate: 0.3118 } };
+eq([P.fxRate('BND', FXR), P.fxRate('sgd', FXR), P.fxRate('USD', FXR), P.fxRate('CNY', FXR)], [1, 1, 1.2813, null], 'fxRate (S$ = B$, missing = null)');
+const IT = [{ line: 1, qty: 100, unit: 'bags' }, { line: 2, qty: null, unit: 'pcs' }];
+const qA = { supplier_id: 'SUP-0001', currency: 'BND', clearing_bnd: 0, delivery_bnd: 50, lines: [{ line: 1, unit_price: 8.5 }, { line: 2, unit_price: 2, moq: 20 }], valid: true, lead_days: 3 };
+const LA = P.landed(qA, IT, FXR);
+eq([LA.goods_bnd, LA.local_bnd, LA.total_bnd, LA.lines[1].qty, LA.lines[1].qty_from], [890, 50, 940, 20, 'moq'], 'landed local quote (MOQ line uses MOQ)');
+const qB = { supplier_id: 'SUP-0002', currency: 'USD', freight: 100, insurance: 0, duty_pct: 5, clearing_bnd: 80, delivery_bnd: 40, lines: [{ line: 1, unit_price: 6 }, { line: 2, unit_price: 1.2, qty: 50 }], valid: true, lead_days: 40 };
+const LB = P.landed(qB, IT, FXR);
+eq([+LB.goods_bnd.toFixed(2), +LB.freight_bnd.toFixed(2), +LB.duty_bnd.toFixed(2), +LB.total_bnd.toFixed(2)], [845.66, 128.13, 48.69, 1142.48], 'landed overseas quote (FXR, freight, duty, clearing)');
+const qC = { supplier_id: 'SUP-0003', currency: 'CNY', lines: [{ line: 1, unit_price: 40 }, { line: 2, unit_price: 9 }], valid: true };
+const qD = { supplier_id: 'SUP-0004', currency: 'MYR', lines: [{ line: 1, unit_price: 25 }], valid: true, validity: '2026-11-01' };
+const qE = { supplier_id: 'SUP-0005', currency: 'BND', lines: [{ line: 1, unit_price: 8 }, { line: 2, unit_price: 2.5 }], valid: true, lead_days: 2 };
+const C = P.compareQuotes(IT, [qA, qB, qC, qD, qE], { fx: FXR, today: '2026-11-09', required_date: '2026-11-20' });
+eq(C.rows.map(r => r.flags.join('|')), ['', '', 'no FX rate for CNY', 'partial: no price for line 2|expired 2026-11-01', ''], 'comparison flags');
+eq([C.valid, C.goalMet, C.best, C.rows[1].leadWarning], [3, true, 'SUP-0005', 'lead time 40 d > 11 d available'], 'best = lowest landed valid without lead-time warning');
+eq([C.rows[0].rank, C.rows[4].rank, C.rows[1].rank, C.lowLine[1], C.lowLine[2]], [2, 1, 3, 'SUP-0002', 'SUP-0002'], 'ranks and lowest per line');
+eq(+C.saving.toFixed(2), 339.98, 'saving vs highest valid (1142.48 - 802.50)');
+const RI = P.resIndex({ head: ['Code', 'Resource', 'Unit', 'Price (B$)', 'Conf.'], rows: [['MATERIALS & PRODUCTS'], ['M09', 'Portland cement, 50kg bag', 'bag', 8.5, 'A'], ['M10', 'Sand', 'm3', '28.75', 'B']] });
+eq(Object.keys(RI), ['M09', 'M10'], 'masterlist Res index skips group rows');
+const BC = P.budgetCheck([{ line: 1, qty: 100, res_code: 'M09' }, { line: 2, qty: null, res_code: 'M10' }], RI, P.landed(qE, IT, FXR));
+eq([BC.budget, BC.quoted, BC.diff, BC.covered], [850, 800, -50, 1], 'budget check vs masterlist');
+eq([P.money(1234567.891), P.money(null), P.money(5, 0)], ['1,234,567.89', '—', '5'], 'money format');
+
 // DNS-over-HTTPS with a fake fetch (Google fails -> Cloudflare)
 const calls = [];
 const fakeFetch = (url) => { calls.push(url); if (/dns\.google/.test(url)) return Promise.reject(new Error('blocked'));

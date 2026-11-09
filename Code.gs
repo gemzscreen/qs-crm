@@ -1,42 +1,47 @@
 /**
- * QS CRM — Google Drive file service (Apps Script), v3.1.0
+ * QS CRM — Google Drive file service (Apps Script), v3.1.3
  * From v2.1.0 the data lives in Supabase. This script only:
  *   - stores tender files in Google Drive (one sub-folder per tender) and returns the links;
  *   - optionally creates sign-in accounts for the Users page (needs the Supabase service key);
  *   - v2.2.0: reads the pricing masterlist (Google Sheet, Rates + Res tabs) for the Masterlist page — read only, signed-in users only.
  *   - v3.1.0: stores Procurement files in <tender files folder>/Procurement/<folder> (company logo now; RFQ PDFs and quotes later).
+ *   - v3.1.3: ARZA's own values are filled in below (Gemz, 9 Nov 2026), so pasting a new version needs no re-typing.
+ *     The secret key is the only value never written here: re-running setSupabase() keeps the one already saved.
  * Every call carries the user's Supabase session token; the script asks Supabase who it is (crm_me) and
  * only QS / admin users may upload, only the admin may create users.
  *
  * Setup (once) — in a new Apps Script project (script.google.com › New project) or the old one (replace all code):
- *  1. setSupabase(): paste the Project URL (Supabase › Connect) and the publishable key (Project Settings › API Keys).
- *     Optional: a secret key, only if you want to add users from the app. Run it, then put the
- *     PASTE-… texts back and save (the values stay in Script Properties, not in the code).
- *  2. setDriveFolder(): paste the link of the Drive folder for tender files (or leave it to make "QS CRM - Tenders"). Run it.
+ *  1. setSupabase(): Project URL and publishable key are filled in. To add users from the app, paste the secret key
+ *     (Supabase › Project Settings › API Keys › sb_secret_…) in place of PASTE-SERVICE-KEY, run it once, then put
+ *     PASTE-SERVICE-KEY back and save. The key stays in Script Properties; running it again later keeps it.
+ *  2. setDriveFolder(): the ARZA tender-files folder link is filled in. Run it.
  *     "An unknown error has occurred" = several Google accounts signed in -> use an Incognito window with one account.
- *  2b. setMasterlist(): paste the link of the "ARZA Tender Pricing Masterlist" Google Sheet. Run it (allow Sheets access).
- *  3. Deploy › New deployment › Web app › Execute as: Me › Who has access: Anyone › Deploy. Put the /exec URL in config.js (driveUrl).
+ *  2b. setMasterlist(): the "ARZA Tender Pricing Masterlist" link is filled in. Run it (allow Sheets access).
+ *  3. Deploy › New deployment › Web app › Execute as: Me › Who has access: Anyone › Deploy.
+ *     Copy the /exec URL into QS CRM › Admin Settings › Connections (saved in the database for every user).
  *  After editing this file: Deploy › Manage deployments › Edit › Version: New version.
  */
 
-// Paste the values below ONLY in the Apps Script editor, run setSupabase(), then put the PASTE-… texts back.
-// Do not commit filled-in values to GitHub (the repo is public). url = Project URL, anon = sb_publishable_…, service = sb_secret_… (optional).
+// url = Project URL, anon = publishable key (meant to be public - it is in config.js too). service = secret key: paste it only
+// in the Apps Script editor, never commit it (the repo is public).
 function setSupabase() {
-  var url = 'PASTE-PROJECT-URL';          // e.g. https://abcdefgh.supabase.co
-  var anon = 'PASTE-ANON-KEY';            // publishable key (sb_publishable_…) or legacy anon key
-  var service = 'PASTE-SERVICE-KEY';      // optional: secret key (sb_secret_…) or legacy service_role key - keep secret; leave as is to add users in the Supabase dashboard instead
+  var url = 'https://pasqkzohnecptbhzznxm.supabase.co';
+  var anon = 'sb_publishable_i7DPeYESDvYNJMqzXoXqVg_PSUka53m';
+  var service = 'PASTE-SERVICE-KEY';      // secret key (sb_secret_…): paste, run once, put PASTE-SERVICE-KEY back. Left as is = the saved key is kept
   var p = PropertiesService.getScriptProperties();
   url = String(url).trim().replace(/\/(rest|auth|storage)\/v1.*$/i, '').replace(/\/+$/, '');
   if (!/^https:\/\/.+\.supabase\.co\/?$/.test(url)) throw new Error('Paste the Supabase Project URL first (https://….supabase.co).');
   if (anon.indexOf('PASTE') === 0 || anon.length < 30) throw new Error('Paste the publishable key first.');
   p.setProperty('SUPABASE_URL', url.replace(/\/$/, ''));
   p.setProperty('SUPABASE_ANON', anon);
-  if (service.indexOf('PASTE') !== 0 && service.length > 30) p.setProperty('SUPABASE_SERVICE', service); else p.deleteProperty('SUPABASE_SERVICE');
-  Logger.log('Saved. Users from the app: ' + (p.getProperty('SUPABASE_SERVICE') ? 'ON' : 'OFF (add users in the Supabase dashboard)') + '. Now put the PASTE-… texts back and save.');
+  if (service === 'REMOVE') p.deleteProperty('SUPABASE_SERVICE');                       // only on purpose
+  else if (service.indexOf('PASTE') !== 0 && service.length > 30) p.setProperty('SUPABASE_SERVICE', service);
+  Logger.log('Saved. Users from the app: ' + (p.getProperty('SUPABASE_SERVICE') ? 'ON (secret key saved)' : 'OFF - paste the secret key (sb_secret_…) in setSupabase() and run it once') + '.' +
+    (service.indexOf('PASTE') !== 0 && service !== 'REMOVE' ? ' Now put PASTE-SERVICE-KEY back and save.' : ''));
 }
 
 function setDriveFolder() {
-  var link = 'PASTE-FOLDER-LINK';   // e.g. https://drive.google.com/drive/folders/1AbC...xyz
+  var link = 'https://drive.google.com/drive/u/0/folders/1VuFsJr1LDZDEjBxokCXu1ohNqa4sKLu0';
   var p = PropertiesService.getScriptProperties();
   Logger.log('Step 1/2: checking Drive access ... My Drive = ' + DriveApp.getRootFolder().getName());
   if (link === 'PASTE-FOLDER-LINK' || !link) {
@@ -54,18 +59,18 @@ function authorizeDrive() { setDriveFolder(); }
 
 /* v2.2.0: which Google Sheet is the pricing masterlist (read only) */
 function setMasterlist() {
-  var link = 'PASTE-MASTERLIST-LINK';   // e.g. https://docs.google.com/spreadsheets/d/1AbC...xyz/edit
+  var link = 'https://docs.google.com/spreadsheets/d/1dC3rSSKKvRuyc_Gr4X2QwtWEiZE49fsngscQvGPCAsg/edit?gid=2071073420#gid=2071073420';
   var m = String(link).match(/\/d\/([\w-]{20,})/) || String(link).match(/^([\w-]{20,})$/);
   if (!m) throw new Error('Paste the masterlist Google Sheet link first (open the sheet, copy the address bar).');
   var ss = SpreadsheetApp.openById(m[1]);
   ['Rates', 'Res'].forEach(function (n) { if (!ss.getSheetByName(n)) throw new Error('Tab "' + n + '" not found in ' + ss.getName()); });
   PropertiesService.getScriptProperties().setProperty('MASTERLIST_ID', m[1]);
-  Logger.log('Masterlist set: "' + ss.getName() + '". Now put PASTE-MASTERLIST-LINK back and save.');
+  Logger.log('Masterlist set: "' + ss.getName() + '".');
 }
 
 function doGet() {
   var p = PropertiesService.getScriptProperties();
-  return json_({ ok: true, app: 'QS CRM file service', version: '3.1.0', supabase: !!p.getProperty('SUPABASE_URL'), drive: !!p.getProperty('DRIVE_ROOT_ID'),
+  return json_({ ok: true, app: 'QS CRM file service', version: '3.1.3', supabase: !!p.getProperty('SUPABASE_URL'), drive: !!p.getProperty('DRIVE_ROOT_ID'),
     users: !!p.getProperty('SUPABASE_SERVICE'), masterlist: !!p.getProperty('MASTERLIST_ID') });
 }
 
@@ -83,7 +88,7 @@ function doPost(e) {
 }
 
 var ACTIONS = {
-  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), version: '3.1.0' }; },
+  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), users: !!p.getProperty('SUPABASE_SERVICE'), version: '3.1.3' }; },
 
   /* v2.2.0: pricing masterlist, read only (any active signed-in user). Tabs Rates + Res, header row = the row starting with "Code" */
   masterlist: function (req, me) {

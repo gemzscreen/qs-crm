@@ -5,6 +5,7 @@
  * message templates.
  * v3.1.0: material categories (standards §3), discovery import rows -> supplier records + contacts.
  * v3.1.2: import templates, item lists (MR), RFQ texts that fit the link, reminders, chase list, discovery prompt, RFQ KPIs.
+ * v3.1.3: AI answers pasted as tables, FX, landed cost in B$, quote comparison, masterlist budget check.
  * Works in the browser (global Procure) and in Node (module.exports). No dependencies.
  */
 (function (root) {
@@ -747,6 +748,106 @@
     return best;
   }
 
+  /* ---------- v3.1.3: AI answers, quotes, FX, landed cost, comparison, budget (standards §8) ---------- */
+  // a table pasted from Claude / Gemini: CSV, tab-separated or a markdown table; header row must hold company_name
+  function splitCsvLine(l, sep) {
+    var out = [], cur = '', q = false;
+    for (var i = 0; i < l.length; i++) {
+      var ch = l.charAt(i);
+      if (q) { if (ch === '"') { if (l.charAt(i + 1) === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true; else if (ch === sep) { out.push(cur); cur = ''; } else cur += ch;
+    }
+    out.push(cur); return out.map(function (x) { return x.trim(); });
+  }
+  function parseTable(text) {
+    var lines = String(text || '').replace(/\r/g, '').split('\n').map(function (l) { return l.replace(/^\s+|\s+$/g, ''); })
+      .filter(function (l) { return l && !/^```/.test(l) && !/^\|?\s*:?-{3,}/.test(l); });
+    var hi = -1; for (var i = 0; i < lines.length; i++) if (/company_name/i.test(lines[i])) { hi = i; break; }
+    if (hi < 0) return { rows: [], error: 'no header row with company_name' };
+    var md = /^\|/.test(lines[hi]), sep = md ? '|' : (lines[hi].split('\t').length > lines[hi].split(',').length ? '\t' : ',');
+    var cells = function (l) { var c = md ? l.replace(/^\||\|$/g, '').split('|').map(function (x) { return x.trim(); }) : splitCsvLine(l, sep); return c; };
+    var head = cells(lines[hi]).map(function (h) { return h.toLowerCase().replace(/\*|`/g, '').trim(); });
+    var rows = lines.slice(hi + 1).map(cells).filter(function (c) { return c.some(function (x) { return x; }); }).map(function (c) {
+      var o = {}; head.forEach(function (h, j) { if (h) o[h] = (c[j] || '').replace(/^\*\*|\*\*$/g, ''); }); return o; })
+      .filter(function (o) { return o.company_name && !/^(e\.g\.|example\b)/i.test(o.company_name); });
+    return { rows: rows, columns: head };
+  }
+  // FX: B$ per 1 unit of the currency. B$ = S$ 1:1 (Currency Interchangeability Agreement); others from the FX table
+  var CURRENCIES = ['BND', 'SGD', 'USD', 'MYR', 'CNY', 'EUR', 'AUD', 'JPY', 'THB', 'IDR', 'VND', 'PHP', 'INR', 'HKD', 'GBP', 'AED', 'KRW', 'TWD'];
+  function fxRate(cur, fx) {
+    cur = String(cur || 'BND').toUpperCase(); if (cur === 'BND' || cur === 'SGD') return 1;
+    var r = fx && fx[cur]; var v = r && (typeof r === 'object' ? +r.rate : +r); return v > 0 ? v : null;
+  }
+  // one quote -> amounts in B$ at site. items: RFQ items [{line, qty, unit}]; q: {currency, freight, insurance, duty_pct, clearing_bnd,
+  // delivery_bnd, lines:[{line, unit_price, qty, moq}]}. Qty used = RFQ qty, else the quoted qty, else the MOQ.
+  function landed(q, items, fx) {
+    var rate = fxRate(q.currency, fx), byLine = {}, out = { rate: rate, fxMissing: rate == null, lines: [], missing: [] };
+    (q.lines || []).forEach(function (l) { byLine[l.line] = l; });
+    var goods = 0;
+    (items || []).forEach(function (it) {
+      var l = byLine[it.line], up = l && l.unit_price !== '' && l.unit_price != null ? +l.unit_price : null;
+      if (up == null || isNaN(up)) { out.missing.push(it.line); out.lines.push({ line: it.line, unit_price: null }); return; }
+      var qty = num(it.qty) || num(l.qty) || num(l.moq) || 1, ub = rate == null ? null : up * rate;
+      goods += up * qty;
+      out.lines.push({ line: it.line, unit_price: up, qty: qty, qty_from: num(it.qty) ? 'rfq' : num(l.qty) ? 'quote' : num(l.moq) ? 'moq' : 'one', moq: num(l.moq),
+        unit_bnd: ub, amount_bnd: ub == null ? null : ub * qty, compliant: l.compliant !== false, brand: l.brand || '' });
+    });
+    var fr = (+q.freight || 0) + (+q.insurance || 0), duty = (+q.duty_pct || 0) / 100;
+    out.goods = goods; out.partial = out.missing.length > 0; out.complete = !out.partial;
+    if (rate == null) { out.total_bnd = null; return out; }
+    out.goods_bnd = goods * rate; out.freight_bnd = fr * rate; out.duty_bnd = (goods + fr) * rate * duty;
+    out.local_bnd = (+q.clearing_bnd || 0) + (+q.delivery_bnd || 0);
+    out.total_bnd = out.goods_bnd + out.freight_bnd + out.duty_bnd + out.local_bnd;
+    return out;
+  }
+  // compare the quotes of one RFQ. opts: {fx, today, required_date, rfq_date}. Valid for the comparison = ticked valid, priced for every
+  // line, within validity, FX known. Lead-time warning when lead_days > days left to the required date (counted from today).
+  function compareQuotes(items, quotes, opts) {
+    opts = opts || {}; var today = opts.today || iso(new Date());
+    var rows = (quotes || []).map(function (q) {
+      var L = landed(q, items, opts.fx), flags = [];
+      if (q.valid === false) flags.push('not valid (unticked)');
+      if (L.partial) flags.push('partial: no price for line ' + L.missing.join(', '));
+      if (L.fxMissing) flags.push('no FX rate for ' + q.currency);
+      if (q.validity && q.validity < today) flags.push('expired ' + q.validity);
+      if (L.lines.some(function (l) { return l.unit_price != null && !l.compliant; })) flags.push('not to spec on some lines');
+      var lw = leadTimeWarning(today, opts.required_date, q.lead_days == null || q.lead_days === '' ? null : +q.lead_days);
+      return { q: q, L: L, flags: flags, leadWarning: lw, ok: !flags.length };
+    });
+    var ok = rows.filter(function (r) { return r.ok; }).sort(function (a, b) { return a.L.total_bnd - b.L.total_bnd; });
+    ok.forEach(function (r, i) { r.rank = i + 1; });
+    var best = ok.filter(function (r) { return !r.leadWarning; })[0] || ok[0] || null;
+    var lowLine = {};
+    (items || []).forEach(function (it) {
+      var c = rows.filter(function (r) { return r.ok; }).map(function (r) { var l = r.L.lines.filter(function (x) { return x.line === it.line; })[0]; return l && l.unit_bnd != null ? { id: r.q.supplier_id, v: l.unit_bnd } : null; }).filter(Boolean)
+        .sort(function (a, b) { return a.v - b.v; });
+      lowLine[it.line] = c.length ? c[0].id : '';
+    });
+    var hi = ok.length ? ok[ok.length - 1].L.total_bnd : null;
+    return { rows: rows, valid: ok.length, goalMet: ok.length >= 3, best: best ? best.q.supplier_id : '', lowLine: lowLine,
+      saving: best && hi != null ? hi - best.L.total_bnd : null };
+  }
+  // masterlist Res tab (via Apps Script) -> {code: {name, unit, price, conf}}
+  function resIndex(res) {
+    var out = {}; if (!res || !res.head) return out;
+    var h = res.head.map(function (x) { return String(x).toLowerCase(); }), ci = function (re) { for (var i = 0; i < h.length; i++) if (re.test(h[i])) return i; return -1; };
+    var cC = ci(/^code/), cN = ci(/^resource/), cU = ci(/^unit/), cP = ci(/^price/), cF = ci(/^conf/);
+    (res.rows || []).forEach(function (r) { var c = String(r[cC] || '').trim(), p = num(r[cP]); if (/^[A-Z]{1,3}\d{1,4}[a-z]?$/.test(c) && p != null) out[c] = { name: String(r[cN] || ''), unit: String(r[cU] || ''), price: p, conf: String(r[cF] || '') }; });
+    return out;
+  }
+  // budget from the masterlist (items with a res_code and a quantity) vs a quote's landed total for the same lines
+  function budgetCheck(items, resIdx, Lq) {
+    var lines = [], budget = 0, quoted = 0, n = 0;
+    (items || []).forEach(function (it) {
+      var r = it.res_code && resIdx[it.res_code], qty = num(it.qty); if (!r || qty == null) return;
+      var ql = Lq && Lq.lines.filter(function (x) { return x.line === it.line; })[0];
+      lines.push({ line: it.line, code: it.res_code, ml_price: r.price, ml_unit: r.unit, conf: r.conf, budget: r.price * qty, quoted: ql && ql.amount_bnd != null ? ql.amount_bnd : null });
+      budget += r.price * qty; if (ql && ql.amount_bnd != null) { quoted += ql.amount_bnd; n++; }
+    });
+    return { lines: lines, budget: budget, quoted: quoted, covered: lines.length, priced: n, diff: n ? quoted - budget : null };
+  }
+  function money(v, d) { if (v == null || isNaN(v)) return '—'; d = d == null ? 2 : d; var s = (+v).toFixed(d).split('.'); s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); return s.join('.'); }
+
   var api = {
     rfqNo: rfqNo, mrNo: mrNo, parseDocNo: parseDocNo, nextDocNo: nextDocNo, supplierId: supplierId, parseSupplierId: parseSupplierId,
     COUNTRIES: COUNTRIES, countryCode: countryCode, ZONES: ZONES, zoneOf: zoneOf, zoneLabel: zoneLabel,
@@ -765,7 +866,8 @@
     autoVerification: autoVerification, dnsTargets: dnsTargets, digits: digits,
     TEMPLATE_COLS: TEMPLATE_COLS, TEMPLATE_HELP: TEMPLATE_HELP, MR_COLS: MR_COLS, MR_HELP: MR_HELP, dateIso: dateIso, mrItem: mrItem, parsePasted: parsePasted,
     shortDesc: shortDesc, rfqItems: rfqItems, rfqForTemplates: rfqForTemplates, buildEmailFit: buildEmailFit, buildReminderEmail: buildReminderEmail,
-    CHASE_OPEN: CHASE_OPEN, chaseDue: chaseDue, discoveryPrompt: discoveryPrompt, rfqFromTextSheet: rfqFromTextSheet, rfqKpis: rfqKpis, matchSupplier: matchSupplier
+    CHASE_OPEN: CHASE_OPEN, chaseDue: chaseDue, discoveryPrompt: discoveryPrompt, rfqFromTextSheet: rfqFromTextSheet, rfqKpis: rfqKpis, matchSupplier: matchSupplier,
+    parseTable: parseTable, CURRENCIES: CURRENCIES, fxRate: fxRate, landed: landed, compareQuotes: compareQuotes, resIndex: resIndex, budgetCheck: budgetCheck, money: money, num: num
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Procure = api;

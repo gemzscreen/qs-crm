@@ -177,6 +177,47 @@ select set_config('request.uid', '00000000-0000-0000-0000-000000000003', false);
 select pg_temp.err($q$select public.crm_rfqclick('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","action":"email"}')$q$, 'Read-only', 'viewer cannot click-log');
 select pg_temp.ok(jsonb_array_length(public.crm_rfq('{"rfq_no":"RFQ-2611-003"}') -> 'items') = 2, 'viewer reads an RFQ');
 
+-- v3.1.3: quotes, FX, recommendation, approval, award, connections (as qs, then admin)
+select set_config('request.uid', '00000000-0000-0000-0000-000000000002', false);
+select pg_temp.err($q$select public.crm_savequote('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0002","header":{},"lines":[{"line":1,"unit_price":"7"}]}')$q$, 'not on the send list', 'quote only from a send-list supplier');
+select pg_temp.err($q$select public.crm_savequote('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","header":{},"lines":[{"line":1,"unit_price":""}]}')$q$, 'at least one unit price', 'quote needs a price');
+select pg_temp.err($q$select public.crm_savequote('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","header":{"lead_days":"two"},"lines":[{"line":1,"unit_price":"7"}]}')$q$, 'must be a number', 'lead days numeric');
+update public.rfq_recipients set status = 'Replied', valid_quote = null where rfq_no = 'RFQ-2611-003' and supplier_id = 'SUP-0001';
+select public.crm_savequote('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","header":{"currency":"BND","lead_days":"2","validity":"2026-12-31","payment_terms":"COD","quote_ref":"Q-881"},"lines":[{"line":1,"unit_price":"7.20","unit":"bags"},{"line":2,"unit_price":"31"}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{quote,rev}') = '1' and jsonb_array_length(:'r'::jsonb #> '{quote,lines}') = 2 and (:'r'::jsonb #>> '{quote,ref}') = 'RFQ-2611-003/SUP-0001/1', 'quote saved, rev 1, 2 lines');
+select pg_temp.ok((select status || ' ' || valid_quote from public.rfq_recipients where rfq_no = 'RFQ-2611-003' and supplier_id = 'SUP-0001') = 'Quoted true', 'quote -> recipient Quoted + valid');
+select public.crm_savequote('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","header":{"currency":"BND"},"lines":[{"line":1,"unit_price":"7.00"}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{quote,rev}') = '1' and jsonb_array_length(:'r'::jsonb #> '{quote,lines}') = 1, 'saving again updates the current revision');
+select public.crm_savequote('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","new_rev":true,"header":{"currency":"USD","freight":"50"},"lines":[{"line":1,"unit_price":"5.5"}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{quote,rev}') = '2' and (select count(*) from public.quotes where rfq_no = 'RFQ-2611-003' and supplier_id = 'SUP-0001' and current) = 1, 'revised quote = rev 2, only one current');
+select pg_temp.ok(jsonb_array_length(public.crm_rfq('{"rfq_no":"RFQ-2611-003"}') -> 'quotes') = 2 and (public.crm_rfq('{"rfq_no":"RFQ-2611-003"}') #>> '{fx,USD,rate}') = '1.2813', 'crm_rfq returns quotes + FX');
+select pg_temp.ok((select (x ->> 'quotes_n')::int from jsonb_array_elements(public.crm_rfqs() -> 'rfqs') x where x ->> 'rfq_no' = 'RFQ-2611-003') = 1, 'register counts current quotes');
+select pg_temp.err($q$select public.crm_setfx('{"rates":{"SGD":{"rate":"1"}}}')$q$, 'always 1:1', 'S$ fixed 1:1');
+select pg_temp.err($q$select public.crm_setfx('{"rates":{"USD":{"rate":"-1"}}}')$q$, 'positive', 'FX positive');
+select public.crm_setfx('{"rates":{"USD":{"rate":"1.29","date":"2026-11-09","source":"bank"},"CNY":{"rate":"0.189"},"EUR":{"rate":""}}}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{fx,USD,rate}') = '1.29' and not (:'r'::jsonb -> 'fx') ? 'EUR', 'FX saved (blank rates dropped)');
+select pg_temp.err($q$select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"recommend","supplier_id":"SUP-0003"}')$q$, 'has no quote', 'recommend needs a quote');
+select pg_temp.err($q$select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-002","action":"approval_sent"}')$q$, 'recommended supplier first', 'approval needs a recommendation');
+select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"recommend","supplier_id":"SUP-0001","reason":"lowest landed, in stock"}') as r \gset
+select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"approval_sent"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{rfq,status}') = 'Approval sent' and (:'r'::jsonb #>> '{rfq,fx_snapshot,USD,rate}') = '1.29', 'approval sent, FX snapshot kept');
+select pg_temp.err($q$select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"award","supplier_id":"SUP-0001"}')$q$, 'Who approved', 'award needs the approver');
+select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"award","supplier_id":"SUP-0001","award_by":"Hj Ahmad","po_ref":"PO-2611-01"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{rfq,status}') = 'Awarded' and (:'r'::jsonb #>> '{rfq,award_supplier}') = 'SUP-0001' and (:'r'::jsonb #>> '{rfq,award_date}') is not null, 'awarded');
+select pg_temp.err($q$select public.crm_savequote('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","header":{},"lines":[{"line":1,"unit_price":"7"}]}')$q$, 'awarded', 'awarded RFQ locks quotes');
+select public.crm_rfqclick('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0001","action":"thanks"}') as r \gset
+select pg_temp.ok((select count(*) from public.rfq_clicks where rfq_no = 'RFQ-2611-003' and action = 'thanks') = 1, 'thank-you click logged');
+select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"reopen","note":"PO cancelled"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{rfq,status}') <> 'Awarded' and (:'r'::jsonb #>> '{rfq,award_supplier}') is null, 'reopen clears the award');
+select public.crm_deletequote(jsonb_build_object('id', (select id from public.quotes where rfq_no = 'RFQ-2611-003' and rev = 2))) as r \gset
+select pg_temp.ok((select rev from public.quotes where rfq_no = 'RFQ-2611-003' and current) = 1, 'deleting rev 2 makes rev 1 current again');
+select public.crm_queueadd('{"source_file":"AI answer","rows":[{"i":"7","data":{"company_name":"Zeta Co","country":"Brunei"},"keys":["name:zeta|BN"]}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{ids,0,i}') = '7' and (:'r'::jsonb #>> '{ids,0,id}') is not null, 'queueadd returns the new ids');
+select set_config('request.uid', '00000000-0000-0000-0000-000000000001', false);
+select pg_temp.err($q$select public.crm_setsettings('{"key":"connections","value":{"drive_url":"https://example.com/x"}}')$q$, 'must look like', 'Drive link checked');
+select public.crm_setsettings('{"key":"connections","value":{"drive_url":"https://script.google.com/macros/s/AKfycbx-Ab_12/exec"}}') as r \gset
+select pg_temp.ok((public.crm_settings() #>> '{connections,drive_url}') = 'https://script.google.com/macros/s/AKfycbx-Ab_12/exec', 'Drive link stored in the database');
+
 -- grants and row-level security as the app's database role
 set role authenticated;
 select pg_temp.ok((select count(*) from public.suppliers) = 3, 'authenticated reads suppliers through RLS');
