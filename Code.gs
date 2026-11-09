@@ -1,5 +1,5 @@
 /**
- * QS CRM — Google Drive file service (Apps Script), v3.1.3
+ * QS CRM — Google Drive file service (Apps Script), v3.2.0
  * From v2.1.0 the data lives in Supabase. This script only:
  *   - stores tender files in Google Drive (one sub-folder per tender) and returns the links;
  *   - optionally creates sign-in accounts for the Users page (needs the Supabase service key);
@@ -7,6 +7,8 @@
  *   - v3.1.0: stores Procurement files in <tender files folder>/Procurement/<folder> (company logo now; RFQ PDFs and quotes later).
  *   - v3.1.3: ARZA's own values are filled in below (Gemz, 9 Nov 2026), so pasting a new version needs no re-typing.
  *     The secret key is the only value never written here: re-running setSupabase() keeps the one already saved.
+ *   - v3.2.0: mlUpdate writes an accepted rate proposal into the masterlist Res tab (price, confidence A, source) and logs the
+ *     old price in a "QS CRM updates" tab; setJobKey() (optional) lets the mailbox job store reply attachments in Drive.
  * Every call carries the user's Supabase session token; the script asks Supabase who it is (crm_me) and
  * only QS / admin users may upload, only the admin may create users.
  *
@@ -68,9 +70,17 @@ function setMasterlist() {
   Logger.log('Masterlist set: "' + ss.getName() + '".');
 }
 
+/* v3.2.0 (optional): key for the mailbox job (GitHub Actions) to store reply attachments in Drive. Run once, copy the key from the log
+   into the GitHub secret DRIVE_JOB_KEY. Running it again makes a new key (the old one stops working). */
+function setJobKey() {
+  var k = (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '');
+  PropertiesService.getScriptProperties().setProperty('JOB_KEY', k);
+  Logger.log('Mailbox job key - put it in GitHub › Settings › Secrets › Actions › DRIVE_JOB_KEY:\n' + k);
+}
+
 function doGet() {
   var p = PropertiesService.getScriptProperties();
-  return json_({ ok: true, app: 'QS CRM file service', version: '3.1.3', supabase: !!p.getProperty('SUPABASE_URL'), drive: !!p.getProperty('DRIVE_ROOT_ID'),
+  return json_({ ok: true, app: 'QS CRM file service', version: '3.2.0', supabase: !!p.getProperty('SUPABASE_URL'), drive: !!p.getProperty('DRIVE_ROOT_ID'),
     users: !!p.getProperty('SUPABASE_SERVICE'), masterlist: !!p.getProperty('MASTERLIST_ID') });
 }
 
@@ -78,7 +88,7 @@ function doPost(e) {
   var req;
   try { req = JSON.parse(e.postData.contents); } catch (err) { return json_({ ok: false, error: 'Bad request' }); }
   try {
-    var me = whoIs_(req.token);
+    var me = req.jobKey ? jobWho_(req.jobKey, req.action) : whoIs_(req.token);
     var fn = ACTIONS[req.action];
     if (!fn) throw new Error('Unknown action ' + req.action);
     return json_({ ok: true, data: fn(req, me) });
@@ -88,7 +98,7 @@ function doPost(e) {
 }
 
 var ACTIONS = {
-  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), users: !!p.getProperty('SUPABASE_SERVICE'), version: '3.1.3' }; },
+  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), users: !!p.getProperty('SUPABASE_SERVICE'), version: '3.2.0' }; },
 
   /* v2.2.0: pricing masterlist, read only (any active signed-in user). Tabs Rates + Res, header row = the row starting with "Code" */
   masterlist: function (req, me) {
@@ -144,6 +154,37 @@ var ACTIONS = {
     } finally { lock.releaseLock(); }
   },
 
+  /* v3.2.0: accepted rate proposal -> masterlist Res tab. req: code, price (B$ per unit), source, unit. Returns {code, old, price}. */
+  mlUpdate: function (req, me) {
+    if (['admin', 'qs'].indexOf(me.role) < 0) throw new Error('Read-only account - only QS and admin users can change the masterlist');
+    var id = PropertiesService.getScriptProperties().getProperty('MASTERLIST_ID');
+    if (!id) throw new Error('Masterlist not set - run setMasterlist() in Apps Script');
+    var code = String(req.code || '').trim(), price = Number(req.price);
+    if (!/^[A-Z]{1,3}\d{1,4}[a-z]?$/.test(code)) throw new Error('Bad masterlist code ' + code);
+    if (!(price > 0) || price > 1e7) throw new Error('Bad price ' + req.price);
+    var lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try {
+      var ss = SpreadsheetApp.openById(id), sh = ss.getSheetByName('Res'); if (!sh) throw new Error('Tab "Res" not found in the masterlist');
+      var v = sh.getDataRange().getValues(), h = -1;
+      for (var i = 0; i < Math.min(v.length, 15); i++) if (String(v[i][0]).trim() === 'Code') { h = i; break; }
+      if (h < 0) throw new Error('Header row starting with "Code" not found in the Res tab');
+      var head = v[h].map(function (x) { return String(x).trim().toLowerCase(); }), col = function (re) { for (var j = 0; j < head.length; j++) if (re.test(head[j])) return j; return -1; };
+      var cP = col(/^price/), cN = col(/^resource/), cU = col(/^unit/), cF = col(/^conf/), cS = col(/^(source|remarks?|basis)/), cD = col(/(date|updated)/);
+      if (cP < 0) throw new Error('No "Price" column in the Res tab');
+      var r = -1; for (var k = h + 1; k < v.length; k++) if (String(v[k][0]).trim() === code) { r = k; break; }
+      if (r < 0) throw new Error(code + ' not found in the Res tab');
+      var old = v[r][cP], when = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+      sh.getRange(r + 1, cP + 1).setValue(Math.round(price * 100) / 100);
+      if (cF >= 0) sh.getRange(r + 1, cF + 1).setValue('A');
+      if (cS >= 0) sh.getRange(r + 1, cS + 1).setValue('Quote ' + String(req.source || '').slice(0, 120) + ' (' + when + ')');
+      if (cD >= 0) sh.getRange(r + 1, cD + 1).setValue(when);
+      var lg = ss.getSheetByName('QS CRM updates') || ss.insertSheet('QS CRM updates');
+      if (lg.getLastRow() === 0) lg.appendRow(['Date', 'Code', 'Resource', 'Unit (masterlist)', 'Old price', 'New price', 'Unit (RFQ)', 'Source', 'By']);
+      lg.appendRow([when, code, cN >= 0 ? v[r][cN] : '', cU >= 0 ? v[r][cU] : '', old, Math.round(price * 100) / 100, req.unit || '', req.source || '', me.email]);
+      return { code: code, old: old, price: Math.round(price * 100) / 100 };
+    } finally { lock.releaseLock(); }
+  },
+
   /* admin: create a sign-in account (email confirmed), then give it a role */
   createUser: function (req, me) {
     if (me.role !== 'admin') throw new Error('Only the admin can add users');
@@ -168,6 +209,13 @@ var ACTIONS = {
 /* ---------- Supabase ---------- */
 /* new secret keys (sb_secret_…) go only in the apikey header; legacy service_role JWTs also as Bearer */
 function adminHeaders_(key) { var h = { apikey: key }; if (/^eyJ/.test(key)) h.Authorization = 'Bearer ' + key; return h; }
+/* the mailbox job may only store files (procUpload) */
+function jobWho_(key, action) {
+  var k = PropertiesService.getScriptProperties().getProperty('JOB_KEY');
+  if (!k || String(key) !== k) throw new Error('AUTH: bad job key');
+  if (action !== 'procUpload' && action !== 'ping') throw new Error('The mailbox job may only store files');
+  return { email: 'mailbox job', role: 'qs' };
+}
 function whoIs_(token) {
   if (!token) throw new Error('AUTH: Not signed in');
   return rpc_(token, 'crm_me', {});

@@ -206,6 +206,64 @@ const BC = P.budgetCheck([{ line: 1, qty: 100, res_code: 'M09' }, { line: 2, qty
 eq([BC.budget, BC.quoted, BC.diff, BC.covered], [850, 800, -50, 1], 'budget check vs masterlist');
 eq([P.money(1234567.891), P.money(null), P.money(5, 0)], ['1,234,567.89', '—', '5'], 'money format');
 
+/* ----- v3.2.0: scoring + must-pass, payment terms, reliability, reply-rate learning, quote link, proposals, alerts, KPIs, prompts, goal guard, mailbox ----- */
+const ST = { 'SUP-0005': { contacted: 4, responded: 4, delivered: 2, on_time: 2, quality: 5 } };
+const SQ = P.scoreQuotes(IT, [qA, qB, qC, qD, qE], { fx: FXR, today: '2026-11-09', required_date: '2026-11-20', stats: ST });
+eq(SQ.rows.map(r => r.pass), [true, true, false, false, true], 'must-pass (default: in-time is a warning only)');
+eq(SQ.rows[3].fails, ['not all lines priced', 'expired'], 'must-pass reasons');
+eq(SQ.rows.map(r => r.score && r.score.total), [76.2, 53.6, null, null, 95], 'weighted scores (price 60, lead 20, payment 10, reliability 10)');
+eq([SQ.top, SQ.cheapest, SQ.passing, SQ.rows[4].srank, SQ.rows[0].score.lead], ['SUP-0005', 'SUP-0005', 3, 1, 75], 'top score, cheapest, ranks');
+const SQ2 = P.scoreQuotes(IT, [qA, qB, qE], { fx: FXR, today: '2026-11-09', required_date: '2026-11-20', scoring: P.scoringOf({ must_in_time: true }) });
+eq(SQ2.rows[1].fails, ['too late (lead time 40 d > 11 d available)'], 'must-pass: arrives in time');
+const SQ3 = P.scoreQuotes(IT, [qA, qD, qE], { fx: FXR, today: '2026-11-09', scoring: P.scoringOf({}, { complete: false, valid: false }) });
+eq([SQ3.rows[1].pass, SQ3.cheapest], [true, 'SUP-0004'], 'RFQ must-pass ticks override the defaults');
+eq(P.scoringOf({ price: '70', lead: 30 }, null).price, 70, 'scoringOf takes saved weights');
+eq(['COD', '30 days credit', 'Net 60', '', '50% deposit, balance before delivery', 'tbc'].map(P.paymentDays), [0, 30, 60, null, 0, null], 'payment terms -> credit days');
+eq([P.paymentScore('COD'), P.paymentScore('30 days'), P.paymentScore('90 days'), P.paymentScore('30% deposit, balance 30 days'), P.paymentScore('')], [40, 70, 100, 58, 50], 'payment score');
+eq([P.reliability({}), P.reliability({ contacted: 10, responded: 5 }), P.reliability({ contacted: 10, responded: 10, delivered: 1, on_time: 0 }), P.reliability(ST['SUP-0005'])], [50, 50, 53, 100], 'reliability 0-100');
+const RR = P.categoryRates([
+  { status: 'Comparison', categories: ['HV'], recipients: [{ status: 'Quoted', valid_quote: true }, { status: 'Quoted', valid_quote: true }, { status: 'Emailed' }, { status: 'No reply' }, { status: 'Declined' }, { status: 'Not contacted' }] },
+  { status: 'Sent', categories: ['HV'], recipients: [{ status: 'Emailed' }, { status: 'Emailed' }] },
+  { status: 'Awarded', categories: ['HV', 'EL'], recipients: [{ status: 'Quoted', valid_quote: true }, { status: 'No reply' }] }]);
+eq([RR.HV.contacted, RR.HV.valid, RR.EL.contacted, +RR.HV.rate.toFixed(3)], [7, 3, 2, 0.429], 'reply-rate learning per category (RFQs past chasing only)');
+eq(P.targetFor(['HV', 'EL'], RR), { target: 7, basis: 'HV 43% valid quotes over 7 contacts', cat: 'HV', rate: 3 / 7 }, 'contact target from history');
+eq(P.targetFor(['XX'], RR), { target: 10, basis: '' }, 'no history: contact 10');
+eq([P.quoteLink('https://qs.x/quote.html', 'ab12'), P.quoteLink('https://qs.x/q?a=1', 'cd'), P.quoteLink('x', '')], ['https://qs.x/quote.html?t=ab12', 'https://qs.x/q?a=1&t=cd', ''], 'quote link');
+const RT = P.rfqForTemplates({ rfq_no: 'RFQ-2611-009', title: 'Cement', deadline: '2026-11-12' }, [{ line: 1, description: 'Cement OPC 50kg', qty: 100, unit: 'bags' }], 'Gemar');
+const em = P.buildEmail(RT, { zone: 1, email: 'a@b.com', quote_link: 'https://qs.x/quote.html?t=ab12' });
+ok(/enter your prices online \(no login needed\): https:\/\/qs\.x\/quote\.html\?t=ab12/.test(em.body) && !/online/.test(P.buildEmail(RT, { zone: 1, email: 'a@b.com' }).body), 'RFQ email carries the quote link only when given');
+ok(/Quote online \(no login\): https/.test(P.buildWhatsApp('wa_follow', RT, { zone: 1, whatsapp: '+6738111111', quote_link: 'https://qs.x/quote.html?t=ab12' }).text)
+  && !/Quote online/.test(P.buildWhatsApp('thanks', RT, { zone: 1, quote_link: 'https://x' }).text), 'WhatsApp follow-up carries the link, thank-you does not');
+ok(/Quote online/.test(P.buildReminderEmail('reminder1', RT, { zone: 1, email: 'a@b.com', quote_link: 'https://x' }).body), 'reminder email carries the link');
+const longRT = P.rfqForTemplates({ rfq_no: 'RFQ-2611-011', title: 'Mixed', deadline: '2026-11-12' }, Array.from({ length: 8 }, (_, i) => ({ line: i + 1, description: 'Stainless steel item number ' + (i + 1) + ' grade 304, 1.2 mm wall', qty: 10, unit: 'pcs' })), 'Gemar');
+const lfull = P.buildEmail(longRT, { zone: 1, email: 'a@b.com' }), lfit = P.buildEmailFit(longRT, { zone: 1, email: 'a@b.com', quote_link: 'https://qs.x/quote.html?t=' + 'f'.repeat(64) });
+eq([lfull.tooLong, lfit.linkDropped, lfit.body === lfull.body], [false, true, true], 'email near the link limit: full RFQ text kept, quote link dropped (WhatsApp has it)');
+const ITr = [{ line: 1, qty: 100, unit: 'bags', res_code: 'M09', description: 'Cement' }, { line: 2, qty: null, unit: 'pcs', description: 'Tie' }];
+const PR = P.proposalsFrom(SQ.rows[1], ITr, RI);
+eq(PR.map(x => [x.res_code, x.new_price, x.ml_price, x.unit_match]), [['M09', 10.39, 8.5, true]], 'rate proposal: landed B$ per unit incl. share of freight, duty, local');
+eq(P.proposalsFrom(SQ.rows[2], ITr, RI), [], 'no proposal without a landed total');
+eq([P.normUnit('Bags'), P.normUnit('m²'), P.normUnit('nos'), P.normUnit('No.')], ['bag', 'm2', 'no', 'no'], 'unit normalising');
+eq(P.validityAlerts([{ rfq_no: 'A', status: 'Comparison', valid_until: '2026-11-12' }, { rfq_no: 'B', status: 'Awarded', valid_until: '2026-11-10' }, { rfq_no: 'C', status: 'Sent', valid_until: '2026-12-30' }, { rfq_no: 'D', status: 'Comparison', valid_until: '2026-11-01' }], '2026-11-09', 7)
+  .map(x => [x.rfq_no, x.days_left, x.expired]), [['D', -8, true], ['A', 3, false]], 'quote validity alerts');
+const MK = P.monthKpis([
+  { rfq_no: 'R1', rfq_date: '2026-11-02', status: 'Awarded', award_date: '2026-11-09', award_supplier: 'S1', award_total_bnd: 1000, saving_bnd: 120, categories: ['HV'],
+    recipients: [{ supplier_id: 'S1', name: 'One', status: 'Quoted', valid_quote: true, emailed_at: '2026-11-02 09:00', replied_at: '2026-11-02 13:00' }, { supplier_id: 'S2', status: 'Quoted', valid_quote: true, emailed_at: '2026-11-02 09:00', replied_at: '2026-11-03 09:00' }, { supplier_id: 'S3', status: 'No reply', emailed_at: '2026-11-02 09:00' }, { supplier_id: 'S4', status: 'Quoted', valid_quote: true, emailed_at: '2026-11-02 09:00', replied_at: '2026-11-02 10:00' }] },
+  { rfq_no: 'R2', rfq_date: '2026-11-05', status: 'Chasing', categories: ['EL'], recipients: [{ supplier_id: 'S1', status: 'Reminder 1', emailed_at: '2026-11-05 09:00' }, { supplier_id: 'S5', status: 'Not contacted' }] },
+  { rfq_no: 'R3', rfq_date: '2026-10-30', status: 'Awarded', award_total_bnd: 9999, categories: ['HV'], recipients: [] }], '2026-11', { reply_rate: 0.3, quotes_per_rfq: 1 });
+eq([MK.rfqs, MK.sent, MK.awarded, MK.contacted, MK.awardedBnd, MK.savingBnd, MK.replyRate, MK.goalMet, MK.medianDaysToAward, MK.medianResponseHours], [2, 2, 1, 5, 1000, 120, 0.6, 1, 7, 4], 'monthly KPIs');
+eq([MK.byCategory.map(c => c.code), +MK.vs.replyRate.toFixed(2), MK.vs.quotesPerRfq, MK.topSuppliers[0].supplier_id], [['EL', 'HV'], 0.3, 0.5, 'S1'], 'monthly KPIs: categories, vs baseline, top supplier');
+const PI = [{ description: 'Copper pipe 3/8"', qty: 20, unit: 'coils', category: 'HV' }];
+const pf = P.promptFrom('Find {count} {category} suppliers in {zones} for RFQ {rfq}:\n{items}\nSkip: {exclude}', { rfq_no: 'RFQ-2611-010', title: 'Pipe' }, PI, { zones: [1, 2], exclude: ['Kiulap Aircon'], count: 8 });
+ok(/^Find 8 HV .* suppliers in Brunei.*for RFQ RFQ-2611-010:\n1\. Copper pipe 3\/8" - 20 coils\nSkip: Kiulap Aircon/.test(pf) && /Answer as a table \(CSV\)/.test(pf), 'saved prompt filled + answer format appended');
+eq(P.promptFrom('', { rfq_no: 'X' }, PI, {}), P.discoveryPrompt({ rfq_no: 'X' }, PI, {}), 'no saved prompt = standard prompt');
+const sg = P.shortOfQuotes({ status: 'Chasing', deadline: '2026-11-05', validQuotes: 1, recipients: [{ status: 'Quoted', zone: 1 }, { status: 'Reminder 2', zone: 1 }, { status: 'No reply', zone: 1 }] }, '2026-11-09');
+eq([sg.short, sg.need, sg.reasons.length, sg.nextZones], [true, 2, 2, [2]], 'goal guard: short, widen to Borneo');
+eq(P.shortOfQuotes({ status: 'Sent', deadline: '2026-11-20', validQuotes: 1, recipients: [{ status: 'Quoted', zone: 1 }, { status: 'Emailed', zone: 1 }, { status: 'Emailed', zone: 2 }] }, '2026-11-09').short, false, 'goal guard: still possible');
+eq(P.shortOfQuotes({ status: 'Sent', deadline: '2026-11-20', validQuotes: 0, recipients: [{ status: 'Emailed', zone: 1 }, { status: 'Declined', zone: 1 }] }, '2026-11-09').reasons, ['even if everyone still waiting quotes, only 1 valid quote possible'], 'goal guard: too few suppliers');
+eq([P.rfqRef('Re: rfq-2611-002 - SS304 tubes'), P.rfqRef('hello')], ['RFQ-2611-002', ''], 'RFQ number in a subject');
+eq([P.isBounce('MAILER-DAEMON@mx.ipage.com', 'Undelivered Mail Returned to Sender'), P.isBounce('ann@gamma.com', 'Re: RFQ-2611-002'), P.isBounce('x@y', 'Delivery Status Notification (Failure)')], [true, false, true], 'bounce detection');
+
+
 // DNS-over-HTTPS with a fake fetch (Google fails -> Cloudflare)
 const calls = [];
 const fakeFetch = (url) => { calls.push(url); if (/dns\.google/.test(url)) return Promise.reject(new Error('blocked'));

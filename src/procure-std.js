@@ -6,6 +6,7 @@
  * v3.1.0: material categories (standards §3), discovery import rows -> supplier records + contacts.
  * v3.1.2: import templates, item lists (MR), RFQ texts that fit the link, reminders, chase list, discovery prompt, RFQ KPIs.
  * v3.1.3: AI answers pasted as tables, FX, landed cost in B$, quote comparison, masterlist budget check.
+ * v3.2.0: weighted scoring + must-pass, reliability, reply-rate learning, quote link, rate proposals, validity alerts, monthly KPIs, saved prompts, goal guard, mailbox parsing.
  * Works in the browser (global Procure) and in Node (module.exports). No dependencies.
  */
 (function (root) {
@@ -345,6 +346,7 @@
     terms_L: 'Please also include stock availability, delivery lead time and charges to {{delivery_short}}, payment terms and quote validity.',
     terms_O: 'Please quote FOB (nearest port) and, if possible, CIF Muara Port, Brunei. Please also include production lead time, packing, payment terms, quote validity, and {{certs}}.',
     close: 'Kindly reply by {{deadline}}.',
+    online: 'You may also enter your prices online (no login needed): {{quote_link}}',
     wa_follow: 'Good day, this is {{sender}}, Quantity Surveyor of ARZA SDN BHD (Brunei). We have emailed our {{rfq_no}} to {{supplier_email}} for {{short_desc}}. Kindly check and send your {{ask_short}} by {{deadline}}. Thank you.',
     wa_full: 'Good day, this is {{sender}}, Quantity Surveyor of ARZA SDN BHD (Brunei). Request for quotation {{rfq_no}}:\n{{items_wa}}\n{{qty_wa}} - please send your {{ask_wa}} by {{deadline}}. Thank you.',
     reminder1: 'Good day, this is {{sender}} of ARZA SDN BHD (Brunei). Kindly reminding you of our {{rfq_no}} for {{short_desc}} sent on {{sent_date}}. May we have your quotation by {{deadline}}? Thank you.',
@@ -364,13 +366,14 @@
   function buildEmail(rfq, sup) {
     var a = audienceOf(sup.zone), v = vars(rfq, sup);
     var body = [fill(T['open_' + a], v), itemsText(rfq.items, false), fill(rfq.qtyMode === 'moq' ? T.qty_moq : T.qty_firm, v),
-      fill(T['terms_' + a], v), fill(T.close, v)].join('\n\n') + '\n';
+      fill(T['terms_' + a], v), fill(T.close, v) + (sup.quote_link ? '\n' + fill(T.online, v) : '')].join('\n\n') + '\n';
     var subject = fill(T.subject, v), link = sup.email ? composeLink(sup.email, subject, body) : '';
     return { subject: subject, body: body, link: link, tooLong: link.length > LINK_MAX };
   }
   function buildWhatsApp(kind, rfq, sup, extra) {
     var v = vars(rfq, sup); for (var k in (extra || {})) v[k] = extra[k];
     var text = fill(T[kind], v);
+    if (sup.quote_link && ['wa_follow', 'wa_full', 'reminder1', 'reminder2'].indexOf(kind) >= 0) text += ' Quote online (no login): ' + sup.quote_link;
     return { text: text, link: sup.whatsapp ? waLink(sup.whatsapp, text) : '' };
   }
   function vars(rfq, sup) {
@@ -379,7 +382,7 @@
       rfq_no: rfq.rfq_no, title: rfq.title, short_desc: rfq.short_desc, greeting: sup.greeting || 'Sir/Madam',
       delivery_place: rfq.delivery_place || 'Bandar Seri Begawan, Brunei', delivery_short: rfq.delivery_short || 'Brunei',
       currency: currencyText(sup.zone), certs: rfq.certs || 'mill certificate / material test report',
-      deadline: longDate(rfq.deadline), sender: rfq.sender || 'Gemar', supplier_email: sup.email || '',
+      deadline: longDate(rfq.deadline), sender: rfq.sender || 'Gemar', supplier_email: sup.email || '', quote_link: sup.quote_link || '',
       items_wa: itemsText(rfq.items, true),
       qty_wa: moq ? 'Quantities being finalised' : 'Quantities as above',
       ask_wa: moq ? 'MOQ per item and unit price at MOQ, lead time, delivery to Brunei, payment terms and validity' : 'unit prices, lead time, delivery to Brunei, payment terms and validity',
@@ -670,10 +673,14 @@
   function buildEmailFit(rfq, sup) {
     var e = buildEmail(rfq, sup);
     if (!e.tooLong) return e;
+    if (sup.quote_link) {   // v3.2.0: the full RFQ text matters more than the link (the WhatsApp follow-up still carries it)
+      var plain = {}; for (var k in sup) plain[k] = sup[k]; plain.quote_link = '';
+      var e2 = buildEmail(rfq, plain); if (!e2.tooLong) { e2.linkDropped = true; return e2; }
+    }
     var a = audienceOf(sup.zone), v = vars(rfq, sup);
     var body = [fill(T['open_' + a], v).replace(/ for the following(, delivered to [^:]*)?:$/, ' for the items in the attached RFQ ' + rfq.rfq_no + ' (' + rfq.items.length + ' items)$1.'),
       'Please quote unit prices ' + v.currency + ' for every item, and include ' + (a === 'O' ? 'FOB / CIF Muara, production lead time, packing, payment terms and quote validity.' : 'stock availability, delivery lead time and charges, payment terms and quote validity.'),
-      fill(T.close, v)].join('\n\n') + '\n';
+      fill(T.close, v) + (sup.quote_link ? '\n' + fill(T.online, v) : '')].join('\n\n') + '\n';
     var link = sup.email ? composeLink(sup.email, e.subject, body) : '';
     return { subject: e.subject, body: body, link: link, tooLong: link.length > LINK_MAX, attach: true };
   }
@@ -848,6 +855,176 @@
   }
   function money(v, d) { if (v == null || isNaN(v)) return '—'; d = d == null ? 2 : d; var s = (+v).toFixed(d).split('.'); s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); return s.join('.'); }
 
+  /* ---------- v3.2.0: evaluation, quote link, rate proposals, KPIs, discovery prompts, goal guard, mailbox (standards §8-9) ---------- */
+  var SCORING_DEFAULT = { price: 60, lead: 20, payment: 10, reliability: 10, must_complete: true, must_spec: true, must_valid: true, must_in_time: false };
+  var MUST = [['complete', 'all lines priced'], ['spec', 'to spec'], ['valid', 'quote still valid'], ['in_time', 'arrives in time']];
+  // global settings + the RFQ's own must-pass ticks (rfqs.must_pass) -> one scoring set
+  function scoringOf(settings, rfqMust) {
+    var o = {}, k; for (k in SCORING_DEFAULT) o[k] = SCORING_DEFAULT[k];
+    for (k in (settings || {})) if (settings[k] != null && settings[k] !== '') o[k] = settings[k];
+    MUST.forEach(function (m) { if (rfqMust && rfqMust[m[0]] != null) o['must_' + m[0]] = !!rfqMust[m[0]]; });
+    ['price', 'lead', 'payment', 'reliability'].forEach(function (x) { o[x] = Math.max(0, +o[x] || 0); });
+    return o;
+  }
+  // payment terms text -> credit days (0 = cash / advance), null = cannot tell
+  function paymentDays(terms) {
+    var t = String(terms || '').toLowerCase(); if (!t.trim()) return null;
+    if (/\b(cod|c\.o\.d|cash|advance|prepay|pre-pay|upfront|up-front|before (delivery|shipment)|t\/?t in advance|100\s*%)/.test(t)) return 0;
+    var m = /(\d{1,3})\s*(days?|d\b|hari)/.exec(t); if (m) return Math.min(180, +m[1]);
+    m = /\bnet\s*(\d{1,3})\b/.exec(t); if (m) return Math.min(180, +m[1]);
+    if (/credit|net/.test(t)) return 30;
+    return null;
+  }
+  function paymentScore(terms) {
+    var t = String(terms || '').toLowerCase(), d = paymentDays(terms);
+    if (d == null) return 50;
+    var dep = /(\d{1,3})\s*%\s*(deposit|advance|down|dp)/.exec(t), s = 40 + Math.min(60, d);
+    if (dep && +dep[1] < 100) s = Math.max(20, s - Math.round(+dep[1] * 0.4));
+    return Math.max(0, Math.min(100, s));
+  }
+  // supplier history (crm_supstats) -> 0-100; no history = 50 (neutral)
+  function reliability(st) {
+    st = st || {}; var parts = [];
+    if ((+st.contacted || 0) >= 2) parts.push([0.4, (+st.responded || 0) / st.contacted]);
+    if (+st.delivered > 0) parts.push([0.35, (+st.on_time || 0) / st.delivered]);
+    if (st.quality != null && st.quality !== '') parts.push([0.25, (+st.quality - 1) / 4]);
+    if (!parts.length) return 50;
+    var w = 0, v = 0; parts.forEach(function (p) { w += p[0]; v += p[0] * p[1]; });
+    return Math.round(v / w * 100);
+  }
+  // weighted scoring over compareQuotes; must-pass checks decide who may be recommended
+  // opts: {fx, today, required_date, scoring (scoringOf), stats {supplier_id: crm_supstats}}
+  function scoreQuotes(items, quotes, opts) {
+    opts = opts || {}; var sc = opts.scoring || scoringOf(), cmp = compareQuotes(items, quotes, opts), today = opts.today || iso(new Date());
+    cmp.rows.forEach(function (r) {
+      var f = [], q = r.q;
+      if (q.valid === false) f.push('marked not valid');
+      if (r.L.fxMissing) f.push('no FX rate for ' + q.currency);
+      if (r.L.partial && sc.must_complete) f.push('not all lines priced');
+      if (sc.must_spec && r.L.lines.some(function (l) { return l.unit_price != null && !l.compliant; })) f.push('not to spec');
+      if (sc.must_valid && q.validity && q.validity < today) f.push('expired');
+      if (sc.must_in_time && r.leadWarning) f.push('too late (' + r.leadWarning + ')');
+      r.fails = f; r.pass = !f.length;
+    });
+    var P = cmp.rows.filter(function (r) { return r.pass && r.L.total_bnd != null; }), W = sc.price + sc.lead + sc.payment + sc.reliability || 1;
+    var minT = Math.min.apply(null, P.map(function (r) { return r.L.total_bnd; }).concat([Infinity]));
+    var leads = P.map(function (r) { return r.q.lead_days === '' || r.q.lead_days == null ? null : +r.q.lead_days; }).filter(function (x) { return x != null; });
+    var minL = leads.length ? Math.min.apply(null, leads) : null;
+    cmp.rows.forEach(function (r) {
+      if (!r.pass || r.L.total_bnd == null) { r.score = null; return; }
+      var ld = r.q.lead_days === '' || r.q.lead_days == null ? null : +r.q.lead_days;
+      var s = { price: r.L.total_bnd > 0 ? minT / r.L.total_bnd * 100 : 100,
+        lead: ld == null || minL == null ? 50 : (minL + 1) / (ld + 1) * 100,
+        payment: paymentScore(r.q.payment_terms), reliability: reliability((opts.stats || {})[r.q.supplier_id]) };
+      s.total = (s.price * sc.price + s.lead * sc.lead + s.payment * sc.payment + s.reliability * sc.reliability) / W;
+      ['price', 'lead', 'payment', 'reliability', 'total'].forEach(function (k) { s[k] = Math.round(s[k] * 10) / 10; });
+      r.score = s;
+    });
+    var ranked = P.slice().sort(function (a, b) { return b.score.total - a.score.total || a.L.total_bnd - b.L.total_bnd; });
+    ranked.forEach(function (r, i) { r.srank = i + 1; });
+    cmp.scoring = sc; cmp.ranked = ranked; cmp.passing = P.length;
+    cmp.top = ranked[0] ? ranked[0].q.supplier_id : '';
+    cmp.cheapest = P.slice().sort(function (a, b) { return a.L.total_bnd - b.L.total_bnd; }).map(function (r) { return r.q.supplier_id; })[0] || '';
+    return cmp;
+  }
+  // reply-rate learning: valid quotes per supplier contacted, per category, from RFQs that are past the chasing stage
+  function categoryRates(rfqs) {
+    var out = {};
+    (rfqs || []).forEach(function (r) {
+      if (['Chasing', 'Comparison', 'Short', 'Approval sent', 'Awarded'].indexOf(r.status) < 0) return;
+      var rec = (r.recipients || []).filter(function (x) { return x.status !== 'Not contacted'; }), v = rec.filter(function (x) { return x.status === 'Quoted' && x.valid_quote; }).length;
+      (r.categories || []).forEach(function (c) { var o = out[c] || (out[c] = { contacted: 0, valid: 0, rfqs: 0 }); o.contacted += rec.length; o.valid += v; o.rfqs++; });
+    });
+    Object.keys(out).forEach(function (c) { out[c].rate = out[c].contacted ? out[c].valid / out[c].contacted : 0; });
+    return out;
+  }
+  // how many suppliers to contact for these categories (the weakest category with history decides)
+  function targetFor(cats, rates) {
+    var best = null;
+    (cats || []).forEach(function (c) { var o = (rates || {})[c]; if (o && o.contacted >= 5 && (!best || o.rate < best.rate)) best = { cat: c, rate: o.rate, contacted: o.contacted }; });
+    if (!best) return { target: contactTarget(0, 0), basis: '' };
+    return { target: contactTarget(best.rate, best.contacted), basis: best.cat + ' ' + Math.round(best.rate * 100) + '% valid quotes over ' + best.contacted + ' contacts', cat: best.cat, rate: best.rate };
+  }
+  function quoteLink(base, token) { return token ? String(base || '') + (String(base || '').indexOf('?') >= 0 ? '&' : '?') + 't=' + token : ''; }
+  // awarded quote -> masterlist rate proposals (landed B$ per unit; freight, duty and local costs shared by line value)
+  function proposalsFrom(row, items, resIdx) {
+    if (!row || !row.L || row.L.total_bnd == null) return [];
+    var L = row.L, extra = (L.freight_bnd || 0) + (L.duty_bnd || 0) + (L.local_bnd || 0), out = [];
+    (items || []).forEach(function (it) {
+      var code = String(it.res_code || '').trim(), l = L.lines.filter(function (x) { return x.line === it.line; })[0];
+      if (!code || !l || l.amount_bnd == null || !l.qty) return;
+      var share = L.goods_bnd ? l.amount_bnd / L.goods_bnd : 0, r = (resIdx || {})[code] || null, unit = String(it.unit || '');
+      var lu = (l.amount_bnd + extra * share) / l.qty;
+      out.push({ line: it.line, res_code: code, description: it.description, unit: unit, ml_unit: r ? r.unit : '', ml_price: r ? r.price : null,
+        new_price: Math.round(lu * 100) / 100, unit_match: !r || !r.unit || normUnit(r.unit) === normUnit(unit), change: r && r.price ? lu / r.price - 1 : null });
+    });
+    return out;
+  }
+  function normUnit(u) { u = String(u || '').toLowerCase().replace(/[\s.]/g, '').replace(/²/g, '2').replace(/³/g, '3'); return { nos: 'no', pcs: 'pc', pc: 'pc', no: 'no', bags: 'bag', sheets: 'sheet', lengths: 'length', coils: 'coil', packs: 'pack', sqm: 'm2', cum: 'm3', ton: 't', tonne: 't' }[u] || u.replace(/s$/, ''); }
+  // open RFQs whose earliest valid quote runs out within `days` (crm_rfqs valid_until)
+  function validityAlerts(rfqs, today, days) {
+    today = today || iso(new Date()); var lim = iso(addDays(today, days == null ? 7 : days));
+    return (rfqs || []).filter(function (r) { return r.valid_until && ['Awarded', 'Cancelled'].indexOf(r.status) < 0 && r.valid_until <= lim; })
+      .map(function (r) { return { rfq_no: r.rfq_no, title: r.title, valid_until: r.valid_until, days_left: daysBetween(today, r.valid_until), expired: r.valid_until < today }; })
+      .sort(function (a, b) { return a.valid_until < b.valid_until ? -1 : 1; });
+  }
+  function addDays(d, n) { d = stripTime(toDate(d)); d.setDate(d.getDate() + n); return d; }
+  // monthly KPI report: RFQs dated in month 'YYYY-MM'; baseline {minutes_per_rfq, reply_rate, quotes_per_rfq, suppliers_per_rfq}
+  function monthKpis(rfqs, month, baseline) {
+    var R = (rfqs || []).filter(function (r) { return String(r.rfq_date || '').slice(0, 7) === month && r.status !== 'Cancelled'; }), k = rfqKpis(R), b = baseline || {};
+    var sent = R.filter(function (r) { return r.status !== 'Draft'; }), aw = R.filter(function (r) { return r.status === 'Awarded'; });
+    var d2a = aw.filter(function (r) { return r.award_date; }).map(function (r) { return daysBetween(r.rfq_date, r.award_date); }).sort(function (a, b) { return a - b; });
+    var cats = {};
+    R.forEach(function (r) { (r.categories || []).forEach(function (c) { var o = cats[c] || (cats[c] = { rfqs: 0, contacted: 0, responded: 0, valid: 0 }); o.rfqs++;
+      (r.recipients || []).forEach(function (x) { if (x.status === 'Not contacted') return; o.contacted++; if (RESPONDED.indexOf(x.status) >= 0) o.responded++; if (x.status === 'Quoted' && x.valid_quote) o.valid++; }); }); });
+    var sup = {};
+    R.forEach(function (r) { (r.recipients || []).forEach(function (x) { if (x.status === 'Not contacted') return; var o = sup[x.supplier_id] || (sup[x.supplier_id] = { supplier_id: x.supplier_id, name: x.name || x.supplier_id, contacted: 0, responded: 0, valid: 0, awards: 0 });
+      o.contacted++; if (RESPONDED.indexOf(x.status) >= 0) o.responded++; if (x.status === 'Quoted' && x.valid_quote) o.valid++; if (r.status === 'Awarded' && r.award_supplier === x.supplier_id) o.awards++; }); });
+    var out = { month: month, rfqs: R.length, sent: sent.length, awarded: aw.length, contacted: k.contacted, perRfq: sent.length ? k.contacted / sent.length : 0,
+      replyRate: k.replyRate, validRate: k.validRate, quotesPerRfq: sent.length ? k.valid / sent.length : 0, goalMet: k.rfqsOk, goalRate: k.rfqSuccess,
+      medianResponseHours: k.medianResponseHours, medianDaysToAward: d2a.length ? d2a[Math.floor((d2a.length - 1) / 2)] : null,
+      awardedBnd: aw.reduce(function (s, r) { return s + (+r.award_total_bnd || 0); }, 0), savingBnd: aw.reduce(function (s, r) { return s + (+r.saving_bnd || 0); }, 0),
+      byCategory: Object.keys(cats).sort().map(function (c) { var o = cats[c]; o.code = c; o.name = categoryName(c); o.replyRate = o.contacted ? o.responded / o.contacted : 0; o.validRate = o.contacted ? o.valid / o.contacted : 0; return o; }),
+      topSuppliers: Object.keys(sup).map(function (s) { return sup[s]; }).sort(function (a, b) { return b.valid - a.valid || b.responded - a.responded; }).slice(0, 10),
+      baseline: b, vs: {} };
+    if (b.reply_rate != null) out.vs.replyRate = out.replyRate - b.reply_rate;
+    if (b.quotes_per_rfq != null) out.vs.quotesPerRfq = out.quotesPerRfq - b.quotes_per_rfq;
+    if (b.suppliers_per_rfq != null) out.vs.perRfq = out.perRfq - b.suppliers_per_rfq;
+    if (b.minutes_per_rfq != null) out.vs.minutesSaved = null;   // time per RFQ is not measured by the app; the report shows the baseline only
+    return out;
+  }
+  // saved discovery prompt per category: placeholders {rfq} {title} {items} {zones} {exclude} {count} {category} {urgency}; the answer format is always appended
+  function promptFrom(tpl, rfq, items, opts) {
+    var base = discoveryPrompt(rfq, items, opts); if (!tpl || !String(tpl).trim()) return base;
+    opts = opts || {};
+    var zones = (opts.zones || []).map(function (z) { return ZONES[z]; }).join('; ') || 'any country';
+    var cats = []; (items || []).forEach(function (it) { if (it.category && cats.indexOf(it.category) < 0) cats.push(it.category); });
+    var v = { rfq: rfq.rfq_no || '', title: rfq.title || '', zones: zones, count: opts.count || 10, urgency: rfq.urgency || '', category: cats.map(function (c) { return c + ' ' + categoryName(c); }).join(', '),
+      exclude: (opts.exclude || []).join('; ') || 'none',
+      items: (items || []).map(function (it, i) { return (i + 1) + '. ' + it.description + (it.spec_brand ? ' (' + it.spec_brand + ')' : '') + (it.qty ? ' - ' + it.qty + ' ' + (it.unit || '') : ''); }).join('\n') };
+    var body = String(tpl).replace(/\{(\w+)\}/g, function (m, k) { return v[k] != null ? String(v[k]) : m; });
+    var fmt = base.slice(base.indexOf('Rules:'));
+    return body.trim() + '\n\n' + fmt;
+  }
+  // RFQ short of quotes? (v3.5 goal guard) state: {status, deadline, recipients[], validQuotes}
+  function shortOfQuotes(state, today) {
+    today = today || iso(new Date()); var rec = state.recipients || [], v = state.validQuotes || 0;
+    if (v >= 3 || ['Draft', 'Awarded', 'Cancelled', 'Approval sent'].indexOf(state.status) >= 0) return { short: false, valid: v };
+    var waiting = rec.filter(function (x) { return CHASE_OPEN.indexOf(x.status) >= 0 && x.status !== 'Reminder 2'; }).length;
+    var reasons = [];
+    if (state.deadline && state.deadline < today) reasons.push('quote deadline ' + state.deadline + ' has passed');
+    if (rec.length && !waiting) reasons.push('nobody left to chase (all replied, declined or had the final reminder)');
+    if (state.status === 'Short') reasons.push('marked Short');
+    var possible = v + waiting + rec.filter(function (x) { return x.status === 'Replied'; }).length;
+    if (!reasons.length && possible < 3) reasons.push('even if everyone still waiting quotes, only ' + possible + ' valid quote' + (possible === 1 ? '' : 's') + ' possible');
+    var zones = []; rec.forEach(function (x) { if (x.zone && zones.indexOf(+x.zone) < 0) zones.push(+x.zone); });
+    var g = goalGuard({ zonesUsed: zones, validQuotes: v, reminder2Done: true });
+    return { short: reasons.length > 0, valid: v, need: 3 - v, waiting: waiting, reasons: reasons, nextZones: g.zones };
+  }
+  // mailbox job: RFQ number in a subject / text, and delivery-failure messages
+  function rfqRef(text) { var m = /RFQ-\d{4}-\d{3,}(?:-R\d+)?/i.exec(String(text || '')); return m ? m[0].toUpperCase() : ''; }
+  function isBounce(from, subject) { return /mailer-daemon|postmaster|mail delivery (sub)?system/i.test(String(from || '')) || /undeliver|delivery (status notification|has failed|failure)|returned mail|failure notice|not delivered/i.test(String(subject || '')); }
+
   var api = {
     rfqNo: rfqNo, mrNo: mrNo, parseDocNo: parseDocNo, nextDocNo: nextDocNo, supplierId: supplierId, parseSupplierId: parseSupplierId,
     COUNTRIES: COUNTRIES, countryCode: countryCode, ZONES: ZONES, zoneOf: zoneOf, zoneLabel: zoneLabel,
@@ -867,7 +1044,10 @@
     TEMPLATE_COLS: TEMPLATE_COLS, TEMPLATE_HELP: TEMPLATE_HELP, MR_COLS: MR_COLS, MR_HELP: MR_HELP, dateIso: dateIso, mrItem: mrItem, parsePasted: parsePasted,
     shortDesc: shortDesc, rfqItems: rfqItems, rfqForTemplates: rfqForTemplates, buildEmailFit: buildEmailFit, buildReminderEmail: buildReminderEmail,
     CHASE_OPEN: CHASE_OPEN, chaseDue: chaseDue, discoveryPrompt: discoveryPrompt, rfqFromTextSheet: rfqFromTextSheet, rfqKpis: rfqKpis, matchSupplier: matchSupplier,
-    parseTable: parseTable, CURRENCIES: CURRENCIES, fxRate: fxRate, landed: landed, compareQuotes: compareQuotes, resIndex: resIndex, budgetCheck: budgetCheck, money: money, num: num
+    parseTable: parseTable, CURRENCIES: CURRENCIES, fxRate: fxRate, landed: landed, compareQuotes: compareQuotes, resIndex: resIndex, budgetCheck: budgetCheck, money: money, num: num,
+    SCORING_DEFAULT: SCORING_DEFAULT, MUST: MUST, scoringOf: scoringOf, paymentDays: paymentDays, paymentScore: paymentScore, reliability: reliability, scoreQuotes: scoreQuotes,
+    categoryRates: categoryRates, targetFor: targetFor, quoteLink: quoteLink, proposalsFrom: proposalsFrom, normUnit: normUnit, validityAlerts: validityAlerts, addDays: addDays,
+    monthKpis: monthKpis, daysBetween: daysBetween, promptFrom: promptFrom, shortOfQuotes: shortOfQuotes, rfqRef: rfqRef, isBounce: isBounce
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Procure = api;

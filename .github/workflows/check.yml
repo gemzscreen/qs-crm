@@ -27,6 +27,8 @@ jobs:
         run: node scripts/version.mjs check
       - name: Procurement helper tests (src/procure-std.js)
         run: node test/t_procure.js
+      - name: Mailbox job tests (scripts/mailbox.mjs, no network)
+        run: node test/t_mailbox.mjs
       - name: Database script + crm_* tests on a fresh PostgreSQL
         env:
           PGHOST: localhost

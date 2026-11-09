@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Quotation</title>
+<style>
+:root{--ink:#1b2130;--ink2:#4a5468;--line:#d9dde7;--bg:#f4f5f9;--card:#fff;--pri:#2b2d9a;--ok:#1e7a4c;--okbg:#e4f3ea;--bad:#a8322d;--badbg:#f8e5e3;--warnbg:#fdf1d8}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+header{background:var(--pri);color:#fff;padding:14px 18px}
+header b{font-size:17px;letter-spacing:.3px}
+header span{display:block;font-size:12.5px;opacity:.85}
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+h1{font-size:19px;margin:0 0 4px}
+h2{font-size:15px;margin:0 0 10px}
+.meta{color:var(--ink2);font-size:13.5px}
+.meta b{color:var(--ink)}
+.note{border-radius:8px;padding:10px 12px;font-size:14px;margin:10px 0}
+.note.ok{background:var(--okbg);color:var(--ok)}
+.note.bad{background:var(--badbg);color:var(--bad)}
+.note.w{background:var(--warnbg)}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--ink2);text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td.d .s{font-size:12.5px;color:var(--ink2)}
+input,select,textarea{font:inherit;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid #c9cbf6;border-color:var(--pri)}
+input.p{text-align:right}
+label{display:block;font-size:12.5px;color:var(--ink2);margin-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.full{grid-column:1/-1}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink)}
+.chk input{width:auto}
+button{font:inherit;font-weight:600;background:var(--pri);color:#fff;border:0;border-radius:8px;padding:12px 22px;cursor:pointer}
+button:disabled{opacity:.6;cursor:default}
+.foot{font-size:12px;color:var(--ink2);text-align:center;margin:18px 0}
+.hint{font-size:12px;color:var(--ink2);margin-top:3px}
+@media (max-width:720px){
+  .grid{grid-template-columns:1fr}
+  main{padding:10px}
+  table.items thead{display:none}
+  table.items tr{display:block;border:1px solid var(--line);border-radius:8px;margin-bottom:10px;padding:6px}
+  table.items td{display:block;border:0;padding:4px 6px}
+  table.items td[data-l]:before{content:attr(data-l);display:block;font-size:11.5px;color:var(--ink2);text-transform:uppercase}
+  button{width:100%}
+}
+</style>
+</head>
+<body>
+<header><b id="co">Quotation</b><span id="sub">Request for quotation</span></header>
+<main id="app"><div class="card">Loading…</div></main>
+<div class="foot" id="ft"></div>
+<script src="config.js"></script>
+<script src="vendor/supabase-js-2.119.0.js"></script>
+<script>
+(function(){
+  'use strict';
+  var C=window.QSCRM_CONFIG||{}, t=(new URLSearchParams(location.search).get('t')||'').toLowerCase(), app=document.getElementById('app'), F=null;
+  var esc=function(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var fmt=function(d){ if(!d) return ''; var x=new Date(d+'T00:00:00'); return isNaN(x)?d:x.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); };
+  var bad=function(m){ app.innerHTML='<div class="card"><div class="note bad">'+esc(m)+'</div></div>'; };
+  if(!window.supabase||!C.supabaseUrl){ bad('This page could not load. Please reply to our email instead.'); return; }
+  var sb=window.supabase.createClient(C.supabaseUrl, C.supabaseKey, {auth:{persistSession:false, autoRefreshToken:false, detectSessionInUrl:false}});
+  var call=function(fn,p){ return sb.rpc(fn,{p:p}).then(function(r){ if(r.error) throw new Error(r.error.message); return r.data; }); };
+  if(!/^[0-9a-f]{64}$/.test(t)){ bad('This quote link is not complete. Please use the full link from our email or WhatsApp message, or reply by email.'); return; }
+  call('crm_qform',{t:t}).then(function(f){ F=f; draw(); }).catch(function(e){ bad(e.message); });
+
+  function draw(){
+    var co=F.company||{}, moq=F.qty_mode==='moq', prev={}, cur='BND';
+    if(F.submitted){ (F.submitted.lines||[]).forEach(function(l){ prev[l.line]=l; }); cur=F.submitted.currency||cur; }
+    document.title='Quotation '+F.rfq_no+' — '+co.name;
+    document.getElementById('co').textContent=co.name||'ARZA SDN BHD';
+    document.getElementById('sub').textContent='Request for quotation '+F.rfq_no;
+    document.getElementById('ft').innerHTML=esc([co.name, co.phone, co.email, co.website].filter(Boolean).join(' · '));
+    var head='<div class="card"><h1>'+esc(F.title)+'</h1><div class="meta">For <b>'+esc(F.supplier)+'</b> · RFQ <b>'+esc(F.rfq_no)+'</b> dated '+esc(fmt(F.rfq_date))+
+      (F.deadline?' · please quote by <b>'+esc(fmt(F.deadline))+'</b>':'')+(F.delivery_place?' · delivery to <b>'+esc(F.delivery_place)+'</b>':'')+(F.certs?' · documents: '+esc(F.certs):'')+'</div>'+
+      (F.submitted?'<div class="note ok">You sent prices on '+esc(F.submitted.at)+' (ref '+esc(F.submitted.ref)+'). Sending again creates a revised quotation.</div>':'')+'</div>';
+    if(!F.open){ app.innerHTML=head+'<div class="card"><div class="note w">'+esc(F.closed_msg||'This RFQ is closed.')+'</div></div>'; return; }
+    var curs=['BND','SGD','MYR','USD','CNY','EUR','AUD','JPY','THB','IDR','VND'];
+    app.innerHTML=head+'<form id="f" novalidate><div class="card"><h2>Prices</h2><table class="items"><thead><tr><th>#</th><th>Item</th><th>Qty</th><th style="width:130px">Unit price</th>'+(moq?'<th style="width:100px">MOQ</th>':'')+'<th style="width:150px">Brand / model</th><th>As specified</th></tr></thead><tbody>'+
+      F.items.map(function(it){ var p=prev[it.line]||{}; return '<tr data-line="'+it.line+'"><td data-l="Item no.">'+it.line+'</td><td class="d" data-l="Item">'+esc(it.description)+(it.spec_brand?'<div class="s">'+esc(it.spec_brand)+'</div>':'')+(it.required_date?'<div class="s">needed by '+esc(fmt(it.required_date))+'</div>':'')+'</td>'+
+        '<td data-l="Quantity">'+(it.qty==null?'please state MOQ':esc(it.qty)+' '+esc(it.unit))+'</td><td data-l="Unit price'+(it.unit?' ('+esc(it.unit)+')':'')+'"><input class="p" data-k="unit_price" inputmode="decimal" value="'+esc(p.unit_price==null?'':p.unit_price)+'" placeholder="0.00"></td>'+
+        (moq?'<td data-l="MOQ"><input class="p" data-k="moq" inputmode="decimal" value="'+esc(p.moq==null?'':p.moq)+'"></td>':'')+'<td data-l="Brand / model"><input data-k="brand" value="'+esc(p.brand||'')+'"></td><td data-l="As specified"><label class="chk"><input type="checkbox" data-k="compliant" checked> yes</label></td></tr>'; }).join('')+
+      '</tbody></table><div class="hint">Leave a price blank if you cannot supply that item. Untick "as specified" if you offer an alternative (write it under brand / model).</div></div>'+
+      '<div class="card"><h2>Terms</h2><div class="grid">'+
+        '<div><label for="q_cur">Currency</label><select id="q_cur">'+curs.map(function(c){ return '<option'+(c===cur?' selected':'')+'>'+c+'</option>'; }).join('')+'</select></div>'+
+        '<div><label for="q_lead">Lead time (days)</label><input id="q_lead" inputmode="numeric" placeholder="e.g. 3"></div>'+
+        '<div><label for="q_val">Valid until</label><input id="q_val" type="date"></div>'+
+        '<div><label for="q_pay">Payment terms</label><input id="q_pay" placeholder="e.g. 30 days, COD"></div>'+
+        '<div><label for="q_inc">Delivery terms</label><input id="q_inc" placeholder="e.g. delivered to site, FOB Shenzhen"></div>'+
+        '<div><label for="q_del">Delivery charge (in your currency)</label><input id="q_del" inputmode="decimal" placeholder="0 if included"></div>'+
+        '<div><label for="q_fr">Freight / shipping (overseas)</label><input id="q_fr" inputmode="decimal" placeholder="blank if not applicable"></div>'+
+        '<div><label for="q_ref">Your quotation no.</label><input id="q_ref"></div>'+
+        '<div><label for="q_org">Brand / country of origin</label><input id="q_org"></div>'+
+        '<div class="full"><label for="q_link">Link to your quotation PDF <span class="hint">optional (Google Drive, Dropbox …) — or email the PDF</span></label><input id="q_link" type="url" placeholder="https://"></div>'+
+        '<div class="full"><label for="q_notes">Notes</label><textarea id="q_notes" rows="3" placeholder="stock availability, price breaks, conditions"></textarea></div>'+
+        '<div><label for="q_name">Your name</label><input id="q_name" autocomplete="name"></div>'+
+      '</div></div><div id="msg"></div><div class="card" style="text-align:right"><button id="go" type="submit">Send quotation</button></div></form>';
+    document.getElementById('f').onsubmit=function(e){ e.preventDefault(); send(); };
+  }
+  function v(id){ return document.getElementById(id).value.trim(); }
+  // 1,250.50 / 1.250,50 / 31,50 / 1 250 -> 1250.50 / 1250.50 / 31.50 / 1250
+  function num(x){ x=String(x||'').trim().replace(/\s+/g,'');
+    if(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(x)) return x.replace(/,/g,'');
+    if(/^\d{1,3}(\.\d{3})+,\d+$/.test(x)) return x.replace(/\./g,'').replace(',','.');
+    if(/^\d+,\d{1,2}$/.test(x)) return x.replace(',','.');
+    return x; }
+  function send(){
+    var msg=document.getElementById('msg'), b=document.getElementById('go'), lines=[], badN='';
+    Array.prototype.forEach.call(document.querySelectorAll('tr[data-line]'),function(tr){ var o={line:+tr.dataset.line};
+      tr.querySelectorAll('[data-k]').forEach(function(x){ o[x.dataset.k]=x.type==='checkbox'?x.checked:x.dataset.k==='brand'?x.value.trim():num(x.value); });
+      if(o.unit_price&&!/^\d+(\.\d+)?$/.test(o.unit_price)) badN=o.unit_price; if(o.moq&&!/^\d+(\.\d+)?$/.test(o.moq)) badN=o.moq; lines.push(o); });
+    var err=badN?'"'+badN+'" is not a number - use digits only, e.g. 12.50':!lines.some(function(l){ return l.unit_price; })?'Enter at least one unit price.':v('q_name').length<2?'Please enter your name.':'';
+    ['q_lead','q_del','q_fr'].forEach(function(id){ if(!err&&v(id)&&!/^\d+(\.\d+)?$/.test(num(v(id)))) err=document.querySelector('label[for='+id+']').textContent+': numbers only'; });
+    if(!err&&v('q_link')&&!/^https:\/\/\S+$/.test(v('q_link'))) err='The quotation link must start with https://';
+    if(err){ msg.innerHTML='<div class="note bad">'+esc(err)+'</div>'; return; }
+    b.disabled=true; b.textContent='Sending…'; msg.innerHTML='';
+    call('crm_qsubmit',{t:t, name:v('q_name'), lines:lines, header:{currency:v('q_cur'), validity:v('q_val'), payment_terms:v('q_pay'), incoterm:v('q_inc'),
+        delivery_bnd:v('q_cur')==='BND'||v('q_cur')==='SGD'?num(v('q_del')):'', freight:num(v('q_fr')), lead_days:num(v('q_lead')), quote_ref:v('q_ref'), brand_origin:v('q_org'), file_link:v('q_link'),
+        notes:[v('q_notes'), v('q_del')&&v('q_cur')!=='BND'&&v('q_cur')!=='SGD'?'delivery charge '+v('q_cur')+' '+v('q_del'):''].filter(Boolean).join(' · ')}})
+      .then(function(r){ app.innerHTML='<div class="card"><h1>Thank you</h1><div class="note ok">Your quotation for '+esc(F.rfq_no)+' has been received (ref '+esc(r.ref)+'). We will contact you after the comparison.</div><div class="meta">You can open this link again to send a revised quotation before '+esc(fmt(F.deadline)||'the deadline')+'.</div></div>'; window.scrollTo(0,0); })
+      .catch(function(e){ b.disabled=false; b.textContent='Send quotation'; msg.innerHTML='<div class="note bad">'+esc(e.message)+'</div>'; });
+  }
+})();
+</script>
+</body>
+</html>
