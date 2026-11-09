@@ -1,0 +1,37 @@
+# v3.2.0 (optional): QS CRM mailbox job - sends queued RFQ emails + due reminders from the QS mailbox and picks up replies.
+# Does nothing until the admin switches it on in QS CRM (Admin Settings › Connections › Mailbox, with the boss's approval)
+# AND these repository secrets are set: SUPABASE_URL, SUPABASE_SERVICE_KEY, MAIL_USER, MAIL_PASS, MAIL_IMAP_HOST, MAIL_SMTP_HOST
+# (optional: MAIL_SMTP_PORT, MAIL_IMAP_PORT, APP_URL, DRIVE_URL + DRIVE_JOB_KEY for attachments in Drive).
+name: Mailbox
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+concurrency:
+  group: mailbox
+  cancel-in-progress: false
+jobs:
+  mailbox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Mail libraries
+        run: npm install --no-save --no-package-lock --no-audit --no-fund imapflow@1 nodemailer@6 mailparser@3
+      - name: Run
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          MAIL_USER: ${{ secrets.MAIL_USER }}
+          MAIL_PASS: ${{ secrets.MAIL_PASS }}
+          MAIL_IMAP_HOST: ${{ secrets.MAIL_IMAP_HOST }}
+          MAIL_SMTP_HOST: ${{ secrets.MAIL_SMTP_HOST }}
+          MAIL_SMTP_PORT: ${{ secrets.MAIL_SMTP_PORT }}
+          MAIL_IMAP_PORT: ${{ secrets.MAIL_IMAP_PORT }}
+          APP_URL: ${{ secrets.APP_URL }}
+          DRIVE_URL: ${{ secrets.DRIVE_URL }}
+          DRIVE_JOB_KEY: ${{ secrets.DRIVE_JOB_KEY }}
+        run: node scripts/mailbox.mjs

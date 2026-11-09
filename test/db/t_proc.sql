@@ -218,10 +218,105 @@ select pg_temp.err($q$select public.crm_setsettings('{"key":"connections","value
 select public.crm_setsettings('{"key":"connections","value":{"drive_url":"https://script.google.com/macros/s/AKfycbx-Ab_12/exec"}}') as r \gset
 select pg_temp.ok((public.crm_settings() #>> '{connections,drive_url}') = 'https://script.google.com/macros/s/AKfycbx-Ab_12/exec', 'Drive link stored in the database');
 
+-- v3.2.0: tender status Pending, closing list, scoring settings, quote link, rate proposals, delivery, must-pass,
+-- price history, marketplace posts, mailbox (admin is signed in here)
+select pg_temp.ok((select sort from public.lists where list = 'status' and value = 'Pending') = 3 and (select sort from public.lists where list = 'status' and value = 'Submitted') = 4, 'status Pending between Pricing and Submitted');
+insert into public.tenders (arza_no, title, status, closing_date) select 'T' || (900 + g), 'Tender ' || g, case when g = 2 then 'Won' when g = 3 then 'Pending' else 'Pricing' end,
+  ((now() at time zone 'Asia/Brunei')::date + (case when g <= 3 then g * 5 else 25 + g * 5 end)) + time '10:00' from generate_series(1, 8) g;
+select public.crm_dashboard() as r \gset
+select pg_temp.ok(jsonb_array_length(:'r'::jsonb -> 'closing') = 5 and (:'r'::jsonb #>> '{closing,0,arza_no}') = 'T901', 'closing list: at least the 5 nearest (Won left out)');
+select pg_temp.ok((select count(*) from jsonb_array_elements(:'r'::jsonb -> 'closing') x where (x ->> 'later')::boolean) = 3, 'closing list flags tenders after 30 days');
+select pg_temp.ok((:'r'::jsonb #>> '{kpi,pending}') = '1' and (:'r'::jsonb #>> '{kpi,open}')::int >= 7, 'Pending counts as open');
+select pg_temp.err($q$select public.crm_setjson('{"key":"scoring","value":{"price":"x","lead":20,"payment":10,"reliability":10}}')$q$, 'must be a number', 'scoring weights checked');
+select public.crm_setjson('{"key":"scoring","value":{"price":60,"lead":20,"payment":10,"reliability":10,"must_in_time":true}}') as r \gset
+select pg_temp.ok((public.crm_settings() #>> '{scoring,must_in_time}') = 'true' and (public.crm_settings() #>> '{scoring,must_complete}') = 'true', 'scoring saved with must-pass defaults');
+select pg_temp.err($q$select public.crm_setjson('{"key":"prompts","value":{"ZZ":"x"}}')$q$, 'Unknown category', 'prompts per known category');
+select public.crm_setjson('{"key":"prompts","value":{"HV":"Find aircon suppliers in {zones} for {items}"}}') as r \gset
+select pg_temp.ok((public.crm_settings() #>> '{prompts,HV}') like 'Find aircon%', 'discovery prompt saved');
+select public.crm_setjson('{"key":"kpi_baseline","value":{"minutes_per_rfq":"70","reply_rate":"0.3","note":"manual log"}}') as r \gset
+select pg_temp.ok((public.crm_settings() #>> '{kpi_baseline,minutes_per_rfq}') = '70', 'KPI baseline saved');
+select pg_temp.err($q$select public.crm_setjson('{"key":"mailbox","value":{"enabled":true}}')$q$, 'who approved', 'mailbox needs the approval record');
+-- quote link (no sign-in)
+select token as tok from public.rfq_recipients where rfq_no = 'RFQ-2611-003' and supplier_id = 'SUP-0003' \gset
+select pg_temp.ok(:'tok' ~ '^[0-9a-f]{64}$', 'each recipient has a 64-hex quote token');
+select set_config('request.uid', '', false);
+select pg_temp.err($q$select public.crm_rfq('{"rfq_no":"RFQ-2611-003"}')$q$, 'Not signed in', 'no sign-in: RFQ page refused');
+select pg_temp.err($q$select public.crm_qform('{"t":"abc"}')$q$, 'not valid', 'bad token refused');
+select public.crm_qform(jsonb_build_object('t', :'tok')) as r \gset
+select pg_temp.ok((:'r'::jsonb ->> 'open')::boolean and jsonb_array_length(:'r'::jsonb -> 'items') = 2 and not (:'r'::jsonb ? 'recipients'), 'quote form shows the items only');
+select pg_temp.err(format($q$select public.crm_qsubmit('{"t":"%s","lines":[{"line":1,"unit_price":"9"}]}')$q$, :'tok'), 'your name', 'quote form needs a name');
+select public.crm_qsubmit(jsonb_build_object('t', :'tok', 'name', 'Mr Tan', 'header', jsonb_build_object('currency', 'BND', 'lead_days', '3', 'valid', false, 'clearing_bnd', '999'),
+  'lines', jsonb_build_array(jsonb_build_object('line', 1, 'unit_price', '8.10'), jsonb_build_object('line', 2, 'unit_price', '31')))) as r \gset
+select pg_temp.ok((:'r'::jsonb ->> 'ok')::boolean and (select source || ' ' || submitted_by || ' ' || valid || ' ' || clearing_bnd from public.quotes where rfq_no = 'RFQ-2611-003' and supplier_id = 'SUP-0003' and current) = 'link Mr Tan true 0', 'link quote saved (supplier cannot set our own cost fields)');
+select pg_temp.ok((select status from public.rfq_recipients where rfq_no = 'RFQ-2611-003' and supplier_id = 'SUP-0003') = 'Quoted', 'link quote marks the supplier Quoted');
+select pg_temp.ok((select user_name from public.activity_log where arza_no = 'RFQ-2611-003' order by id desc limit 1) like 'Supplier link - Mr Tan%', 'log names the supplier as the actor');
+select pg_temp.ok(coalesce(current_setting('crm.actor', true), '') = '', 'actor cleared after the link quote');
+select pg_temp.err($q$select public.crm_savequote('{"rfq_no":"RFQ-2611-003","supplier_id":"SUP-0003","header":{},"lines":[{"line":1,"unit_price":"7"}]}')$q$, 'Not signed in', 'no sign-in: normal quote entry refused');
+set role anon;
+select pg_temp.ok((public.crm_qform(jsonb_build_object('t', :'tok')) ->> 'rfq_no') = 'RFQ-2611-003', 'anon may open the quote form');
+select pg_temp.err($q$select public.crm_rfqs()$q$, 'permission denied', 'anon may not call anything else');
+reset role;
+select set_config('request.uid', '00000000-0000-0000-0000-000000000002', false);
+-- must-pass, award with rate proposals, delivery
+select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"must_pass","must_pass":{"complete":true,"spec":true,"valid":false,"in_time":true,"bogus":true}}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{rfq,must_pass,valid}') = 'false' and not (:'r'::jsonb #> '{rfq,must_pass}') ? 'bogus', 'must-pass checks per RFQ');
+select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"award","supplier_id":"SUP-0003","award_by":"Hj Ahmad","total_bnd":"1402.00","saving_bnd":"120.5","scores":[{"supplier_id":"SUP-0003","score":88}],
+  "proposals":[{"line":1,"res_code":"M01","description":"Cement OPC 50kg","unit":"bags","ml_unit":"bag","ml_price":"7.50","new_price":"8.104"},{"line":2,"res_code":"bad code","new_price":"1"}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{rfq,award_total_bnd}') = '1402.00' and (:'r'::jsonb #>> '{rfq,scores,0,score}') = '88', 'award keeps total, saving and scores');
+select pg_temp.ok((select count(*) from public.rate_proposals where rfq_no = 'RFQ-2611-003') = 1 and (select new_price from public.rate_proposals where rfq_no = 'RFQ-2611-003') = 8.10, 'one rate proposal (bad code skipped, rounded)');
+select id as pid from public.rate_proposals where rfq_no = 'RFQ-2611-003' \gset
+select public.crm_ratedecide(jsonb_build_object('id', :pid, 'decision', 'Accepted', 'note', 'written to Res')) as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{proposal,status}') = 'Accepted' and (:'r'::jsonb #>> '{proposal,decided_by}') = 'Qs Person', 'rate proposal accepted');
+select pg_temp.ok(jsonb_array_length(public.crm_rateprops('{"status":"Accepted"}') -> 'proposals') = 1, 'rate proposals listed by status');
+select pg_temp.err($q$select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"delivery","quality":"9"}')$q$, '1 \(poor\)', 'quality 1-5');
+select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"delivery","delivered_on":"2026-11-20","on_time":true,"quality":"4"}') as r \gset
+select pg_temp.ok((public.crm_supstats('SUP-0003') ->> 'on_time') = '1' and (public.crm_supstats('SUP-0003') ->> 'quality') = '4.0' and (public.crm_supstats('SUP-0003') ->> 'awards') = '1', 'scorecard: award, on time, quality');
+select pg_temp.ok(jsonb_array_length(public.crm_quoteprices('{"q":"cement"}') -> 'rows') >= 2 and (public.crm_quoteprices('{"q":"cement opc"}') #>> '{rows,0,awarded}') is not null, 'price history by words');
+select pg_temp.ok(jsonb_array_length(public.crm_quoteprices('{"q":"cement -none zzz"}') -> 'rows') = 0, 'price history: all words must match');
+-- marketplace posts
+select pg_temp.err($q$select public.crm_savepost('{"rfq_no":"RFQ-2611-003","platform":"Alibaba RFQ","url":"ftp://x"}')$q$, 'https', 'post link checked');
+select public.crm_savepost('{"rfq_no":"RFQ-2611-003","platform":"Alibaba RFQ","url":"https://rfq.alibaba.com/x"}') as r \gset
+select public.crm_savepost(jsonb_build_object('rfq_no', 'RFQ-2611-003', 'id', :'r'::jsonb #>> '{post,id}', 'platform', 'Alibaba RFQ', 'responses', '4')) as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{post,responses}') = '4' and jsonb_array_length(public.crm_rfq('{"rfq_no":"RFQ-2611-003"}') -> 'posts') = 1, 'marketplace post saved + updated');
+select public.crm_deletepost(jsonb_build_object('id', :'r'::jsonb #>> '{post,id}')) as r \gset
+select pg_temp.ok(jsonb_array_length(public.crm_rfq('{"rfq_no":"RFQ-2611-003"}') -> 'posts') = 0, 'marketplace post removed');
+-- mailbox
+select pg_temp.err($q$select public.crm_setjson('{"key":"mailbox","value":{"enabled":false}}')$q$, 'Only the admin', 'mailbox setting is admin only');
+select pg_temp.err($q$select public.crm_mailqueue('{"rfq_no":"RFQ-2611-002","items":[]}')$q$, 'mailbox connection is off', 'queue refused while the mailbox is off');
+select set_config('request.uid', '00000000-0000-0000-0000-000000000001', false);
+select public.crm_setjson('{"key":"mailbox","value":{"enabled":true,"daily_limit":"2","auto_followups":true,"approved_by":"Hj Ahmad","approved_on":"2026-11-09"}}') as r \gset
+select pg_temp.ok((public.crm_settings() #>> '{mailbox,enabled}') = 'true', 'mailbox on with the approval record');
+select set_config('request.uid', '00000000-0000-0000-0000-000000000002', false);
+update public.rfq_recipients set email = 'sales@gammametal.com' where rfq_no = 'RFQ-2611-002' and supplier_id = 'SUP-0003';
+select public.crm_mailqueue('{"rfq_no":"RFQ-2611-002","items":[{"supplier_id":"SUP-0003","kind":"rfq","to":"Sales@GammaMetal.com","subject":"RFQ RFQ-2611-002","body":"Dear Sir"}]}') as r \gset
+select public.crm_mailqueue('{"rfq_no":"RFQ-2611-002","items":[{"supplier_id":"SUP-0003","kind":"rfq","to":"sales@gammametal.com","subject":"RFQ RFQ-2611-002","body":"Dear Sir"}]}') as r \gset
+select pg_temp.ok((:'r'::jsonb ->> 'skipped') = '1' and jsonb_array_length(:'r'::jsonb -> 'outbox') = 1, 'same email not queued twice');
+select pg_temp.err($q$select public.crm_mjob_pending()$q$, 'Mailbox job only', 'signed-in users cannot run the job functions');
+select set_config('request.uid', '', false);
+select public.crm_mjob_pending() as r \gset
+select pg_temp.ok(jsonb_array_length(:'r'::jsonb -> 'outbox') = 1 and (:'r'::jsonb ->> 'left_today') = '2' and jsonb_array_length(:'r'::jsonb -> 'rfqs') >= 2, 'job gets the queue and open RFQs');
+select public.crm_mjob_done(jsonb_build_object('sent', jsonb_build_array(jsonb_build_object('id', :'r'::jsonb #>> '{outbox,0,id}', 'message_id', '<m1@arza>')),
+  'inbox', jsonb_build_array(
+    jsonb_build_object('message_id', '<r1@gamma>', 'from', 'Ann <ann@gammametal.com>', 'subject', 'Re: RFQ-2611-002 steel', 'received_at', '2026-11-10T09:00:00+08', 'snippet', 'Please find our quote', 'attachments', '[{"name":"Q123.pdf"}]'),
+    jsonb_build_object('message_id', '<r1@gamma>', 'from', 'Ann <ann@gammametal.com>', 'subject', 'dup'),
+    jsonb_build_object('message_id', '<x9@other>', 'from', 'spam@nowhere.com', 'subject', 'Hello')))) as r \gset
+select pg_temp.ok((:'r'::jsonb ->> 'sent') = '1' and (:'r'::jsonb ->> 'received') = '2' and (:'r'::jsonb ->> 'matched') = '1', 'job results stored (duplicate skipped, unmatched kept)');
+select pg_temp.ok((select status from public.rfq_recipients where rfq_no = 'RFQ-2611-002' and supplier_id = 'SUP-0003') = 'Quoted', 'a reply never downgrades Quoted');
+select pg_temp.ok((select emailed_at is not null from public.rfq_recipients where rfq_no = 'RFQ-2611-002' and supplier_id = 'SUP-0003') and (select user_name from public.rfq_clicks order by id desc limit 1) = 'Mailbox job', 'sent email recorded as a click by the mailbox job');
+select pg_temp.ok((select value ->> 'matched' from public.settings where key = 'mailbox_status') = '1', 'job status stored');
+set role authenticated;
+select pg_temp.err($q$select public.crm_mjob_done('{}')$q$, 'permission denied', 'app users cannot call the job functions');
+reset role;
+set role service_role;
+select pg_temp.ok((public.crm_mjob_pending() ->> 'enabled')::boolean, 'the service key may run the job');
+reset role;
+select set_config('request.uid', '00000000-0000-0000-0000-000000000001', false);
+
 -- grants and row-level security as the app's database role
 set role authenticated;
 select pg_temp.ok((select count(*) from public.suppliers) = 3, 'authenticated reads suppliers through RLS');
 select pg_temp.ok((select count(*) from public.rfqs) = 3, 'authenticated reads RFQs through RLS');
+select pg_temp.ok((select count(*) from public.mail_outbox) = 1 and (select count(*) from public.rate_proposals) = 1, 'authenticated reads the new tables');
 select pg_temp.ok(jsonb_array_length(public.crm_procdata() -> 'suppliers') = 3, 'authenticated may call crm_procdata');
 select pg_temp.err($q$insert into public.suppliers (supplier_id, name, country) values ('SUP-9999', 'x', 'BN')$q$, 'permission denied', 'no direct writes');
 select pg_temp.err($q$select public.crm_supwrite(null, '{}', '[]', '[]', '{}', null)$q$, 'permission denied', 'internal functions not callable');

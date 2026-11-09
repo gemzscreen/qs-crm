@@ -2,6 +2,25 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v3.2.0 — 9 Nov 2026
+
+- Tenders: new status Pending (priced, revisions still coming) between Pricing and Submitted; Pending counts as open. Dashboard "Closing next" shows every tender closing in the next 30 days and at least the 5 nearest (later ones greyed).
+- Quote scoring: each quote gets a score of 100 from price (landed B$), lead time, payment terms and supplier reliability (replies, on-time deliveries, quality). Weights in Admin Settings › RFQ settings. The proposed supplier is the highest score among the quotes that pass.
+- Must-pass checks per RFQ (all lines priced, to spec, still valid, arrives in time): a quote that fails cannot be proposed; defaults in RFQ settings. Shown in the comparison, the approval pack and the Excel.
+- Quote validity alerts on the RFQ page and the Dashboard (default: quotes running out within 7 days).
+- Supplier quote link: each supplier gets a private link (in the email, WhatsApp and reminder texts, and a 🔗 Link button) to type prices on a simple page without a login; the quote lands in the comparison marked "online". Can be switched off.
+- Award: total, saving and scores are kept; items with an ML code become masterlist rate proposals (landed B$ per unit). Pricing › Rate proposals: Accept writes the price into the masterlist Res tab (confidence A, source) and logs the old price.
+- Delivery rating after the award (date, on time, quality 1-5) feeds the supplier scorecard and the reliability score.
+- Pricing › Quote prices: price history per material from every quote (B$ per unit, awarded ones marked, vs lowest); "price history" link on each RFQ item.
+- Monthly KPI report (PDF, on the letterhead) in Reports › RFQ reports, compared with the manual baseline set in RFQ settings; supplier scorecard on every supplier card.
+- Reply-rate learning: the number of suppliers to contact per RFQ now comes from the valid-quote rate of the category on earlier RFQs (shown in RFQ reports).
+- Goal guard on the RFQ page when short of 3 valid quotes: add next-best suppliers (all zones), find more in the next zone, log a marketplace post, mark Short. Marketplace posts card (Alibaba RFQ, Made-in-China, Facebook groups …) per RFQ.
+- Saved discovery prompts per material category (RFQ settings, or "Save as … prompt" in Find more suppliers).
+- Mailbox connection (optional, off until the boss approves): a scheduled GitHub job sends queued RFQ emails and due reminders from qs@arzabrunei.com within a daily limit and picks up replies (supplier marked Replied, attachments to Drive). Admin Settings › Connections › Mailbox.
+- Screen sizes: layout checked and fixed for phones, tablets / iPad, notebooks, laptops and large desktops.
+- Code.gs changed (v3.2.0): mlUpdate (accepted rate proposals into the masterlist) and the optional setJobKey() for the mailbox job. Paste it and deploy a New version; the links stay filled in.
+- Database: rate_proposals, rfq_postings, mail_outbox, mail_inbox; quote tokens, scores and delivery on RFQs; settings scoring, rfq_opts, kpi_baseline, prompts, mailbox. Applied by the Database workflow after merge.
+
 ## v3.1.3 — 9 Nov 2026
 
 - Quotes: Enter quote on the send list (or + Enter a quote): unit price per line, MOQ, currency, delivery terms, lead time, validity, payment terms, brand, freight / insurance, import duty %, clearing and local delivery, the quotation file (uploaded to Drive › Procurement › <RFQ>) or a link. Revised quotes keep the earlier revision.
