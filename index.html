@@ -399,8 +399,10 @@ tbody tr:hover td{background:var(--hover)}
 .f .catgrid b{flex:0 0 24px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--bink)}
 .f .catgrid span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .f .catgrid label.on{border-color:var(--brand2);background:color-mix(in srgb,var(--brand2) 10%,var(--field));font-weight:500}
-.lh{display:flex;gap:16px;align-items:center;border:1px solid var(--line);border-bottom:3px solid var(--brand);border-radius:6px;padding:12px 14px;background:#fff;color:#111}
-.lh img{max-height:64px;max-width:220px} .lhn{font-size:18px;font-weight:700;color:#120377} .lhs{font-size:11.5px;color:#444}
+.lhwrap{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.lh{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding-bottom:8px;border-bottom:1px solid #c9cde0;color:#111;background:#fff}
+.lh .jw{height:34px;display:block;margin:0 0 2px} .lh .lhn{font:700 21px/1.15 Calibri,Carlito,Arial,sans-serif;color:#000;margin:2px 0 4px}
+.lh .lhs{font:10.5px/1.38 Calibri,Carlito,Arial,sans-serif;color:#111} .lh .lg{height:78px;max-width:190px;object-fit:contain;flex:none}
 @media (max-width:900px){.catgrid{grid-template-columns:1fr 1fr}.modal dl.rec{grid-template-columns:110px 1fr}}
 .pv .form.f3{grid-template-columns:repeat(3,minmax(0,1fr))} .hrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .pv .crumb{font-size:12px;margin-bottom:2px} .pv .crumb a{color:var(--ink3);text-decoration:none} .pv .crumb a:hover{text-decoration:underline}
 .pv table.grid td{padding:3px 4px} .pv table.grid td.ln{color:var(--ink3);font-size:12px;text-align:right;width:26px}
@@ -413,6 +415,8 @@ tbody tr:hover td{background:var(--hover)}
 .ug-SUPER-URGENT{background:var(--badbg);color:var(--bad)} .ug-URGENT{background:#fdecd8;color:#b45309} .ug-NORMAL{background:var(--infobg);color:var(--info)} .ug-NEEDED-SOON{background:var(--line2);color:var(--bink)} .ug-RESTOCK{background:var(--mutebg);color:var(--mute)}
 .rs-Draft{background:var(--mutebg);color:var(--mute)} .rs-Sent,.rs-Chasing{background:var(--infobg);color:var(--info)} .rs-Comparison,.rs-Awarded{background:var(--okbg);color:var(--ok)} .rs-Short{background:#fdecd8;color:#b45309} .rs-Approval-sent{background:var(--line2);color:var(--bink)} .rs-Cancelled{background:var(--badbg);color:var(--bad)}
 .pv .grid2.rd .card .kpis{grid-template-columns:repeat(3,1fr)}
+.pv table.cmp td,.pv table.cmp th{vertical-align:top} .pv table.cmp th.qc{min-width:120px;text-align:right} .pv table.cmp th.qc a{color:inherit} .pv table.cmp td.low{background:color-mix(in srgb,var(--ok) 12%,transparent);font-weight:600}
+.pv table.cmp th.rec{box-shadow:inset 0 -3px 0 var(--brand2)} .pv table.cmp th.aw{box-shadow:inset 0 -3px 0 var(--ok)} .pv table.cmp tr.tot td{background:var(--line2)} .note.ok{background:var(--okbg);color:var(--ok)}
 @media (max-width:900px){.pv .form.f3{grid-template-columns:1fr}}
 </style>
 </head>
@@ -453,8 +457,7 @@ tbody tr:hover td{background:var(--hover)}
     <div class="ddm right" id="meMenu">
       <div class="mehead" id="meHead"></div>
       <a data-act="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>My profile</a>
-      <a data-v="users" class="hidden" id="navUsers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2.2.6 3.5 2.4 3.5 5.2"/></svg>Team &amp; access</a>
-      <a data-v="company" class="hidden" id="navCompany"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 21V5l8-3 8 3v16M9 21v-5h6v5M8 8h1M12 8h1M16 8h1M8 12h1M12 12h1M16 12h1"/></svg>Company &amp; settings</a>
+      <a data-v="users" class="hidden" id="navUsers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Admin Settings</a>
       <a data-act="ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>What's new<code id="meVer"></code></a>
       <div class="sep"></div>
       <a data-act="out" id="btnOut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/></svg>Sign out</a>
@@ -530,6 +533,7 @@ tbody tr:hover td{background:var(--hover)}
 <main id="vRE" class="hidden pv"></main>
 <main id="vRR" class="hidden pv"></main>
 <input type="file" id="rfFile" accept=".xlsx,.xlsm,.xls" class="hidden">
+<input type="file" id="quoteFile" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx" class="hidden">
 <input type="file" id="itemFile" accept=".xlsx,.xlsm,.xls,.csv" class="hidden">
 <input type="file" id="rqFile" accept=".xlsx,.xlsm,.xls,.csv" class="hidden">
 <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" class="hidden">
@@ -539,7 +543,7 @@ tbody tr:hover td{background:var(--hover)}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.1.2</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.1.3</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -1405,6 +1409,7 @@ tbody tr:hover td{background:var(--hover)}
  * message templates.
  * v3.1.0: material categories (standards §3), discovery import rows -> supplier records + contacts.
  * v3.1.2: import templates, item lists (MR), RFQ texts that fit the link, reminders, chase list, discovery prompt, RFQ KPIs.
+ * v3.1.3: AI answers pasted as tables, FX, landed cost in B$, quote comparison, masterlist budget check.
  * Works in the browser (global Procure) and in Node (module.exports). No dependencies.
  */
 (function (root) {
@@ -2147,6 +2152,106 @@ tbody tr:hover td{background:var(--hover)}
     return best;
   }
 
+  /* ---------- v3.1.3: AI answers, quotes, FX, landed cost, comparison, budget (standards §8) ---------- */
+  // a table pasted from Claude / Gemini: CSV, tab-separated or a markdown table; header row must hold company_name
+  function splitCsvLine(l, sep) {
+    var out = [], cur = '', q = false;
+    for (var i = 0; i < l.length; i++) {
+      var ch = l.charAt(i);
+      if (q) { if (ch === '"') { if (l.charAt(i + 1) === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true; else if (ch === sep) { out.push(cur); cur = ''; } else cur += ch;
+    }
+    out.push(cur); return out.map(function (x) { return x.trim(); });
+  }
+  function parseTable(text) {
+    var lines = String(text || '').replace(/\r/g, '').split('\n').map(function (l) { return l.replace(/^\s+|\s+$/g, ''); })
+      .filter(function (l) { return l && !/^```/.test(l) && !/^\|?\s*:?-{3,}/.test(l); });
+    var hi = -1; for (var i = 0; i < lines.length; i++) if (/company_name/i.test(lines[i])) { hi = i; break; }
+    if (hi < 0) return { rows: [], error: 'no header row with company_name' };
+    var md = /^\|/.test(lines[hi]), sep = md ? '|' : (lines[hi].split('\t').length > lines[hi].split(',').length ? '\t' : ',');
+    var cells = function (l) { var c = md ? l.replace(/^\||\|$/g, '').split('|').map(function (x) { return x.trim(); }) : splitCsvLine(l, sep); return c; };
+    var head = cells(lines[hi]).map(function (h) { return h.toLowerCase().replace(/\*|`/g, '').trim(); });
+    var rows = lines.slice(hi + 1).map(cells).filter(function (c) { return c.some(function (x) { return x; }); }).map(function (c) {
+      var o = {}; head.forEach(function (h, j) { if (h) o[h] = (c[j] || '').replace(/^\*\*|\*\*$/g, ''); }); return o; })
+      .filter(function (o) { return o.company_name && !/^(e\.g\.|example\b)/i.test(o.company_name); });
+    return { rows: rows, columns: head };
+  }
+  // FX: B$ per 1 unit of the currency. B$ = S$ 1:1 (Currency Interchangeability Agreement); others from the FX table
+  var CURRENCIES = ['BND', 'SGD', 'USD', 'MYR', 'CNY', 'EUR', 'AUD', 'JPY', 'THB', 'IDR', 'VND', 'PHP', 'INR', 'HKD', 'GBP', 'AED', 'KRW', 'TWD'];
+  function fxRate(cur, fx) {
+    cur = String(cur || 'BND').toUpperCase(); if (cur === 'BND' || cur === 'SGD') return 1;
+    var r = fx && fx[cur]; var v = r && (typeof r === 'object' ? +r.rate : +r); return v > 0 ? v : null;
+  }
+  // one quote -> amounts in B$ at site. items: RFQ items [{line, qty, unit}]; q: {currency, freight, insurance, duty_pct, clearing_bnd,
+  // delivery_bnd, lines:[{line, unit_price, qty, moq}]}. Qty used = RFQ qty, else the quoted qty, else the MOQ.
+  function landed(q, items, fx) {
+    var rate = fxRate(q.currency, fx), byLine = {}, out = { rate: rate, fxMissing: rate == null, lines: [], missing: [] };
+    (q.lines || []).forEach(function (l) { byLine[l.line] = l; });
+    var goods = 0;
+    (items || []).forEach(function (it) {
+      var l = byLine[it.line], up = l && l.unit_price !== '' && l.unit_price != null ? +l.unit_price : null;
+      if (up == null || isNaN(up)) { out.missing.push(it.line); out.lines.push({ line: it.line, unit_price: null }); return; }
+      var qty = num(it.qty) || num(l.qty) || num(l.moq) || 1, ub = rate == null ? null : up * rate;
+      goods += up * qty;
+      out.lines.push({ line: it.line, unit_price: up, qty: qty, qty_from: num(it.qty) ? 'rfq' : num(l.qty) ? 'quote' : num(l.moq) ? 'moq' : 'one', moq: num(l.moq),
+        unit_bnd: ub, amount_bnd: ub == null ? null : ub * qty, compliant: l.compliant !== false, brand: l.brand || '' });
+    });
+    var fr = (+q.freight || 0) + (+q.insurance || 0), duty = (+q.duty_pct || 0) / 100;
+    out.goods = goods; out.partial = out.missing.length > 0; out.complete = !out.partial;
+    if (rate == null) { out.total_bnd = null; return out; }
+    out.goods_bnd = goods * rate; out.freight_bnd = fr * rate; out.duty_bnd = (goods + fr) * rate * duty;
+    out.local_bnd = (+q.clearing_bnd || 0) + (+q.delivery_bnd || 0);
+    out.total_bnd = out.goods_bnd + out.freight_bnd + out.duty_bnd + out.local_bnd;
+    return out;
+  }
+  // compare the quotes of one RFQ. opts: {fx, today, required_date, rfq_date}. Valid for the comparison = ticked valid, priced for every
+  // line, within validity, FX known. Lead-time warning when lead_days > days left to the required date (counted from today).
+  function compareQuotes(items, quotes, opts) {
+    opts = opts || {}; var today = opts.today || iso(new Date());
+    var rows = (quotes || []).map(function (q) {
+      var L = landed(q, items, opts.fx), flags = [];
+      if (q.valid === false) flags.push('not valid (unticked)');
+      if (L.partial) flags.push('partial: no price for line ' + L.missing.join(', '));
+      if (L.fxMissing) flags.push('no FX rate for ' + q.currency);
+      if (q.validity && q.validity < today) flags.push('expired ' + q.validity);
+      if (L.lines.some(function (l) { return l.unit_price != null && !l.compliant; })) flags.push('not to spec on some lines');
+      var lw = leadTimeWarning(today, opts.required_date, q.lead_days == null || q.lead_days === '' ? null : +q.lead_days);
+      return { q: q, L: L, flags: flags, leadWarning: lw, ok: !flags.length };
+    });
+    var ok = rows.filter(function (r) { return r.ok; }).sort(function (a, b) { return a.L.total_bnd - b.L.total_bnd; });
+    ok.forEach(function (r, i) { r.rank = i + 1; });
+    var best = ok.filter(function (r) { return !r.leadWarning; })[0] || ok[0] || null;
+    var lowLine = {};
+    (items || []).forEach(function (it) {
+      var c = rows.filter(function (r) { return r.ok; }).map(function (r) { var l = r.L.lines.filter(function (x) { return x.line === it.line; })[0]; return l && l.unit_bnd != null ? { id: r.q.supplier_id, v: l.unit_bnd } : null; }).filter(Boolean)
+        .sort(function (a, b) { return a.v - b.v; });
+      lowLine[it.line] = c.length ? c[0].id : '';
+    });
+    var hi = ok.length ? ok[ok.length - 1].L.total_bnd : null;
+    return { rows: rows, valid: ok.length, goalMet: ok.length >= 3, best: best ? best.q.supplier_id : '', lowLine: lowLine,
+      saving: best && hi != null ? hi - best.L.total_bnd : null };
+  }
+  // masterlist Res tab (via Apps Script) -> {code: {name, unit, price, conf}}
+  function resIndex(res) {
+    var out = {}; if (!res || !res.head) return out;
+    var h = res.head.map(function (x) { return String(x).toLowerCase(); }), ci = function (re) { for (var i = 0; i < h.length; i++) if (re.test(h[i])) return i; return -1; };
+    var cC = ci(/^code/), cN = ci(/^resource/), cU = ci(/^unit/), cP = ci(/^price/), cF = ci(/^conf/);
+    (res.rows || []).forEach(function (r) { var c = String(r[cC] || '').trim(), p = num(r[cP]); if (/^[A-Z]{1,3}\d{1,4}[a-z]?$/.test(c) && p != null) out[c] = { name: String(r[cN] || ''), unit: String(r[cU] || ''), price: p, conf: String(r[cF] || '') }; });
+    return out;
+  }
+  // budget from the masterlist (items with a res_code and a quantity) vs a quote's landed total for the same lines
+  function budgetCheck(items, resIdx, Lq) {
+    var lines = [], budget = 0, quoted = 0, n = 0;
+    (items || []).forEach(function (it) {
+      var r = it.res_code && resIdx[it.res_code], qty = num(it.qty); if (!r || qty == null) return;
+      var ql = Lq && Lq.lines.filter(function (x) { return x.line === it.line; })[0];
+      lines.push({ line: it.line, code: it.res_code, ml_price: r.price, ml_unit: r.unit, conf: r.conf, budget: r.price * qty, quoted: ql && ql.amount_bnd != null ? ql.amount_bnd : null });
+      budget += r.price * qty; if (ql && ql.amount_bnd != null) { quoted += ql.amount_bnd; n++; }
+    });
+    return { lines: lines, budget: budget, quoted: quoted, covered: lines.length, priced: n, diff: n ? quoted - budget : null };
+  }
+  function money(v, d) { if (v == null || isNaN(v)) return '—'; d = d == null ? 2 : d; var s = (+v).toFixed(d).split('.'); s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); return s.join('.'); }
+
   var api = {
     rfqNo: rfqNo, mrNo: mrNo, parseDocNo: parseDocNo, nextDocNo: nextDocNo, supplierId: supplierId, parseSupplierId: parseSupplierId,
     COUNTRIES: COUNTRIES, countryCode: countryCode, ZONES: ZONES, zoneOf: zoneOf, zoneLabel: zoneLabel,
@@ -2165,7 +2270,8 @@ tbody tr:hover td{background:var(--hover)}
     autoVerification: autoVerification, dnsTargets: dnsTargets, digits: digits,
     TEMPLATE_COLS: TEMPLATE_COLS, TEMPLATE_HELP: TEMPLATE_HELP, MR_COLS: MR_COLS, MR_HELP: MR_HELP, dateIso: dateIso, mrItem: mrItem, parsePasted: parsePasted,
     shortDesc: shortDesc, rfqItems: rfqItems, rfqForTemplates: rfqForTemplates, buildEmailFit: buildEmailFit, buildReminderEmail: buildReminderEmail,
-    CHASE_OPEN: CHASE_OPEN, chaseDue: chaseDue, discoveryPrompt: discoveryPrompt, rfqFromTextSheet: rfqFromTextSheet, rfqKpis: rfqKpis, matchSupplier: matchSupplier
+    CHASE_OPEN: CHASE_OPEN, chaseDue: chaseDue, discoveryPrompt: discoveryPrompt, rfqFromTextSheet: rfqFromTextSheet, rfqKpis: rfqKpis, matchSupplier: matchSupplier,
+    parseTable: parseTable, CURRENCIES: CURRENCIES, fxRate: fxRate, landed: landed, compareQuotes: compareQuotes, resIndex: resIndex, budgetCheck: budgetCheck, money: money, num: num
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Procure = api;
@@ -2175,8 +2281,22 @@ tbody tr:hover td{background:var(--hover)}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'3.1.2', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'3.1.3', user:'Gemz' };
 var CHANGELOG = [
+  { v:'3.1.3', date:'9 Nov 2026', items:[
+    'Quotes: Enter quote on the send list (or + Enter a quote): unit price per line, MOQ, currency, delivery terms, lead time, validity, payment terms, brand, freight / insurance, import duty %, clearing and local delivery, the quotation file (uploaded to Drive › Procurement › <RFQ>) or a link. Revised quotes keep the earlier revision.',
+    'Comparison on the RFQ page: unit prices in B$ side by side (lowest per line highlighted), landed total at site in B$, lead-time warning, validity, payment terms, checks (partial, expired, not to spec, no FX rate), rank, saving vs the highest valid quote, and a budget check against the pricing masterlist (ML code per item).',
+    'Recommendation, approval pack PDF on the ARZA letterhead (To: Quantity Surveyor, qs@arzabrunei.com — set in Admin Settings), Mark approval pack sent (FX rates of the day kept), Record award (approved by, date, PO no.) — then Thank-you / Regret buttons by email or WhatsApp. Comparison Excel export.',
+    'FX table (B$ per USD, MYR, CNY …; B$ = S$) in Admin Settings › RFQ settings, pre-filled with the 9 Nov 2026 mid-market rates — confirm before an approval pack.',
+    'Find more suppliers: paste the AI\'s answer straight back into the app — each supplier is checked (format, duplicates, mail server), saved as Unverified and put on the send list with its Email / WhatsApp buttons. Clear guidance when the supplier database is still empty.',
+    'Dashboard is now the page you land on after signing in, with RFQ tiles (open, chase today, quotes to compare, waiting for approval, awarded this month).',
+    'Admin Settings (was Team & access) with tabs: Team & access · Company & letterhead · RFQ settings · Connections. The official ARZA letterhead from the Word file (logo, Jawi name, RC no., address, phone, email, website) is built in and used on RFQ PDFs and the approval pack.',
+    'Connections: paste the Apps Script web app URL once — it is saved in the database for every user (fixes "Drive file service not set" when adding a team member). Test button shows Drive folder, masterlist and team-accounts status.',
+    'Browser tab title is just "ARZA QS CRM SYSTEM" (no version).',
+    'Sign out then sign in as someone else: one connection per page (no more "Multiple GoTrueClient" warning); the sign-in page keeps what you already typed.',
+    'Code.gs changed: ARZA\'s Supabase URL, publishable key, Drive folder and masterlist links are filled in; re-running setSupabase() no longer removes the saved secret key; ping reports whether team accounts can be created. Paste Code.gs in Apps Script, run setSupabase / setDriveFolder / setMasterlist if needed, then Deploy › Manage deployments › Edit › New version.',
+    'Database: new tables quotes, quote_lines; RFQ award columns; settings fx and connections. Applied by the Database workflow after merge.'
+  ]},
   { v:'3.1.2', date:'8 Nov 2026', items:[
     'RFQ › RFQs: the RFQ register with KPIs and a Chase today list (reminders due, per the urgency timetable and Brunei working days).',
     'New RFQ: type the boss\'s list into a fill-in-the-blanks table (Enter moves down), paste it from Excel, or import an item-list file (template provided). Category is guessed from each item; urgency and the quote deadline follow from the earliest required-on-site date. RFQ numbers RFQ-YYMM-NNN, restarting each month.',
@@ -2365,14 +2485,24 @@ function cancel(){ if(dirty() && !confirm('Discard the changes you made?')) retu
 var LIBMSG='The sign-in component did not load. Reload the page (Ctrl+F5). If it keeps happening, check the internet connection, or whether a firewall or ad-blocker is blocking this site.';
 function cfg(){ var c=window.QSCRM_CONFIG||{}, o={}; ['supabaseUrl','supabaseKey','driveUrl'].forEach(function(k){ o[k]=String(c[k]||load('cfg.'+k)||'').trim(); });
   o.supabaseUrl=o.supabaseUrl.replace(/\/(rest|auth|storage)\/v1.*$/i,'').replace(/\/+$/,'');   // 'https://x.supabase.co/rest/v1/' -> project URL
+  if(S.driveDb) o.driveUrl=S.driveDb;   // v3.1.3: Admin Settings › Connections (database) wins over config.js / this device
   return o; }
 function cfgOk(){ var c=cfg(); return /^https:\/\/.+/.test(c.supabaseUrl) && c.supabaseKey.length>20; }
 function store(k,v,persist){ try{ (persist?localStorage:sessionStorage).setItem('qscrm.'+k,v); }catch(e){} }
 function load(k){ try{ return sessionStorage.getItem('qscrm.'+k) || localStorage.getItem('qscrm.'+k) || ''; }catch(e){ return ''; } }
+/* one Supabase client per page: two clients on the same storage key race each other after sign-out / sign-in.
+   "Keep me signed in" only switches where the session is stored (local vs this tab). */
+var AUTHST={keep:false};
+function authStore(){ var ls, ss; try{ ls=window.localStorage; ss=window.sessionStorage; }catch(e){ return undefined; }
+  return { getItem:function(k){ return (AUTHST.keep?ls:ss).getItem(k); }, setItem:function(k,v){ (AUTHST.keep?ls:ss).setItem(k,v); (AUTHST.keep?ss:ls).removeItem(k); },
+    removeItem:function(k){ ls.removeItem(k); ss.removeItem(k); } }; }
 function sbClient(remember){
   if(!window.supabase){ throw new Error(LIBMSG); }
-  var c=cfg(), st; try{ st = remember ? window.localStorage : window.sessionStorage; }catch(e){ st=undefined; }
-  return window.supabase.createClient(c.supabaseUrl, c.supabaseKey, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storage:st, storageKey:'qscrm.auth' } });
+  AUTHST.keep=!!remember;
+  var c=cfg(), key=c.supabaseUrl+'|'+c.supabaseKey;
+  if(S.sbc && S.sbcKey===key) return S.sbc;
+  S.sbcKey=key; S.sbc=window.supabase.createClient(c.supabaseUrl, c.supabaseKey, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storage:authStore(), storageKey:'qscrm.auth' } });
+  return S.sbc;
 }
 function api(action, body){
   if(!S.sb) { var e0=new Error('Not signed in'); e0.auth=true; return Promise.reject(e0); }
@@ -2384,7 +2514,7 @@ function api(action, body){
 /* store a file in Google Drive through the Apps Script file service -> {folder_link, url, name} */
 function driveUp(file, t){
   var url=cfg().driveUrl;
-  if(!url) return Promise.reject(new Error('Drive file service not set (driveUrl in config.js)'));
+  if(!url) return Promise.reject(new Error('Drive file service not set yet — Admin Settings › Connections (paste the Apps Script web app URL)'));
   return S.sb.auth.getSession().then(function(r){
     var tok=r.data&&r.data.session&&r.data.session.access_token; if(!tok) throw new Error('Session expired - sign in again');
     return fetch(url,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, redirect:'follow',
@@ -2393,7 +2523,7 @@ function driveUp(file, t){
     .then(function(j){ if(!j.ok) throw new Error(j.error||'Drive error'); return j.data; });
 }
 function driveCall(action, extra){
-  var url=cfg().driveUrl; if(!url) return Promise.reject(new Error('Drive file service not set (driveUrl in config.js)'));
+  var url=cfg().driveUrl; if(!url) return Promise.reject(new Error('Drive file service not set yet — Admin Settings › Connections (paste the Apps Script web app URL)'));
   return S.sb.auth.getSession().then(function(r){ var tok=r.data&&r.data.session&&r.data.session.access_token;
     return fetch(url,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, redirect:'follow', body:JSON.stringify(Object.assign({action:action, token:tok}, extra||{})) }); })
     .then(function(r){ return r.json(); }).then(function(j){ if(!j.ok) throw new Error(j.error||'Error'); return j.data; });
@@ -2417,10 +2547,12 @@ function apiF(action, body){
 
 /* ---------- login ---------- */
 function showLogin(err){
+  var shown=!$('vLogin').classList.contains('hidden');   // already on the login page: keep what is typed
   $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS','vDB','vLB','vML','vSP','vRQ','vCS','vRF','vRD','vRE','vRR'].forEach(function(id){ $(id).classList.add('hidden'); }); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); closeMenus(); mobileNav(false);
-  $('inEmail').value = load('email'); $('loginErr').textContent = err||''; closeDrawer();
+  if(!shown || !$('inEmail').value) $('inEmail').value = load('email'); if(!shown || err) $('loginErr').textContent = err||''; closeDrawer();
   var c=cfg(); $('inSbUrl').value=c.supabaseUrl; $('inSbKey').value=c.supabaseKey; $('inDrive').value=c.driveUrl;
   $('cfgBox').classList.toggle('hidden', cfgOk());
+  if(shown) return;
   $('inRemember').checked = load('remember')==='1';
   setTimeout(function(){ ($('inEmail').value? $('inPw') : $('inEmail')).focus(); }, 30);
 }
@@ -2456,16 +2588,19 @@ function forgot(e){
     $('loginErr').textContent = r.error ? r.error.message : 'If '+email+' has an account, a reset link is on its way. Open it on this device.'; });
 }
 function signOut(){ var sb=S.sb; S.sb=null; S.me=null; S.mode=''; S.tenders=[];
-  if(typeof ML!=='undefined'){ ML.data=null; ML.q=''; ML.grp=''; ML.tab='rates'; } if(typeof LB!=='undefined'){ LB.data=null; } if(typeof RV!=='undefined'){ RV.no=''; RV.dirty=false; RV.edit=null; } if(typeof RF!=='undefined'){ RF.list=null; RF.cur=null; RF.no=''; } if(typeof PR!=='undefined'){ PR.data=null; PR.Q=null; PR.sel={}; PR.set=null; prBadge(0); } if(sb){ try{ sb.auth.signOut(); }catch(e){} } showLogin(); }
+  if(typeof ML!=='undefined'){ ML.data=null; ML.q=''; ML.grp=''; ML.tab='rates'; } if(typeof LB!=='undefined'){ LB.data=null; } if(typeof RV!=='undefined'){ RV.no=''; RV.dirty=false; RV.edit=null; } if(typeof RF!=='undefined'){ RF.list=null; RF.cur=null; RF.no=''; } if(typeof PR!=='undefined'){ PR.data=null; PR.Q=null; PR.sel={}; PR.set=null; prBadge(0); } showLogin(); if(!sb) return;
+  /* let the sign-out finish before the next sign-in */
+  $('btnLogin').disabled=true; var done=function(){ $('btnLogin').disabled=false; };
+  try{ Promise.race([sb.auth.signOut(), new Promise(function(r){ setTimeout(r,4000); })]).then(done, done); }catch(e){ done(); } }
 function enter(){
   $('vLogin').classList.add('hidden'); $('vMain').classList.remove('hidden'); $('top').classList.remove('hidden'); drawMe(); clock();
   var c=$('conn'); c.classList.remove('hidden','off'); c.classList.toggle('ro', ro());
   c.querySelector('span').textContent = fileMode() ? 'Read-only file · '+S.fileName : 'Connected · Supabase'+(canWrite()?'':' · read only');
   c.title = fileMode() ? 'Data from the file on this computer; nothing is saved' : 'Data is live in the QS CRM database';
   $('btnNew').classList.toggle('hidden', ro()); $('btnImport').classList.toggle('hidden', ro());
-  $('navUsers').classList.toggle('hidden', !isAdmin()); $('navCompany').classList.toggle('hidden', !isAdmin());
-  if(!fileMode()) prLoad().catch(function(){});   // review-queue badge (quietly: before the v3.1.0 database update there is nothing to show)
-  fillFilters(); showView('tenders'); openFromHash();
+  $('navUsers').classList.toggle('hidden', !isAdmin());
+  if(!fileMode()){ prLoad().catch(function(){}); setsLoad().catch(function(){}); }   // review-queue badge, letterhead, Drive link (quietly)
+  fillFilters(); showView('dash'); openFromHash();
 }
 function refresh(){
   if(fileMode()) return Promise.resolve();
@@ -2901,6 +3036,7 @@ function showUpload(f){
 /* ---------- views & reports ---------- */
 function showView(v){
   if(v==='import'){ startImport(); return; }
+  if(v==='company'){ ADM.tab='company'; v='users'; }
   if(S.view==='rev' && v!=='rev' && !rvLeave()) return;
   if(v!=='rev'){ RV.dirty=false; RV.edit=null; }
   S.view=v;
@@ -2915,7 +3051,7 @@ function showView(v){
   if(v==='rfqs'){ var had2=!!RF.list; renderRfqs(); if(had2) rfLoad().then(function(){ if(S.view==='rfqs') renderRfqs(); }).catch(function(){}); return; }
   if(v==='rfq'){ RF.cur=null; renderRfq(); return; } if(v==='rfqedit'){ renderRfqEdit(); return; } if(v==='rfqreports'){ RF.list=null; renderRfqReports(); return; }
   if(v==='suppliers'){ var had=!!PR.data; renderSuppliers(); if(had) prLoad().then(function(){ if(S.view==='suppliers') renderSuppliers(); }).catch(function(){}); return; }
-  if(v==='queue'){ renderQueue(); return; } if(v==='company'){ renderCompany(); return; }
+  if(v==='queue'){ renderQueue(); return; }
   if(v==='reports') renderReports(); else if(v==='asbuilt') renderAsBuilt(); else if(v==='rev') renderRV(); else if(v==='users') renderUsers();
   else if(v==='dash') renderDash(); else if(v==='library') renderLib(); else if(v==='master') renderMaster(); else render();
 }
@@ -3705,20 +3841,7 @@ function printRV(){
 
 /* ---------- users & setup (admin) ---------- */
 var ROLE_HELP={ admin:'everything + users', qs:'all changes (tenders, BQ, revisions, as-built)', viewer:'read only (management, client)', pm:'read only for now (site modules in v7)', site:'read only for now (site modules in v7)' };
-function renderUsers(){
-  if(!isAdmin()){ $('vUS').innerHTML='<div class="empty">Only the admin can manage team access.</div>'; return; }
-  $('vUS').innerHTML='<div class="bar"><div><h2>Team &amp; access</h2><div class="scope">Who in the team can sign in to QS CRM, and what they can do. Roles: admin — '+ROLE_HELP.admin+' · qs — '+ROLE_HELP.qs+' · viewer — '+ROLE_HELP.viewer+'.</div></div><span style="flex:1"></span><button class="btn pri" id="usAdd">+ Add team member</button></div>'+
-    '<div class="card"><div id="usList"><div class="empty"><span class="spin"></span> Loading…</div></div><p class="n">Changes apply at the person\'s next action. A deactivated account cannot sign in to the data. There must always be one active admin.</p></div>'+
-    '<div class="card"><h3>Move data from the Google Sheet (one time)</h3><p style="margin:0 0 8px;color:var(--ink2)">1. Open the Google Sheet <b>QS CRM DB</b> › File › Download › Microsoft Excel (.xlsx).<br>2. Choose that file here: tenders, BQ lines, revisions, as-built lines, the log and lists are copied into Supabase. Drive links stay as they are.</p>'+
-    '<button class="btn imp" id="usMig">Choose QS CRM DB.xlsx…</button></div>'+
-    '<div class="card"><h3>Connection</h3><div id="usConn" class="n">Checking the Drive file service…</div></div>';
-  $('usAdd').onclick=addUser; $('usMig').onclick=function(){ $('migFile').click(); };
-  loadUsers();
-  var c=cfg();
-  (c.driveUrl ? driveCall('ping') : Promise.reject(new Error('driveUrl is empty in config.js'))).then(function(d){
-    $('usConn').innerHTML='Supabase: '+esc(c.supabaseUrl)+'<br>Drive file service: OK (signed in as '+esc(d.email)+', Drive folder '+(d.drive?'set':'<b>not set — run setDriveFolder()</b>')+').';
-  }).catch(function(e){ $('usConn').innerHTML='Supabase: '+esc(c.supabaseUrl)+'<br><b style="color:var(--bad)">Drive file service: '+esc(e.message)+'</b> — files cannot be stored until it works.'; });
-}
+function renderUsers(){ renderAdmin(); }
 function loadUsers(){
   return api('users').then(function(U){
     S.users=U;
@@ -3796,6 +3919,12 @@ function renderDash(){
   var el=$('vDB'); if(needLive(el,'The dashboard')) return;
   el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">Money view across all tenders: pipeline, contract value after rationalization, revisions waiting, won projects and their as-built position. Register charts are on Reports.</div></div><span style="flex:1"></span><button class="btn" id="dbRef">Refresh</button></div><div id="dbBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
   $('dbRef').onclick=renderDash;
+  var rq=document.createElement('div'); rq.id='dbRfq'; var bb=$('dbBody'); if(bb) bb.parentNode.insertBefore(rq,bb);
+  rfLoad().then(function(L){ var el2=$('dbRfq'); if(!el2) return; var all=L.rfqs||[], ch=chaseList(), m0=new Date().toISOString().slice(0,7);
+    var open=all.filter(function(r){ return RFQ_OPEN.indexOf(r.status)>=0; }), cmp=open.filter(function(r){ return r.quotes_n>0 && ['Approval sent'].indexOf(r.status)<0; }), apv=all.filter(function(r){ return r.status==='Approval sent'; }), aw=all.filter(function(r){ return r.status==='Awarded' && String(r.award_date||'').slice(0,7)===m0; });
+    el2.innerHTML='<div class="card dbrfq"><h3>RFQs</h3>'+kpiRow([['Open RFQs',open.length,all.length+' in total','rfqs'],['Chase today',ch.length,ch.length?'reminders due':'nothing due','rfqs'],['Quotes to compare',cmp.length,'RFQs with quotes in','rfqs'],['Waiting for approval',apv.length,'approval pack sent','rfqs'],['Awarded this month',aw.length,'RFQs awarded','rfqs']])+'</div>';
+    el2.onclick=function(e){ var k=e.target.closest('[data-go]'); if(k) showView(k.dataset.go); };
+  }).catch(function(){});
   api('dashboard').then(function(D){
     var k=D.kpi||{}, m0=function(v){return money0(v);};
     var wonDiff=(Number(k.won_contract)||0)-(Number(k.won_tendered)||0);
@@ -4370,50 +4499,98 @@ function showQueueImport(file){
 }
 
 /* ----- Company & letterhead, approval addressee, public holidays (admin) ----- */
-var CO_FIELDS=[['name','Company name','ARZA SDN BHD'],['reg_no','Registration no.',''],['address','Address','Bandar Seri Begawan, Brunei Darussalam'],['phone','Office phone','+673 …'],['email','Office email','qs@arzabrunei.com'],['website','Website',''],
-  ['sender_name','Sender name (RFQ contact)','Gemar C. Tubalado'],['sender_designation','Sender designation','Quantity Surveyor'],['sender_phone','Sender phone','+673 …'],['sender_email','Sender email','qs@arzabrunei.com']];
-function letterhead(c){ c=c||{};
-  var line=[c.address, c.phone?'Tel '+c.phone:'', c.email, c.website].filter(Boolean).map(esc).join(' · ');
-  return '<div class="lh">'+(c.logo?'<img src="'+esc(c.logo)+'" alt="">':'')+'<div><div class="lhn">'+esc(c.name||'ARZA SDN BHD')+'</div>'+(c.reg_no?'<div class="lhs">Reg. no. '+esc(c.reg_no)+'</div>':'')+(line?'<div class="lhs">'+line+'</div>':'')+'</div></div>'; }
-function renderCompany(){
-  var el=$('vCS'); if(needLive(el,'Company settings')) return;
-  if(!isAdmin()){ el.innerHTML='<div class="empty">Only the admin can change the company settings.</div>'; return; }
-  el.innerHTML='<div class="empty"><span class="spin"></span> Loading…</div>';
-  api('settings').then(function(st){
-    PR.set=st; var c=Object.assign({},st.company||{}), a=st.approval||{};
-    el.innerHTML='<div class="bar"><div><h2>Company &amp; settings</h2><div class="scope">Letterhead for RFQs and approval packs, the approval addressee and Brunei public holidays (RFQ reminders skip Fridays, Sundays and these days).</div></div></div>'+
-      '<div class="grid2"><div class="card"><h3>Company &amp; letterhead</h3><div class="form">'+CO_FIELDS.map(function(f){ return '<div class="f'+(f[0]==='address'?' full':'')+'"><label for="co_'+f[0]+'">'+esc(f[1])+'</label><input id="co_'+f[0]+'" maxlength="300" value="'+esc(c[f[0]]||'')+'" placeholder="'+esc(f[2])+'"></div>'; }).join('')+
-        '<div class="f full"><label>Logo <span class="hint">PNG / JPG; resized to fit 600 × 200 px</span></label><div class="fl"><button class="btn" id="coLogo" type="button">Choose logo…</button><button class="btn" id="coNoLogo" type="button">Remove</button><span class="n" id="coLogoN">'+esc(c.logo?(c.logo_name||'logo set')+(c.logo_link?' · copy in Drive':''):'no logo yet')+'</span></div></div></div>'+
-        '<h4 class="psec">Preview</h4><div id="coPrev"></div><p class="n">Until the details are filled, RFQ PDFs print a plain "ARZA SDN BHD" header and leave out blank fields.</p>'+
-        '<div class="pact"><button class="btn" id="coTest">Print test page</button><button class="btn pri" id="coSave">Save company</button></div></div>'+
-      '<div><div class="card"><h3>Approval pack addressee</h3><div class="form"><div class="f"><label for="ap_to">To</label><input id="ap_to" value="'+esc(a.to||'Quantity Surveyor')+'"></div><div class="f"><label for="ap_email">Email</label><input id="ap_email" value="'+esc(a.email||'qs@arzabrunei.com')+'"></div>'+
-        '<div class="f full"><label for="ap_cc">Cc <span class="hint">optional</span></label><input id="ap_cc" value="'+esc(a.cc||'')+'"></div></div><p class="n">Used on the 3-quote comparison / approval PDF (v3.1.2).</p><div class="pact"><button class="btn pri" id="apSave">Save addressee</button></div></div>'+
-      '<div class="card"><h3>Brunei public holidays</h3><div id="hoList"></div><div class="form" style="margin-top:8px"><div class="f full"><label for="hoAdd">Add holidays <span class="hint">one per line: YYYY-MM-DD name</span></label><textarea id="hoAdd" placeholder="2026-12-25 Christmas Day&#10;2027-01-01 New Year\'s Day"></textarea></div></div>'+
-        '<p class="n">From the official gazette, once a year. Fridays and Sundays are always off.</p><div class="pact"><button class="btn pri" id="hoSave">Add</button></div></div></div></div>'+
-      '<div class="card"><h3>Material categories</h3><div class="tbl"><table class="mini"><thead><tr><th>Code</th><th>Category</th><th>Examples</th><th>Masterlist prefix</th></tr></thead><tbody>'+Procure.CATEGORIES.map(function(x){ return '<tr style="cursor:default"><td class="no">'+x[0]+'</td><td>'+esc(x[1])+'</td><td class="n">'+esc(x[2])+'</td><td>'+esc(x[3]||'new')+'</td></tr>'; }).join('')+'</tbody></table></div><p class="n">Standards §3. Fixed for now; ask for a change in the next version.</p></div>';
-    var read=function(){ CO_FIELDS.forEach(function(f){ c[f[0]]=$('co_'+f[0]).value.trim(); }); return c; };
-    var prev=function(){ $('coPrev').innerHTML=letterhead(read()); };
-    CO_FIELDS.forEach(function(f){ $('co_'+f[0]).oninput=prev; }); prev();
-    $('coLogo').onclick=function(){ $('logoFile').click(); };
-    $('coNoLogo').onclick=function(){ c.logo=''; c.logo_name=''; c.logo_link=''; $('coLogoN').textContent='no logo (save to apply)'; prev(); };
-    $('logoFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return;
-      if(!/^image\/(png|jpeg|webp)$/.test(f.type)){ toast('Choose a PNG, JPG or WebP image.',true); return; }
-      $('coLogoN').innerHTML='<span class="spin"></span> reading…';
-      logoData(f).then(function(url){ c.logo=url; c.logo_name=f.name; prev(); $('coLogoN').textContent=f.name+' ('+Math.round(url.length*0.75/1024)+' KB) — saving a copy in Drive…';
-        return f.arrayBuffer().then(function(buf){ return driveCall('procUpload',{folder:'Company', file:{name:f.name,type:f.type,data:b64(buf)}}); })
-          .then(function(d){ c.logo_link=d.url; $('coLogoN').textContent=f.name+' · copy in Drive (save to apply)'; },
-                function(e){ $('coLogoN').textContent=f.name+' (save to apply) · Drive copy not stored: '+e.message; });
-      }).catch(function(e){ toast('Could not read the image: '+e.message,true); $('coLogoN').textContent=''; }); };
-    $('coSave').onclick=function(){ var btn=this; busy(btn,true); api('setSettings',{key:'company', value:read()}).then(function(r){ PR.set.company=r.value; busy(btn,false); toast('Company & letterhead saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
-    $('coTest').onclick=function(){ printLetterTest(read()); };
-    $('apSave').onclick=function(){ var btn=this; busy(btn,true); api('setSettings',{key:'approval', value:{to:$('ap_to').value.trim(), email:$('ap_email').value.trim(), cc:$('ap_cc').value.trim()}}).then(function(){ busy(btn,false); toast('Approval addressee saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
-    var hol=function(list){ $('hoList').innerHTML=list.length?'<div class="tbl"><table class="mini"><tbody>'+list.map(function(h){ return '<tr style="cursor:default"><td class="nw">'+esc(Procure.longDate(h.date))+'</td><td>'+esc(h.label)+'</td><td class="r"><button class="dbtn hoDel" data-d="'+esc(h.date)+'" title="Remove">×</button></td></tr>'; }).join('')+'</tbody></table></div>':'<div class="note w">No holidays entered yet — reminders count every Mon–Thu and Sat as a working day.</div>'; };
-    hol(st.holidays||[]);
-    $('hoList').onclick=function(e){ var b=e.target.closest('.hoDel'); if(!b) return; api('setHolidays',{remove:[b.dataset.d]}).then(function(s){ hol(s.holidays||[]); toast('Removed'); }).catch(fail); };
-    $('hoSave').onclick=function(){ var add=[], bad=[]; $('hoAdd').value.split(/\n/).forEach(function(l){ l=l.trim(); if(!l) return; var m=l.match(/^(\d{4}-\d{2}-\d{2})\s*[-–:,]?\s*(.*)$/); if(m) add.push({date:m[1], label:m[2]}); else bad.push(l); });
-      if(bad.length){ toast('Use YYYY-MM-DD name: '+bad[0],true); return; } if(!add.length){ toast('Type the holidays first.',true); return; }
-      var btn=this; busy(btn,true); api('setHolidays',{add:add}).then(function(s){ busy(btn,false); $('hoAdd').value=''; hol(s.holidays||[]); toast(add.length+' holiday'+(add.length>1?'s':'')+' saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
-  }).catch(function(e){ prNeedDb(el,e); });
+/* ---------- Admin Settings (v3.1.3): Team & access · Company & letterhead · RFQ settings · Connections ---------- */
+var ADM={ tab:'team' };
+/* official ARZA letterhead (Gemz's Word letterhead, 9 Nov 2026): logo right, Jawi name + details left */
+var LH_LOGO='data:image/jpeg;base64,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';
+var LH_JAWI='data:image/jpeg;base64,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';
+var CO_DEFAULT={ name:'ARZA SDN BHD', reg_no:'RC/00004225', address:'Unit No, 29, 1st & 2nd Floor\nBlock B, Melabau Complex\nKampong Serusop BB2313, Jln. Muara\nBandar Seri Begawan\nNegara Brunei Darussalam',
+  phone:'+673-234 2534', email:'info@arzabrunei.com', website:'www.arzabrunei.com', sender_name:'Gemar C. Tubalado', sender_designation:'Quantity Surveyor', sender_email:'qs@arzabrunei.com', sender_phone:'' };
+var CO_FIELDS=[['name','Company name'],['reg_no','Registration no.'],['address','Address (one line per row, as on the letterhead)'],['phone','Phone'],['email','Email'],['website','Website'],
+  ['sender_name','RFQ contact person'],['sender_designation','Designation'],['sender_email','Contact email'],['sender_phone','Contact phone']];
+function company(c){ c=c||((PR.set&&PR.set.company)||{}); var o=Object.assign({},CO_DEFAULT); Object.keys(c).forEach(function(k){ if(c[k]) o[k]=c[k]; }); o.logo=c.logo||LH_LOGO; o.logo2=c.logo2||LH_JAWI; return o; }
+var LH_CSS='.lh{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid #c9cde0;color:#111;background:#fff}'+
+  '.lh .lhl{min-width:0}.lh .jw{height:34px;display:block;margin:0 0 2px}.lh .lhn{font:700 21px/1.15 Calibri,Carlito,Arial,sans-serif;color:#000;margin:2px 0 4px}'+
+  '.lh .lhs{font:10.5px/1.38 Calibri,Carlito,Arial,sans-serif;color:#111}.lh .lhs b{font-weight:700}.lh .lg{height:78px;max-width:190px;object-fit:contain;flex:none}';
+function letterhead(c){ c=company(c);
+  var ad=String(c.address||'').split(/\n/).map(function(x){ return x.trim(); }).filter(Boolean);
+  return '<div class="lh"><div class="lhl">'+(c.logo2?'<img class="jw" src="'+esc(c.logo2)+'" alt="">':'')+'<div class="lhn">'+esc(c.name)+'</div><div class="lhs">'+[c.reg_no].concat(ad).filter(Boolean).map(esc).join('<br>')+
+    (c.phone?'<br><b>Phone:</b> '+esc(c.phone):'')+(c.email?'<br><b>Email:</b> '+esc(c.email):'')+(c.website?'<br><b>Website:</b> '+esc(c.website):'')+'</div></div>'+(c.logo?'<img class="lg" src="'+esc(c.logo)+'" alt="">':'')+'</div>'; }
+function setsLoad(){ return api('settings').then(function(st){ PR.set=st; S.driveDb=(st.connections&&st.connections.drive_url)||''; return st; }); }
+function renderAdmin(){
+  var el=$('vUS'); if(!isAdmin()){ el.innerHTML='<div class="empty">Only the admin can open Admin Settings.</div>'; return; }
+  var tabs=[['team','Team & access'],['company','Company & letterhead'],['rfq','RFQ settings'],['conn','Connections']];
+  el.innerHTML='<div class="bar"><div><h2>Admin Settings</h2><div class="scope">Team accounts, the official letterhead, RFQ settings (FX, holidays, approval addressee) and the connection to Google Drive.</div></div></div>'+
+    '<div class="tabs abtabs" id="admTabs">'+tabs.map(function(t){ return '<a data-t="'+t[0]+'"'+(ADM.tab===t[0]?' class="on"':'')+'>'+esc(t[1])+'</a>'; }).join('')+'</div><div id="admBody"></div>';
+  $('admTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(a){ ADM.tab=a.dataset.t; renderAdmin(); } };
+  var b=$('admBody');
+  if(ADM.tab==='team') return renderTeam(b);
+  b.innerHTML='<div class="empty"><span class="spin"></span> Loading…</div>';
+  setsLoad().then(function(st){ if(ADM.tab==='company') admCompany(b,st); else if(ADM.tab==='rfq') admRfq(b,st); else admConn(b,st); }).catch(function(e){ prNeedDb(b,e); });
+}
+function renderTeam(b){
+  b.innerHTML='<div class="bar"><div class="scope">Who can sign in to QS CRM and what they can do. Roles: admin — '+ROLE_HELP.admin+' · qs — '+ROLE_HELP.qs+' · viewer — '+ROLE_HELP.viewer+'.</div><span style="flex:1"></span><button class="btn pri" id="usAdd">+ Add team member</button></div>'+
+    '<div class="card"><div id="usList"><div class="empty"><span class="spin"></span> Loading…</div></div><p class="n">Changes apply at the person\'s next action. A deactivated account cannot sign in to the data. There must always be one active admin.</p></div>';
+  $('usAdd').onclick=addUser; loadUsers();
+}
+function admCompany(b,st){
+  var c=Object.assign({},st.company||{}), eff=company(c);
+  b.innerHTML='<div class="grid2"><div class="card"><h3>Company &amp; letterhead</h3><p class="n">The official ARZA letterhead (from the Word file) is built in. Change a field only if the company details change; a blank field uses the built-in value.</p><div class="form">'+
+      CO_FIELDS.map(function(f){ return '<div class="f'+(f[0]==='address'?' full':'')+'"><label for="co_'+f[0]+'">'+esc(f[1])+'</label>'+(f[0]==='address'?'<textarea id="co_address" rows="5">'+esc(eff.address)+'</textarea>':'<input id="co_'+f[0]+'" maxlength="300" value="'+esc(eff[f[0]]||'')+'">')+'</div>'; }).join('')+
+      '<div class="f full"><label>Logo (right) and Jawi name (top left)</label><div class="fl"><button class="btn sm" type="button" id="coLogo">Replace logo…</button><button class="btn sm" type="button" id="coJawi">Replace Jawi name…</button><button class="btn sm" type="button" id="coReset">Use the official images</button><span class="n" id="coLogoN">'+(c.logo||c.logo2?'custom image saved':'official images')+'</span></div></div></div>'+
+      '<div class="pact"><button class="btn" id="coTest">Print test page</button><button class="btn pri" id="coSave">Save</button></div></div>'+
+    '<div class="card"><h3>Preview</h3><div class="lhwrap" id="coPrev"></div><p class="n">Used on RFQ PDFs and the quotation comparison / approval pack.</p></div></div>';
+  var read=function(){ CO_FIELDS.forEach(function(f){ c[f[0]]=$('co_'+f[0]).value.trim(); }); return c; };
+  var prev=function(){ $('coPrev').innerHTML=letterhead(read()); }; CO_FIELDS.forEach(function(f){ $('co_'+f[0]).oninput=prev; }); prev();
+  var pick=function(key){ PR.logoKey=key; $('logoFile').click(); };
+  $('coLogo').onclick=function(){ pick('logo'); }; $('coJawi').onclick=function(){ pick('logo2'); };
+  $('coReset').onclick=function(){ c.logo=''; c.logo2=''; c.logo_name=''; c.logo2_name=''; c.logo_link=''; $('coLogoN').textContent='official images (save to apply)'; prev(); };
+  $('logoFile').onchange=function(){ var f=this.files[0], key=PR.logoKey||'logo'; this.value=''; if(!f) return;
+    if(!/^image\/(png|jpeg|webp)$/.test(f.type)){ toast('Choose a PNG, JPG or WebP image.',true); return; }
+    logoData(f).then(function(url){ c[key]=url; c[key+'_name']=f.name; prev(); $('coLogoN').textContent=f.name+' (save to apply)';
+      if(key==='logo') f.arrayBuffer().then(function(buf){ return driveCall('procUpload',{folder:'Company', file:{name:f.name,type:f.type,data:b64(buf)}}); }).then(function(d){ c.logo_link=d.url; },function(){}); })
+      .catch(function(e){ toast('Could not read the image: '+e.message,true); }); };
+  $('coSave').onclick=function(){ var btn=this, v=read(), out={};
+    Object.keys(v).forEach(function(k){ if(['logo','logo2','logo_name','logo2_name','logo_link'].indexOf(k)>=0 || v[k]!==CO_DEFAULT[k]) out[k]=v[k]; });   // keep only what differs from the official letterhead
+    busy(btn,true); api('setSettings',{key:'company', value:out}).then(function(r){ PR.set.company=r.value; busy(btn,false); toast('Company & letterhead saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+  $('coTest').onclick=function(){ printLetterTest(read()); };
+}
+function admRfq(b,st){
+  var a=st.approval||{}, fx=st.fx||{}, curs=['USD','MYR','CNY'].concat(Object.keys(fx).filter(function(k){ return ['USD','MYR','CNY'].indexOf(k)<0; })).concat(['EUR','AUD','JPY','THB','IDR','VND'].filter(function(k){ return !fx[k]; }).slice(0,2));
+  b.innerHTML='<div class="grid2"><div><div class="card"><h3>FX rates <span class="n">B$ per 1 unit</span></h3><p class="n">B$ = S$ 1:1 always. Landed cost in the comparison uses these rates; the approval pack keeps the rates of the day it was sent. Blank = not used.</p>'+
+      '<div class="tbl"><table class="mini grid"><thead><tr><th>Currency</th><th>B$ per 1</th><th>Date</th><th>Source</th></tr></thead><tbody id="fxRows">'+curs.map(function(k){ var r=fx[k]||{};
+        return '<tr><td><b>'+k+'</b></td><td><input class="ed num" data-k="rate" data-c="'+k+'" value="'+esc(r.rate==null?'':r.rate)+'" inputmode="decimal"></td><td><input class="ed" type="date" data-k="date" data-c="'+k+'" value="'+esc(r.date||'')+'"></td><td><input class="ed" data-k="source" data-c="'+k+'" value="'+esc(r.source||'')+'" placeholder="bank / AMBD / xe.com"></td></tr>'; }).join('')+'</tbody></table></div>'+
+      '<div class="pact"><button class="btn pri" id="fxSave">Save FX rates</button></div></div>'+
+    '<div class="card"><h3>Approval pack addressee</h3><div class="form"><div class="f"><label for="ap_to">To</label><input id="ap_to" value="'+esc(a.to||'Quantity Surveyor')+'"></div><div class="f"><label for="ap_email">Email</label><input id="ap_email" value="'+esc(a.email||'qs@arzabrunei.com')+'"></div>'+
+      '<div class="f full"><label for="ap_cc">Cc <span class="hint">optional</span></label><input id="ap_cc" value="'+esc(a.cc||'')+'"></div></div><div class="pact"><button class="btn pri" id="apSave">Save addressee</button></div></div></div>'+
+    '<div><div class="card"><h3>Brunei public holidays</h3><div id="hoList"></div><div class="form" style="margin-top:8px"><div class="f full"><label for="hoAdd">Add holidays <span class="hint">one per line: YYYY-MM-DD name</span></label><textarea id="hoAdd" placeholder="2026-12-25 Christmas Day&#10;2027-01-01 New Year\'s Day"></textarea></div></div>'+
+      '<p class="n">From the official gazette, once a year. Fridays and Sundays are always off.</p><div class="pact"><button class="btn pri" id="hoSave">Add</button></div></div>'+
+    '<div class="card"><h3>Material categories</h3><div class="tbl" style="max-height:340px"><table class="mini"><thead><tr><th>Code</th><th>Category</th><th>Masterlist</th></tr></thead><tbody>'+Procure.CATEGORIES.map(function(x){ return '<tr style="cursor:default" title="'+esc(x[2])+'"><td class="no">'+x[0]+'</td><td>'+esc(x[1])+'</td><td>'+esc(x[3]||'new')+'</td></tr>'; }).join('')+'</tbody></table></div></div></div></div>';
+  $('fxSave').onclick=function(){ var rates={}; document.querySelectorAll('#fxRows [data-c]').forEach(function(x){ (rates[x.dataset.c]=rates[x.dataset.c]||{})[x.dataset.k]=x.value.trim(); });
+    var btn=this; busy(btn,true); api('setFx',{rates:rates}).then(function(r){ PR.set.fx=r.fx; busy(btn,false); toast('FX rates saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+  $('apSave').onclick=function(){ var btn=this; busy(btn,true); api('setSettings',{key:'approval', value:{to:$('ap_to').value.trim(), email:$('ap_email').value.trim(), cc:$('ap_cc').value.trim()}}).then(function(){ busy(btn,false); toast('Approval addressee saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+  var hol=function(list){ $('hoList').innerHTML=list.length?'<div class="tbl"><table class="mini"><tbody>'+list.map(function(h){ return '<tr style="cursor:default"><td class="nw">'+esc(Procure.longDate(h.date))+'</td><td>'+esc(h.label)+'</td><td class="r"><button class="dbtn hoDel" data-d="'+esc(h.date)+'" title="Remove">×</button></td></tr>'; }).join('')+'</tbody></table></div>':'<div class="note w">No holidays entered yet — reminders count every Mon–Thu and Sat as a working day.</div>'; };
+  hol(st.holidays||[]);
+  $('hoList').onclick=function(e){ var x=e.target.closest('.hoDel'); if(!x) return; api('setHolidays',{remove:[x.dataset.d]}).then(function(s){ hol(s.holidays||[]); toast('Removed'); }).catch(fail); };
+  $('hoSave').onclick=function(){ var add=[], bad=[]; $('hoAdd').value.split(/\n/).forEach(function(l){ l=l.trim(); if(!l) return; var m=l.match(/^(\d{4}-\d{2}-\d{2})\s*[-–:,]?\s*(.*)$/); if(m) add.push({date:m[1], label:m[2]}); else bad.push(l); });
+    if(bad.length){ toast('Use YYYY-MM-DD name: '+bad[0],true); return; } if(!add.length){ toast('Type the holidays first.',true); return; }
+    var btn=this; busy(btn,true); api('setHolidays',{add:add}).then(function(s){ busy(btn,false); $('hoAdd').value=''; hol(s.holidays||[]); toast(add.length+' holiday'+(add.length>1?'s':'')+' saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+}
+function admConn(b,st){
+  var cn=st.connections||{}, c=cfg();
+  b.innerHTML='<div class="grid2"><div class="card"><h3>Google Drive file service (Apps Script)</h3><p class="n">Needed to create team accounts, store files in Drive (tender files, quotations, logo) and read the pricing masterlist. Saved in the database, so every user and device gets it.</p>'+
+      '<div class="form"><div class="f full"><label for="cnUrl">Web app URL <span class="hint">Apps Script › Deploy › Manage deployments › Web app › URL (ends with /exec)</span></label><input id="cnUrl" value="'+esc(cn.drive_url||c.driveUrl||'')+'" placeholder="https://script.google.com/macros/s/…/exec"></div></div>'+
+      '<div class="pact"><button class="btn" id="cnTest">Test</button><button class="btn pri" id="cnSave">Save</button></div><div id="cnStat" class="n" style="margin-top:8px"></div></div>'+
+    '<div class="card"><h3>Status</h3><div class="n" id="cnInfo">Supabase: '+esc(c.supabaseUrl)+'</div><p class="n">After pasting a new Code.gs in Apps Script: Deploy › Manage deployments › Edit (pencil) › Version: New version › Deploy. The URL stays the same. Script Properties (Supabase keys, Drive folder, masterlist) are kept when the code is replaced.</p></div></div>'+
+    '<div class="card"><h3>Move data from the Google Sheet (one time)</h3><p style="margin:0 0 8px;color:var(--ink2)">1. Open the Google Sheet <b>QS CRM DB</b> › File › Download › Microsoft Excel (.xlsx).<br>2. Choose that file here: tenders, BQ lines, revisions, as-built lines, the log and lists are copied into Supabase. Drive links stay as they are.</p><button class="btn imp" id="usMig">Choose QS CRM DB.xlsx…</button></div>';
+  $('usMig').onclick=function(){ $('migFile').click(); };
+  var test=function(){ var u=$('cnUrl').value.trim(); if(!u){ $('cnStat').innerHTML='<b class="neg">Not set</b> — creating accounts and storing files will not work.'; return Promise.resolve(); }
+    var keep=S.driveDb; S.driveDb=u; $('cnStat').innerHTML='<span class="spin"></span> Testing…';
+    return driveCall('ping').then(function(d){ $('cnStat').innerHTML='<b class="pos">Works</b> — signed in as '+esc(d.email)+' · Drive folder '+(d.drive?'set':'<b class="neg">not set (run setDriveFolder)</b>')+' · masterlist '+(d.masterlist?'set':'<b class="neg">not set (run setMasterlist)</b>')+' · team accounts from the app '+(d.users?'on':d.users===false?'<b class="neg">off (paste the secret key in setSupabase and run it)</b>':'?')+(d.version?' · Code.gs v'+esc(d.version):''); })
+      .catch(function(e){ S.driveDb=keep; $('cnStat').innerHTML='<b class="neg">Does not work:</b> '+esc(e.message); }); };
+  $('cnTest').onclick=test;
+  $('cnSave').onclick=function(){ var btn=this, u=$('cnUrl').value.trim(); busy(btn,true); api('setSettings',{key:'connections', value:{drive_url:u}}).then(function(r){ S.driveDb=r.value.drive_url||''; busy(btn,false); toast('Saved for every user'); test(); }).catch(function(e){ busy(btn,false); fail(e); }); };
+  test();
 }
 /* image -> data: URL that fits 600 x 200 (PNG keeps transparency; JPG for photos), under ~300 KB */
 function logoData(file){
@@ -4424,15 +4601,16 @@ function logoData(file){
       if(url.length>420000) rej(new Error('image is still too large after resizing')); else res(url); };
     im.onerror=function(){ rej(new Error('not an image')); }; im.src=fr.result; }; fr.onerror=function(){ rej(fr.error); }; fr.readAsDataURL(file); });
 }
-function printLetterTest(c){
-  var w=window.open('','_blank'); if(!w){ toast('Allow pop-ups to print / save as PDF.',true); return; }
-  var who=[c.sender_name||'Gemar C. Tubalado', c.sender_designation||'Quantity Surveyor', c.sender_email||'qs@arzabrunei.com', c.sender_phone].filter(Boolean).map(esc).join(' · ');
-  w.document.open(); w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Letterhead test</title><style>@page{size:A4 portrait;margin:16mm}body{font:12px/1.45 Arial,sans-serif;color:#111}'+
-    '.lh{display:flex;gap:16px;align-items:center;border-bottom:2px solid #120377;padding-bottom:10px}.lh img{max-height:64px;max-width:220px}.lhn{font-size:18px;font-weight:700;color:#120377}.lhs{font-size:11px;color:#444}'+
-    'h1{font-size:16px;letter-spacing:1px;text-align:center;margin:22px 0}.ft{position:fixed;bottom:0;left:0;right:0;font-size:10px;color:#666;text-align:center}</style></head><body>'+letterhead(c)+
-    '<h1>REQUEST FOR QUOTATION</h1><p>Test page: this is how the header of RFQ PDFs (v3.1.1) and approval packs will look.</p><p>Contact: '+who+'</p><div class="ft">Please quote RFQ no. in your reply</div>'+
-    '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>'); w.document.close();
+function printDoc(title, body, extraCss){
+  var w=window.open('','_blank'); if(!w){ toast('Allow pop-ups to print / save as PDF.',true); return null; }
+  w.document.open(); w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:A4 portrait;margin:12mm 13mm 16mm}body{font:11px/1.42 Calibri,Carlito,Arial,sans-serif;color:#111;margin:0}'+LH_CSS+
+    'h1{font-size:15px;letter-spacing:1.2px;text-align:center;margin:12px 0 10px}table{border-collapse:collapse;width:100%}.meta td{padding:2px 8px 2px 0;vertical-align:top}.meta td.k{color:#555;width:120px}'+
+    '.it{margin-top:10px}.it th,.it td{border:1px solid #9aa0b4;padding:4px 5px;vertical-align:top}.it th{background:#eef0fb;text-align:left;font-size:10px}.r{text-align:right}h3{font-size:11.5px;margin:12px 0 4px}ul{margin:4px 0;padding-left:18px}'+
+    '.ft{position:fixed;bottom:0;left:0;right:0;font-size:9px;color:#666;text-align:center;border-top:1px solid #ccc;padding-top:3px}'+(extraCss||'')+'</style></head><body>'+body+
+    '<script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script></body></html>'); w.document.close(); return w;
 }
+function printLetterTest(c){ var e=company(c);
+  printDoc('Letterhead test', letterhead(c)+'<h1>REQUEST FOR QUOTATION</h1><p>Test page: this is how RFQ PDFs and the quotation comparison / approval pack start.</p><p>Contact: '+[e.sender_name,e.sender_designation,e.sender_email,e.sender_phone].filter(Boolean).map(esc).join(' · ')+'</p><div class="ft">Please quote the RFQ no. in your reply</div>'); }
 $('rqFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return; if(ro()){ toast('Read-only account.',true); return; } showQueueImport(f); };
 
 /* ---------- v3.1.2: RFQs — item list, shortlist, send list with Email / WhatsApp buttons, chase list, RFQ PDF, RFQ reports ---------- */
@@ -4503,6 +4681,7 @@ function itemRow(it){ it=it||{}; var v=function(k){ return esc(it[k]==null?'':it
   return '<tr><td class="ln"></td><td><input class="ed" data-k="description" value="'+v('description')+'" placeholder="Item"></td><td><input class="ed" data-k="spec_brand" value="'+v('spec_brand')+'" placeholder="spec / brand"></td>'+
     '<td><input class="ed num" data-k="qty" value="'+v('qty')+'" inputmode="decimal" placeholder="MOQ"></td><td><input class="ed" data-k="unit" value="'+v('unit')+'" style="width:70px"></td>'+
     '<td><input class="ed" type="date" data-k="required_date" value="'+v('required_date')+'"></td><td><select data-k="category"><option value="">—</option>'+Procure.CATEGORIES.map(function(c){ return '<option value="'+c[0]+'"'+(it.category===c[0]?' selected':'')+' title="'+esc(c[1])+'">'+c[0]+'</option>'; }).join('')+'</select></td>'+
+    '<td><input class="ed" data-k="res_code" list="mlCodes" value="'+v('res_code')+'" style="width:64px" placeholder="M09"></td>'+
     '<td style="text-align:center"><input type="checkbox" data-k="only_overseas"'+(it.only_overseas?' checked':'')+' title="Only made overseas (e.g. China)"></td><td><button class="dbtn idel" type="button" title="Remove">×</button></td></tr>'; }
 function renderRfqEdit(){
   var el=$('vRE'); if(needLive(el,'RFQ')) return; if(!canWrite()){ el.innerHTML='<div class="empty">Read-only account.</div>'; return; }
@@ -4523,9 +4702,9 @@ function renderRfqEdit(){
     '</div></div>'+
     '<div class="card"><div class="hrow" style="margin-bottom:8px"><h3 style="margin:0">Items</h3><span class="n" id="re_cnt" style="margin:0 0 0 8px"></span><span style="flex:1"></span>'+
       '<button class="btn sm" id="re_paste" type="button">Paste from Excel…</button><button class="btn sm" id="re_imp" type="button">Import item list…</button><button class="btn sm" id="re_tpl" type="button">Template</button></div>'+
-      '<div class="tbl"><table class="mini grid"><thead><tr><th>#</th><th style="min-width:260px">Item</th><th style="min-width:150px">Spec / brand</th><th>Qty</th><th>Unit</th><th>Required on site</th><th>Cat.</th><th title="Only made overseas">O/S</th><th></th></tr></thead><tbody id="re_items">'+
+      '<div class="tbl"><table class="mini grid"><thead><tr><th>#</th><th style="min-width:260px">Item</th><th style="min-width:150px">Spec / brand</th><th>Qty</th><th>Unit</th><th>Required on site</th><th>Cat.</th><th title="Masterlist resource code (Res tab) - for the budget check">ML code</th><th title="Only made overseas">O/S</th><th></th></tr></thead><tbody id="re_items">'+
       (items.length?items:[{},{},{},{},{}]).map(itemRow).join('')+'</tbody></table></div><button class="btn sm" id="re_add" type="button" style="margin-top:6px">+ Row</button>'+
-      '<p class="n">Blank quantity = the RFQ asks for MOQ and the unit price at MOQ. Category is guessed from the item when left blank (it decides which suppliers are proposed).</p></div>'+
+      '<datalist id="mlCodes"></datalist><p class="n">Blank quantity = the RFQ asks for MOQ and the unit price at MOQ. Category is guessed from the item when left blank (it decides which suppliers are proposed). ML code = the masterlist resource code (e.g. M09 cement) for the budget check in the comparison.</p></div>'+
     '<div class="pact"><button class="btn" id="re_c">Cancel</button><button class="btn pri" id="re_go">'+(edit?'Save changes':'Create RFQ')+'</button></div>';
   if(h.urgency && edit) $('re_urg').value=h.urgency;
   var tb=$('re_items');
@@ -4575,6 +4754,7 @@ function renderRfqEdit(){
       .catch(function(e){ busy(btn,false); fail(e); });
   };
   refresh(); if(!edit) $('re_title').focus();
+  mlEnsure().then(function(){ var R=mlRes(), dl=$('mlCodes'); if(dl) dl.innerHTML=Object.keys(R).map(function(k){ return '<option value="'+esc(k)+'">'+esc(R[k].name+' — B$ '+R[k].price+'/'+R[k].unit)+'</option>'; }).join(''); });
 }
 
 /* ----- one RFQ: items, send list with the two buttons, chase, statuses ----- */
@@ -4596,12 +4776,15 @@ function renderRfq(){
     '<div class="card"><div class="hrow" style="margin-bottom:6px"><h3 style="margin:0">Send list</h3><span style="flex:1"></span>'+(w?'<button class="btn sm pri" id="rdAdd">+ Add suppliers</button><button class="btn sm" id="rdMore" title="Ready prompt for Claude / Gemini to find more suppliers in the import-template columns">Find more suppliers</button><button class="btn sm" id="rdQuick">Quick-add a supplier</button>':'')+'</div>'+
       (rec.length?'<p class="n">For each supplier: click <b>① Email</b> (Roundcube opens with the RFQ written — press Send), then <b>② WhatsApp</b> (follow-up ready — press Send). Each click is recorded. Set the status when they answer.</p>'+
       '<div class="tbl"><table class="mlt sl"><thead><tr><th>Supplier</th><th>Contact</th><th>Send</th><th>Chase</th><th>Status</th><th>Dates</th></tr></thead><tbody id="rdRows">'+rec.map(slRow).join('')+'</tbody></table></div>':
-      '<div class="empty" style="padding:22px">No suppliers yet. '+(w?'Click <b>+ Add suppliers</b> — the system proposes suppliers from your database by category and the zones allowed by the urgency.':'')+'</div>')+'</div>'+
+      '<div class="empty" style="padding:22px">No suppliers yet. '+(w?((PR.data&&!(PR.data.suppliers||[]).length)?'<b>Your supplier database is empty</b>, so there is nothing to propose yet. Two ways to fill it:<br>① <b>Find more suppliers</b> → copy the prompt into Claude / Gemini → paste the answer back there → the suppliers land on this send list with their Email / WhatsApp buttons.<br>② RFQ › Review queue › Import file… with supplier lists you already have (e.g. the RFQ-2611-002 send list, the aircon directory).':'Click <b>+ Add suppliers</b> — the system proposes suppliers from your database by category and the zones allowed by the urgency.'):'')+'</div>')+'</div>'+
+    '<div class="card" id="rdQ">'+rdQuotes(D)+'</div>'+
     '<div class="card"><h3>History</h3>'+rdHistory(D)+'</div>';
+  rdQuotesWire(D);
+  if(D.items.some(function(x){ return x.res_code; }) && typeof ML!=='undefined' && !ML.data) mlEnsure().then(function(){ if(RF.cur===D && ML.data && $('rdQ')){ $('rdQ').innerHTML=rdQuotes(D); rdQuotesWire(D); } });
   $('rdBack').onclick=function(e){ e.preventDefault(); showView('rfqs'); };
   $('rdPdf').onclick=function(){ printRfq(D); };
   if($('rdSt')) $('rdSt').onclick=rfqStatusDlg;
-  if(w){ $('rdEdit').onclick=function(){ showView('rfqedit'); }; $('rdAdd').onclick=shortlist; $('rdMore').onclick=findMore; $('rdQuick').onclick=quickAdd; }
+  if(w){ $('rdEdit').onclick=function(){ if((D.quotes||[]).length && !confirm('Quotes are already entered for this RFQ. Changing the item lines (order, number of lines) also changes which quoted price belongs to which line. Continue?')) return; showView('rfqedit'); }; $('rdAdd').onclick=shortlist; $('rdMore').onclick=findMore; $('rdQuick').onclick=quickAdd; }
   var tb=$('rdRows'); if(!tb) return;
   tb.addEventListener('click',function(e){
     var a=e.target.closest('a[data-act]'); if(a){ if(!canWrite()) return; var tr=a.closest('tr'), sid=tr.dataset.sup, act=a.dataset.act;
@@ -4609,6 +4792,7 @@ function renderRfq(){
       api('rfqClick',{rfq_no:r.rfq_no, supplier_id:sid, action:act}).then(function(x){ var i=D.recipients.findIndex(function(y){ return y.supplier_id===sid; }); if(i>=0){ Object.assign(D.recipients[i],x.recipient); } D.rfq.status=x.rfq_status; RF.list=null; tr.outerHTML=slRow(D.recipients[i]); })
         .catch(fail); return; }
     var sup=e.target.closest('.slSup'); if(sup){ e.preventDefault(); if(supById(sup.dataset.sup)) openSupplier(sup.dataset.sup); return; }
+    var qb=e.target.closest('.slQ'); if(qb){ var sid2=qb.closest('tr').dataset.sup; enterQuote(D, sid2, curQuotes(D).filter(function(q){ return q.supplier_id===sid2; })[0]); return; }
   });
   tb.addEventListener('change',function(e){
     var x=e.target, tr=x.closest('tr'); if(!tr) return; var sid=tr.dataset.sup, rc=D.recipients.filter(function(y){ return y.supplier_id===sid; })[0];
@@ -4634,7 +4818,8 @@ function slRow(x){
     chase='<div class="'+(isDue?'due':'')+'">'+(isDue?'<b>due</b> ':'<span class="n">'+(due.t?'due '+esc(k==='reminder1'?due.t.reminder1:due.t.reminder2):'')+'</span> ')+btn(re&&re.link,k,'✉ '+lab,'',false)+btn(rw&&rw.link,k,'WA '+lab,'sl-wa',false)+'</div>';
   } else if(due.due==='noreply') chase='<div class="due"><b>no reply</b> — set the status</div>';
   var st='<select class="slSt"'+(canWrite()?'':' disabled')+'>'+Procure.RECIPIENT_STATUS.map(function(v){ return '<option'+(v===x.status?' selected':'')+'>'+v+'</option>'; }).join('')+'</select>'+
-    (x.status==='Quoted'?'<label class="chkrow" style="margin:4px 0 0"><input type="checkbox" class="slValid"'+(x.valid_quote?' checked':'')+(canWrite()?'':' disabled')+'> valid quote</label>':'')+(x.note?'<div class="sub2">'+esc(x.note)+'</div>':'');
+    (x.status==='Quoted'?'<label class="chkrow" style="margin:4px 0 0"><input type="checkbox" class="slValid"'+(x.valid_quote?' checked':'')+(canWrite()?'':' disabled')+'> valid quote</label>':'')+(x.note?'<div class="sub2">'+esc(x.note)+'</div>':'')+
+    (w&&contacted?'<div><button class="btn sm slQ" type="button" title="Type in the supplier\'s prices">'+((D.quotes||[]).some(function(q){ return q.current&&q.supplier_id===x.supplier_id; })?'Quote ✓':'Enter quote')+'</button></div>':'');
   var st2=x.stats||{};
   return '<tr data-sup="'+esc(x.supplier_id)+'" class="st-'+esc(x.status.replace(/\s+/g,'-'))+'" style="cursor:default"><td class="dsc"><a href="#" class="slSup" data-sup="'+esc(x.supplier_id)+'"><b>'+esc(s.name||x.supplier_id)+'</b></a><div class="sub2">'+esc(x.supplier_id)+' · '+esc(Procure.countryName(s.country))+(s.city?' · '+esc(s.city):'')+'</div><div>'+zChip(x.zone||s.zone,s.country)+' '+vChip(s.verification)+(st2.contacted>1?' <span class="n" title="earlier RFQs">replied '+st2.responded+'/'+st2.contacted+'</span>':'')+'</div></td>'+
     '<td style="font-size:12px">'+esc(x.email||'')+(x.whatsapp?'<div>WA '+esc(x.whatsapp)+'</div>':'')+(!x.whatsapp&&x.phone?'<div>☎ '+esc(x.phone)+'</div>':'')+'</td>'+
@@ -4659,7 +4844,7 @@ function shortlist(){
     $('slList').innerHTML=c.length?'<p class="n">Aim: about <b>'+target+'</b> suppliers for 3 valid quotes (new category: no reply-rate history yet). '+(need?'The first '+Math.min(need,c.length)+' are ticked.':'')+'</p><div class="tbl" style="max-height:52vh"><table class="mini"><thead><tr><th></th><th>Supplier</th><th>Zone</th><th>Categories</th><th>Contacts</th><th>Verification</th><th>History</th></tr></thead><tbody>'+c.map(function(x,i){ var s=x.s, st=s.stats||{}, ce=(s.contacts||[]);
       return '<tr style="cursor:default"><td><input type="checkbox" class="slPick" value="'+esc(s.supplier_id)+'"'+(i<need?' checked':'')+'></td><td><b>'+esc(s.name)+'</b><div class="sub2">'+esc(s.supplier_id)+' · '+esc(Procure.countryName(s.country))+(s.city?' · '+esc(s.city):'')+'</div></td><td class="nw">'+zChip(s.zone,s.country)+(x.pr===1?' <b class="n">first</b>':'')+'</td><td>'+catChips(s.categories)+'</td>'+
         '<td class="nw">'+supContactsSum(s)+(ce.some(function(y){ return y.email; })?'':' <span class="chip st-Lost">no email</span>')+'</td><td>'+vChip(s.verification)+'</td><td class="n">'+(st.contacted?'replied '+st.responded+'/'+st.contacted:'new')+'</td></tr>'; }).join('')+'</tbody></table></div>'
-      :'<div class="note w">No supplier in the database matches '+(cats.length?'category '+cats.filter(function(v,i,a){ return a.indexOf(v)===i; }).join(', '):'')+(all?'':' in '+plan.zones.map(function(z){ return ZONE_TXT[z]; }).join(', '))+'. Tick "all zones" / "all categories", use <b>Find more suppliers</b>, or <b>Quick-add</b> one you know.</div>';
+      :(!(PR.data.suppliers||[]).length?'<div class="note w"><b>Your supplier database is empty.</b> Click <b>Find more suppliers…</b> below: copy the prompt into Claude or Gemini, paste the answer back, and the suppliers go straight onto this send list. Supplier lists you already have (e.g. the RFQ-2611-002 send list) go in through RFQ › Review queue › Import file.</div>':'')+'<div class="note w">No supplier in the database matches '+(cats.length?'category '+cats.filter(function(v,i,a){ return a.indexOf(v)===i; }).join(', '):'')+(all?'':' in '+plan.zones.map(function(z){ return ZONE_TXT[z]; }).join(', '))+'. Tick "all zones" / "all categories", use <b>Find more suppliers</b>, or <b>Quick-add</b> one you know.</div>';
   };
   pmodal('Add suppliers to '+r.rfq_no,'<div class="hrow" style="gap:16px;margin-bottom:6px"><span class="n" style="margin:0">Proposed from your supplier database: category '+(cats.filter(function(v,i,a){ return a.indexOf(v)===i; }).join(', ')||'any')+' · '+esc(r.urgency)+' → '+plan.zones.map(function(z){ return ZONE_TXT[z]; }).join(', ')+'</span><span style="flex:1"></span>'+
       '<label class="chkrow" style="margin:0"><input type="checkbox" id="slAllZ"> all zones</label><label class="chkrow" style="margin:0"><input type="checkbox" id="slAllC"> all categories</label></div><div id="slList"></div>',
@@ -4674,10 +4859,28 @@ function shortlist(){
 function findMore(){
   var D=RF.cur, r=D.rfq, plan=Procure.sourcingPlan(r.urgency, D.items.some(function(x){ return x.only_overseas; }));
   var txt=Procure.discoveryPrompt(r, D.items, {zones:plan.zones, count:10, exclude:(D.recipients||[]).map(function(x){ return x.supplier?x.supplier.name:x.supplier_id; })});
-  pmodal('Find more suppliers — '+r.rfq_no,'<p class="n">The app cannot search the internet itself (free tools only). Copy this prompt into Claude or Gemini; save the answer as Excel/CSV (or fill the supplier template), then <b>RFQ › Review queue › Import file…</b>, approve the good ones, and come back to <b>+ Add suppliers</b>.</p><textarea id="fmT" style="width:100%;height:300px;font:12.5px var(--mono)" readonly>'+esc(txt)+'</textarea>',
-    '<button class="btn" id="fmTpl">Download supplier template</button><button class="btn" id="fmQ">Open Review queue</button><span style="flex:1"></span><button class="btn" id="fmC">Close</button><button class="btn pri" id="fmCopy">Copy prompt</button>');
-  $('fmC').onclick=function(){ closeModal(); }; $('fmTpl').onclick=supplierTemplate; $('fmQ').onclick=function(){ closeModal(); showView('queue'); };
-  $('fmCopy').onclick=function(){ var t=$('fmT'); t.select(); (navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(function(){ toast('Prompt copied'); },function(){ document.execCommand('copy'); toast('Prompt copied'); }); };
+  pmodal('Find more suppliers — '+r.rfq_no,'<p class="n">The app cannot search the internet by itself (free tools only), so the search is done by Claude or Gemini:</p>'+
+    '<div class="hrow"><b>① Copy this prompt</b> and paste it into Claude or Gemini.<span style="flex:1"></span><button class="btn sm pri" id="fmCopy">Copy prompt</button></div><textarea id="fmT" style="width:100%;height:150px;font:12px var(--mono);margin-top:6px" readonly>'+esc(txt)+'</textarea>'+
+    '<div class="hrow" style="margin-top:12px"><b>② Paste the AI\'s answer here</b> (the table / CSV it gives back).</div><textarea id="fmA" style="width:100%;height:150px;font:12px var(--mono);margin-top:6px" placeholder="company_name,country,city,…"></textarea>'+
+    '<div class="hrow" style="margin-top:6px"><button class="btn sm pri" id="fmChk">Check the answer</button><span class="n" style="margin:0">Each supplier is checked (format, duplicates, mail server) and saved as Unverified, then put on this send list.</span></div><div id="fmPrev"></div>',
+    '<button class="btn" id="fmTpl">Supplier template</button><span style="flex:1"></span><button class="btn" id="fmC">Close</button><button class="btn pri hidden" id="fmAdd">Add to the send list</button>');
+  $('fmC').onclick=function(){ closeModal(); }; $('fmTpl').onclick=supplierTemplate;
+  $('fmCopy').onclick=function(){ var t=$('fmT'); t.select(); (navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(function(){ toast('Prompt copied - paste it into Claude or Gemini'); },function(){ document.execCommand('copy'); toast('Prompt copied'); }); };
+  var rows=[];
+  $('fmChk').onclick=function(){ var go=function(){ try{ rows=aiCheck($('fmA').value, D); }catch(e){ $('fmPrev').innerHTML='<div class="note w">'+esc(e.message)+'</div>'; $('fmAdd').classList.add('hidden'); return; }
+      $('fmPrev').innerHTML='<div class="tbl" style="max-height:300px;margin-top:8px"><table class="mini"><thead><tr><th></th><th>Supplier</th><th>Country</th><th>Contact</th><th>Check</th></tr></thead><tbody>'+rows.map(function(x){ var d=x.d;
+        return '<tr style="cursor:default"><td><input type="checkbox" class="fmPick" data-i="'+x.i+'"'+(x.pick?' checked':'')+(x.onList?' disabled':'')+'></td><td><b>'+esc(d.company_name)+'</b><div class="sub2">'+esc(d.city||'')+' · '+esc(d.zone||'')+'</div></td><td>'+esc(d.country)+'</td>'+
+          '<td style="font-size:12px">'+esc(d.email||'')+(d.whatsapp?'<div>WA '+esc(d.whatsapp)+'</div>':'')+'</td><td style="font-size:12px">'+(x.onList?'already on this send list':x.sid?'<span class="pos">in your database ('+esc(x.sid)+')</span>':x.dupIn!=null?'same as row '+(x.dupIn+1):x.c.ok?'<span class="pos">format OK</span>':'<span class="neg">'+esc(x.c.issues.join('; '))+'</span>')+
+          (x.c.ok&&x.c.issues.length?'<div class="sub2">'+esc(x.c.issues.join('; '))+'</div>':'')+'</td></tr>'; }).join('')+'</tbody></table></div>';
+      var n=function(){ var k=document.querySelectorAll('.fmPick:checked').length; $('fmAdd').textContent='Add '+k+' to the send list'; $('fmAdd').classList.toggle('hidden',!k); };
+      document.querySelectorAll('.fmPick').forEach(function(x){ x.onchange=n; }); n(); };
+    if(!PR.data) prLoad().then(go).catch(fail); else go(); };
+  $('fmAdd').onclick=function(){ var pick=Array.prototype.map.call(document.querySelectorAll('.fmPick:checked'),function(x){ return rows[+x.dataset.i]; }), bad=pick.filter(function(x){ return !x.c.ok&&!x.sid; });
+    if(bad.length&&!confirm(bad.length+' ticked row(s) failed the format check ('+bad.map(function(x){ return x.d.company_name; }).join(', ')+'). They will be skipped. Continue?')) return;
+    pick=pick.filter(function(x){ return x.c.ok||x.sid; }); if(!pick.length) return;
+    var btn=this; busy(btn,true,'Adding…'); $('fmChk').disabled=true;
+    aiAdd(D,pick).then(function(res){ closeModal(); renderRfq(); toast(res.added?res.added+' supplier'+(res.added>1?'s':'')+' added to the send list'+(res.fresh?' ('+res.fresh+' new in the database, Unverified)':''):'Nothing new to add'); })
+      .catch(function(e){ busy(btn,false); $('fmChk').disabled=false; fail(e); }); };
 }
 function quickAdd(){
   var D=RF.cur, r=D.rfq, cats=D.items.map(function(x){ return x.category; }).filter(function(v,i,a){ return v&&a.indexOf(v)===i; });
@@ -4696,24 +4899,18 @@ function rfqStatusDlg(){
   $('rsC').onclick=closeModal;
   $('rsGo').onclick=function(){ var btn=this; busy(btn,true); api('rfqStatus',{rfq_no:r.rfq_no, status:$('rsS').value, note:$('rsN').value.trim()}).then(function(x){ RF.cur.rfq=x.rfq; RF.list=null; (x._log||[]).forEach(function(l){ RF.cur.log.push(l); }); closeModal(); renderRfq(); }).catch(function(e){ busy(btn,false); fail(e); }); };
 }
-function printRfq(D){
-  var r=D.rfq, c=(PR.set&&PR.set.company)||{}, w=window.open('','_blank'); if(!w){ toast('Allow pop-ups to print / save as PDF.',true); return; }
-  var moq=Procure.rfqForTemplates(r,D.items).qtyMode==='moq';
-  var who=[c.sender_name||'Gemar C. Tubalado', c.sender_designation||'Quantity Surveyor', c.sender_email||'qs@arzabrunei.com', c.sender_phone].filter(Boolean).map(esc).join(' · ');
-  w.document.open(); w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+esc(r.rfq_no)+' - '+esc(r.title)+'</title><style>@page{size:A4 portrait;margin:14mm 14mm 18mm}body{font:11.5px/1.45 Arial,sans-serif;color:#111;margin:0}'+
-    '.lh{display:flex;gap:16px;align-items:center;border-bottom:2px solid #120377;padding-bottom:10px}.lh img{max-height:60px;max-width:220px}.lhn{font-size:18px;font-weight:700;color:#120377}.lhs{font-size:10.5px;color:#444}'+
-    'h1{font-size:16px;letter-spacing:1.5px;text-align:center;margin:16px 0 10px}table{border-collapse:collapse;width:100%}.meta td{padding:2px 6px 2px 0;vertical-align:top}.meta td:first-child{color:#555;width:120px}'+
-    '.it{margin-top:12px}.it th,.it td{border:1px solid #999;padding:5px 6px;vertical-align:top}.it th{background:#eef0fb;text-align:left;font-size:10.5px}.r{text-align:right}h3{font-size:12px;margin:14px 0 4px}ul{margin:4px 0;padding-left:18px}'+
-    '.ft{position:fixed;bottom:0;left:0;right:0;font-size:9.5px;color:#666;text-align:center;border-top:1px solid #ccc;padding-top:4px}</style></head><body>'+letterhead(c)+'<h1>REQUEST FOR QUOTATION</h1>'+
-    '<table class="meta"><tr><td>RFQ no.</td><td><b>'+esc(r.rfq_no)+'</b></td><td style="color:#555;width:110px">Date</td><td>'+esc(Procure.longDate(r.rfq_date))+'</td></tr><tr><td>Subject</td><td colspan="3">'+esc(r.title)+'</td></tr>'+
-    (r.project?'<tr><td>Project</td><td colspan="3">'+esc(r.project)+'</td></tr>':'')+'<tr><td>To</td><td colspan="3">'+(D.recipients&&D.recipients.length===1&&D.recipients[0].supplier?esc(D.recipients[0].supplier.name):'Supplier')+'</td></tr><tr><td>Quote deadline</td><td colspan="3"><b>'+esc(r.deadline?Procure.longDate(r.deadline):'')+'</b></td></tr></table>'+
+function printRfq(D, sup){
+  var r=D.rfq, c=company(), moq=Procure.rfqForTemplates(r,D.items).qtyMode==='moq', to=sup?(sup.supplier||{}).name||sup.supplier_id:'';
+  var who=[c.sender_name, c.sender_designation, c.sender_email, c.sender_phone].filter(Boolean).map(esc).join(' · ');
+  printDoc(r.rfq_no+' - '+r.title, letterhead()+'<h1>REQUEST FOR QUOTATION</h1>'+
+    '<table class="meta"><tr><td class="k">RFQ no.</td><td><b>'+esc(r.rfq_no)+'</b></td><td class="k" style="width:90px">Date</td><td>'+esc(Procure.longDate(r.rfq_date))+'</td></tr><tr><td class="k">Subject</td><td colspan="3">'+esc(r.title)+'</td></tr>'+
+    (r.project?'<tr><td class="k">Project</td><td colspan="3">'+esc(r.project)+'</td></tr>':'')+'<tr><td class="k">To</td><td colspan="3">'+esc(to||'Supplier')+'</td></tr><tr><td class="k">Quote deadline</td><td colspan="3"><b>'+esc(r.deadline?Procure.longDate(r.deadline):'')+'</b></td></tr></table>'+
     '<table class="it"><thead><tr><th style="width:28px">No.</th><th>Description / specification</th><th style="width:130px">Brand / standard</th><th class="r" style="width:55px">Qty</th><th style="width:55px">Unit</th><th style="width:80px">Required on site</th></tr></thead><tbody>'+D.items.map(function(x){
       return '<tr><td>'+x.line+'</td><td>'+esc(x.description)+'</td><td>'+esc(x.spec_brand||'')+'</td><td class="r">'+(x.qty==null?'MOQ':esc(x.qty))+'</td><td>'+esc(x.unit||'')+'</td><td>'+esc(x.required_date?fmtDate(x.required_date):'')+'</td></tr>'; }).join('')+'</tbody></table>'+
     '<h3>Please quote</h3><ul>'+(moq?'<li>Quantities are being finalised: please state your Minimum Order Quantity (MOQ) for each item and the unit price at MOQ, with price breaks if any.</li>':'<li>Unit price for the quantities above, with price breaks if any.</li>')+
       '<li>Local / regional suppliers: price in B$ (S$ or RM accepted), delivered to '+esc(r.delivery_place||'Bandar Seri Begawan, Brunei')+'; stock availability, delivery lead time and charges.</li>'+
       '<li>Overseas suppliers: price in USD, FOB nearest port and, if possible, CIF Muara Port, Brunei; production lead time, packing'+(r.certs?', '+esc(r.certs):'')+'.</li><li>Payment terms and quote validity.</li></ul>'+
-    '<h3>Contact</h3><p>'+who+'</p><div class="ft">Please quote RFQ no. '+esc(r.rfq_no)+' in your reply · '+esc(c.name||'ARZA SDN BHD')+'</div>'+
-    '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>'); w.document.close();
+    '<h3>Contact</h3><p>'+who+'</p><div class="ft">Please quote RFQ no. '+esc(r.rfq_no)+' in your reply · '+esc(c.name)+'</div>');
 }
 /* import an Excel send list (RFQ Text + Send List sheets) with its statuses */
 function importRfqWorkbook(file){
@@ -4778,6 +4975,230 @@ function renderRfqReports(){
 }
 $('rfFile').onchange=function(){ var f=this.files[0]; this.value=''; if(f) importRfqWorkbook(f); };
 
+/* ---------- v3.1.3: paste the AI answer -> suppliers on the send list ---------- */
+function aiCheck(text, D){
+  var P=Procure.parseTable(text); if(P.error) throw new Error('No table found: the answer needs a header row with company_name (ask the AI to answer as CSV / a table in the given columns).');
+  var cat=(D.items.map(function(x){ return x.category; }).filter(Boolean)[0])||'', sups=(PR.data&&PR.data.suppliers)||[], seen=[];
+  return P.rows.map(function(r,i){
+    var d=Procure.discoveryRow(r,{found_on:today(), category:cat}); if(!d.found_by) d.found_by='Claude';
+    var c=Procure.offlineChecks(d); if(!Procure.categoryCodes(d.category).length){ c.issues.push('no category'); c.ok=false; }
+    var sid=Procure.matchSupplier(d,sups), onList=sid&&(D.recipients||[]).some(function(x){ return x.supplier_id===sid; });
+    var dupIn=seen.filter(function(o){ return Procure.findDuplicates([o.d,d]).length; })[0]; seen.push({d:d,i:i});
+    return {i:i, d:d, c:c, sid:sid, onList:onList, dupIn:dupIn?dupIn.i:null, pick:c.ok&&!onList&&dupIn==null};
+  });
+}
+function aiAdd(D, rows){
+  var r=D.rfq, fresh=rows.filter(function(x){ return !x.sid; }), known=rows.filter(function(x){ return x.sid; }).map(function(x){ return x.sid; });
+  var step=function(t){ var m=$('fmPrev'); if(m) m.insertAdjacentHTML('beforeend','<div class="n">'+t+'</div>'); };
+  var dnsOf=function(d){ var t=Procure.dnsTargets(d), lim=function(p){ return Promise.race([p,new Promise(function(ok){ setTimeout(function(){ ok({mx:null,a:null}); },6000); })]); };
+    return Promise.all([t.mx?lim(Procure.checkDns(t.mx)):{mx:null}, t.a&&t.a!==t.mx?lim(Procure.checkDns(t.a)):t.a?null:{a:null}]).then(function(x){ var a=x[1]||x[0]; return {mx:t.mx?x[0].mx:null, a:t.a?a.a:null, mx_domain:t.mx, a_domain:t.a}; }); };
+  var p=Promise.resolve([]);
+  if(fresh.length){ step('<span class="spin"></span> Checking mail servers / websites of '+fresh.length+' new supplier'+(fresh.length>1?'s':'')+'…');
+    p=Promise.all(fresh.map(function(x){ return dnsOf(x.d).then(function(dn){ x.dns=dn; }); }))
+      .then(function(){ return api('queueAdd',{source_file:'AI answer for '+r.rfq_no, rows:fresh.map(function(x){ return {i:String(x.i), data:x.d, checks:x.c, keys:Procure.dedupKeys(x.d)}; })}); })
+      .then(function(q){ var byI={}; (q.ids||[]).forEach(function(o){ byI[o.i]=o.id; });
+        var items=fresh.filter(function(x){ return byI[String(x.i)]; }).map(function(x){ var s=Procure.toSupplier(x.d); return Object.assign({id:byI[String(x.i)], action:'approve', verification:Procure.autoVerification(x.c,x.dns,s.contacts.some(function(c){ return c.email; }))},s); });
+        if(!items.length) return [];
+        return api('queueDns',{rows:fresh.filter(function(x){ return byI[String(x.i)]; }).map(function(x){ return {id:byI[String(x.i)], dns:Object.assign({at:new Date().toISOString().slice(0,16).replace('T',' ')},x.dns)}; })}).catch(function(){})
+          .then(function(){ return api('queueDecide',{items:items}); })
+          .then(function(res){ var out=[], merge=[];
+            (res.results||[]).forEach(function(z){ if(z.ok&&z.supplier_id) out.push(z.supplier_id); else if(z.dups&&z.dups.length){ var it=items.filter(function(y){ return y.id===z.id; })[0]; merge.push(Object.assign({},it,{action:'merge', supplier_id:z.dups[0].supplier_id})); } });
+            return merge.length?api('queueDecide',{items:merge}).then(function(m){ (m.results||[]).forEach(function(z){ if(z.ok) out.push(z.supplier_id); }); return out; }):out; });
+      });
+  }
+  return p.then(function(newIds){ return prLoad().then(function(){
+    var ids=known.concat(newIds).filter(function(v,i,a){ return a.indexOf(v)===i && !(D.recipients||[]).some(function(x){ return x.supplier_id===v; }); });
+    if(!ids.length) return {added:0};
+    var plan=Procure.sourcingPlan(r.urgency);
+    return api('setRecipients',{rfq_no:r.rfq_no, add:ids.map(function(id){ var s=supById(id)||{}, ce=s.contacts||[], g=function(k){ var c=ce.filter(function(y){ return y[k]; })[0]; return c?c[k]:''; };
+      return {supplier_id:id, zone:s.zone, priority:plan.priority[s.zone]||(plan.benchmark.indexOf(+s.zone)>=0?2:3), email:g('email'), whatsapp:g('whatsapp'), phone:g('phone')}; })})
+      .then(function(d){ RF.cur=d; RF.list=null; return {added:ids.length, fresh:newIds.length}; }); }); });
+}
+
+/* ---------- v3.1.3: quotes, comparison, approval pack, award ---------- */
+function curQuotes(D){ return (D.quotes||[]).filter(function(q){ return q.current; }); }
+function mlRes(){ return (typeof ML!=='undefined'&&ML.data)?Procure.resIndex(ML.data.res):{}; }
+function mlEnsure(){ if(typeof ML==='undefined'||ML.data||ML.loading||!cfg().driveUrl) return Promise.resolve(); ML.loading=true;
+  return driveCall('masterlist').then(function(d){ ML.data=d; ML.at=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); },function(){}).then(function(){ ML.loading=false; }); }
+function cmpOf(D){ return Procure.compareQuotes(D.items, curQuotes(D), {fx:D.fx, today:today(), required_date:D.rfq.required_date}); }
+function rdQuotes(D){
+  var r=D.rfq, Q=curQuotes(D), w=canWrite()&&['Awarded','Cancelled'].indexOf(r.status)<0, sup=function(id){ var x=(D.recipients||[]).filter(function(y){ return y.supplier_id===id; })[0]; return x&&x.supplier?x.supplier.name:id; };
+  var head='<div class="hrow" style="margin-bottom:6px"><h3 style="margin:0">Quotes &amp; comparison</h3><span class="n" style="margin:0 0 0 6px">'+Q.length+' quote'+(Q.length===1?'':'s')+'</span><span style="flex:1"></span>'+
+    (w&&(D.recipients||[]).length?'<button class="btn sm pri" id="qAdd">+ Enter a quote</button>':'')+(Q.length?'<button class="btn sm exp" id="qXls">Comparison Excel</button><button class="btn sm" id="qPack">Approval pack PDF</button>':'')+'</div>';
+  if(!Q.length) return head+'<div class="empty" style="padding:18px">No quotes yet. When a supplier sends a quotation (email, WhatsApp, PDF), click <b>+ Enter a quote</b> (or <b>Quote</b> on the send list) and type the unit prices; the comparison builds itself.</div>';
+  var C=cmpOf(D), rows=C.rows.slice().sort(function(a,b){ return (a.rank||99)-(b.rank||99) || ((a.L.total_bnd==null?1e15:a.L.total_bnd)-(b.L.total_bnd==null?1e15:b.L.total_bnd)); });
+  var res=mlRes(), m=Procure.money, moq=Procure.rfqForTemplates(r,D.items).qtyMode==='moq';
+  var th='<th>Item</th><th class="r">Qty</th>'+rows.map(function(x){ var q=x.q; return '<th class="qc'+(q.supplier_id===r.award_supplier?' aw':q.supplier_id===(r.recommended_supplier||C.best)?' rec':'')+'"><a href="#" class="qEdit" data-id="'+q.id+'">'+esc(sup(q.supplier_id))+'</a><div class="sub2">'+esc(q.currency)+(q.rev>1?' · rev '+q.rev:'')+(x.rank?' · <b>#'+x.rank+'</b>':'')+'</div></th>'; }).join('')+(Object.keys(res).length?'<th>Masterlist</th>':'');
+  var body=D.items.map(function(it){ var ml=it.res_code&&res[it.res_code];
+    return '<tr><td>'+it.line+'. '+esc(it.description.length>60?it.description.slice(0,57)+'…':it.description)+'</td><td class="r">'+(it.qty==null?'<span class="n">MOQ</span>':esc(it.qty)+' '+esc(it.unit||''))+'</td>'+rows.map(function(x){ var l=x.L.lines.filter(function(y){ return y.line===it.line; })[0];
+      if(!l||l.unit_price==null) return '<td class="qc n">—</td>';
+      var low=C.lowLine[it.line]===x.q.supplier_id;
+      return '<td class="qc r'+(low?' low':'')+'">'+(x.q.currency!=='BND'?'<div class="sub2">'+esc(x.q.currency)+' '+m(l.unit_price)+'</div>':'')+'B$ '+m(l.unit_bnd)+(l.moq?'<div class="sub2">MOQ '+esc(l.moq)+'</div>':'')+(l.compliant?'':'<div class="neg sub2">not to spec</div>')+'</td>'; }).join('')+
+      (Object.keys(res).length?'<td class="n">'+(ml?esc(it.res_code)+' B$ '+m(ml.price)+'/'+esc(ml.unit):'')+'</td>':'')+'</tr>'; }).join('');
+  var row=function(label,f,cls){ return '<tr class="'+(cls||'')+'"><td colspan="2">'+label+'</td>'+rows.map(function(x){ return '<td class="qc r">'+f(x)+'</td>'; }).join('')+(Object.keys(res).length?'<td></td>':'')+'</tr>'; };
+  var BC=Object.keys(res).length&&C.best?Procure.budgetCheck(D.items,res,rows.filter(function(x){ return x.q.supplier_id===C.best; })[0].L):null;
+  var foot=row('Goods',function(x){ return x.L.goods_bnd==null?'—':m(x.L.goods_bnd); })+row('Freight + insurance',function(x){ return x.L.freight_bnd?m(x.L.freight_bnd):'—'; })+row('Duty',function(x){ return x.L.duty_bnd?m(x.L.duty_bnd):'—'; })+
+    row('Clearing + local delivery',function(x){ return x.L.local_bnd?m(x.L.local_bnd):'—'; })+row('<b>Landed total B$</b>'+(moq?' <span class="n">(MOQ quantities differ - compare unit prices)</span>':''),function(x){ return '<b>'+m(x.L.total_bnd)+'</b>'; },'tot')+
+    row('Lead time',function(x){ return (x.q.lead_days==null?'—':esc(x.q.lead_days)+' d')+(x.leadWarning?'<div class="neg sub2">'+esc(x.leadWarning)+'</div>':''); })+
+    row('Valid until',function(x){ return esc(x.q.validity?fmtDate(x.q.validity):'—'); })+row('Payment terms',function(x){ return esc(x.q.payment_terms||'—'); })+row('Delivery terms',function(x){ return esc(x.q.incoterm||'—'); })+
+    row('Checks',function(x){ return x.ok?'<span class="pos">valid'+(x.leadWarning?' · lead time!':'')+'</span>':'<span class="neg">'+x.flags.map(esc).join('<br>')+'</span>'; })+
+    row('Quotation',function(x){ return x.q.file_link?'<a href="'+esc(x.q.file_link)+'" target="_blank" rel="noopener">'+esc(x.q.file_name||'file')+'</a>':(x.q.quote_ref?esc(x.q.quote_ref):'—'); });
+  var recId=r.recommended_supplier||C.best||'', opts=rows.map(function(x){ return '<option value="'+esc(x.q.supplier_id)+'"'+(x.q.supplier_id===recId?' selected':'')+'>'+esc(sup(x.q.supplier_id))+(x.L.total_bnd!=null?' — B$ '+m(x.L.total_bnd):'')+(x.ok?'':' (not valid)')+'</option>'; }).join('');
+  var dec='';
+  if(r.status==='Awarded'){ var aw=r.award_supplier;
+    dec='<div class="note ok"><b>Awarded to '+esc(sup(aw))+'</b> on '+esc(fmtDate(r.award_date))+' — approved by '+esc(r.award_by||'')+(r.po_ref?' · PO '+esc(r.po_ref):'')+(r.award_note?' · '+esc(r.award_note):'')+'</div>'+
+      '<p class="n">Tell the suppliers (keeps them replying next time): thank-you to the winner, regret to the others who quoted.</p><div class="tbl"><table class="mini"><tbody>'+
+      Q.map(function(q){ var rc=(D.recipients||[]).filter(function(y){ return y.supplier_id===q.supplier_id; })[0]||{}, kind=q.supplier_id===aw?'thanks':'regret', T=rfqTpl(D), s2={zone:rc.zone, email:rc.email, whatsapp:rc.whatsapp};
+        var wa=rc.whatsapp?Procure.buildWhatsApp(kind,T,s2):null, txt=Procure.buildWhatsApp(kind,T,s2).text, subj=(kind==='thanks'?'Award: ':'')+Procure.fill(Procure.TEMPLATES.subject,{rfq_no:r.rfq_no,title:r.title});
+        var em=rc.email?Procure.composeLink(rc.email,subj,'Dear Sir/Madam,\n\n'+txt.replace(/^Good day, this is [^.]*\. /,'Good day. ')+'\n'):'';
+        var done=(D.clicks||[]).some(function(c){ return c.supplier_id===q.supplier_id&&c.action===kind; });
+        return '<tr style="cursor:default" data-sup="'+esc(q.supplier_id)+'"><td>'+esc(sup(q.supplier_id))+'</td><td>'+(kind==='thanks'?'<b>Thank-you (award)</b>':'Regret')+(done?' <span class="pos">✓ sent</span>':'')+'</td><td class="nw btns">'+
+          (em?'<a class="btn sm sl-mail" target="_blank" rel="noopener" href="'+esc(em)+'" data-qact="'+kind+'">Email</a>':'')+(wa?'<a class="btn sm sl-wa" target="_blank" rel="noopener" href="'+esc(wa.link)+'" data-qact="'+kind+'">WhatsApp</a>':'')+'</td></tr>'; }).join('')+'</tbody></table></div>'+
+      (canWrite()?'<div class="pact"><button class="btn sm" id="qReopen">Reopen (cancel the award)</button></div>':'');
+  } else if(w){
+    dec='<div class="form f3" style="margin-top:6px"><div class="f"><label for="qRec">Recommended supplier</label><select id="qRec">'+opts+'</select><div class="hint">Proposed: the lowest landed valid quote that can deliver in time'+(C.best?' ('+esc(sup(C.best))+')':'')+'.</div></div>'+
+      '<div class="f" style="grid-column:span 2"><label for="qWhy">Reason</label><input id="qWhy" maxlength="300" value="'+esc(r.recommendation||'')+'" placeholder="e.g. lowest landed cost, in stock, delivers in 3 days"></div></div>'+
+      '<div class="pact"><span class="n" style="margin:0">'+(C.goalMet?'<b class="pos">3 valid quotes ✓</b>':'<b class="neg">'+C.valid+' valid quote'+(C.valid===1?'':'s')+' — goal is 3</b> (approval pack can still go, it shows the shortfall)')+(r.approval_sent_at?' · approval pack sent '+esc(r.approval_sent_at):'')+'</span><span style="flex:1"></span>'+
+      '<button class="btn" id="qRecSave">Save recommendation</button><button class="btn" id="qSent">Mark approval pack sent</button><button class="btn pri" id="qAward">Record award…</button></div>';
+  }
+  return head+'<div class="tbl"><table class="mini cmp"><thead><tr>'+th+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>'+
+    (BC&&BC.covered?'<p class="n">Budget check (masterlist): '+BC.covered+' line'+(BC.covered>1?'s':'')+' with a code — masterlist B$ '+m(BC.budget)+(BC.priced?' vs proposed B$ '+m(BC.quoted)+' (<b class="'+(BC.diff>0?'neg':'pos')+'">'+(BC.diff>0?'+':'')+m(BC.diff)+'</b>)':'')+'.</p>':'')+
+    (C.saving?'<p class="n">Saving vs the highest valid quote: <b>B$ '+m(C.saving)+'</b>.</p>':'')+dec+
+    (D.quotes.length>Q.length?'<p class="n">Older revisions: '+D.quotes.filter(function(q){ return !q.current; }).map(function(q){ return esc(q.ref); }).join(', ')+'.</p>':'');
+}
+function rdQuotesWire(D){
+  var r=D.rfq;
+  if($('qAdd')) $('qAdd').onclick=function(){ pickSupplierForQuote(D); };
+  if($('qXls')) $('qXls').onclick=function(){ exportComparison(D); };
+  if($('qPack')) $('qPack').onclick=function(){ printApproval(D); };
+  document.querySelectorAll('#rdQ .qEdit').forEach(function(a){ a.onclick=function(e){ e.preventDefault(); var q=D.quotes.filter(function(x){ return String(x.id)===a.dataset.id; })[0]; if(q) enterQuote(D,q.supplier_id,q); }; });
+  var after=function(x){ RF.cur.rfq=x.rfq; RF.list=null; (x._log||[]).forEach(function(l){ RF.cur.log.push(l); }); renderRfq(); };
+  if($('qRecSave')) $('qRecSave').onclick=function(){ var b=this; busy(b,true); api('rfqDecide',{rfq_no:r.rfq_no, action:'recommend', supplier_id:$('qRec').value, reason:$('qWhy').value.trim()}).then(function(x){ toast('Recommendation saved'); after(x); }).catch(function(e){ busy(b,false); fail(e); }); };
+  if($('qSent')) $('qSent').onclick=function(){ var b=this; busy(b,true);
+    api('rfqDecide',{rfq_no:r.rfq_no, action:'recommend', supplier_id:$('qRec').value, reason:$('qWhy').value.trim()}).then(function(){ return api('rfqDecide',{rfq_no:r.rfq_no, action:'approval_sent', fx:D.fx}); })
+      .then(function(x){ toast('Approval pack marked as sent'); after(x); }).catch(function(e){ busy(b,false); fail(e); }); };
+  if($('qAward')) $('qAward').onclick=function(){ awardDlg(D, $('qRec').value); };
+  if($('qReopen')) $('qReopen').onclick=function(){ var why=prompt('Reopen '+r.rfq_no+' and clear the award. Reason:',''); if(why==null) return; api('rfqDecide',{rfq_no:r.rfq_no, action:'reopen', note:why}).then(after).catch(fail); };
+  document.querySelectorAll('#rdQ a[data-qact]').forEach(function(a){ a.addEventListener('click',function(){ var sid=a.closest('tr').dataset.sup;
+    api('rfqClick',{rfq_no:r.rfq_no, supplier_id:sid, action:a.dataset.qact}).then(function(){ RF.cur.clicks.push({supplier_id:sid, action:a.dataset.qact, at:'now', user:''}); }).catch(fail); }); });
+}
+function pickSupplierForQuote(D){
+  var rec=(D.recipients||[]).slice().sort(function(a,b){ var o=function(x){ return x.status==='Quoted'?2:Procure.RESPONDED.indexOf(x.status)>=0?0:x.status==='Not contacted'?3:1; }; return o(a)-o(b); });
+  pmodal('Enter a quote — '+D.rfq.rfq_no,'<div class="form"><div class="f full"><label for="pqS">Supplier</label><select id="pqS">'+rec.map(function(x){ return '<option value="'+esc(x.supplier_id)+'">'+esc((x.supplier||{}).name||x.supplier_id)+' — '+esc(x.status)+'</option>'; }).join('')+'</select><div class="hint">Only suppliers on the send list. Not there? Add it first (Quick-add).</div></div></div>',
+    '<button class="btn" id="pqC">Cancel</button><button class="btn pri" id="pqGo">Next</button>');
+  $('pqC').onclick=closeModal; $('pqGo').onclick=function(){ var sid=$('pqS').value, q=curQuotes(D).filter(function(x){ return x.supplier_id===sid; })[0]; enterQuote(D,sid,q); };
+}
+function enterQuote(D, sid, q, newRev){
+  var r=D.rfq, rc=(D.recipients||[]).filter(function(x){ return x.supplier_id===sid; })[0]||{}, s=rc.supplier||{}, lock=['Awarded','Cancelled'].indexOf(r.status)>=0||!canWrite();
+  var local=(rc.zone||s.zone)<=3, h=q&&!newRev?q:{ currency:(rc.zone||s.zone)===1?'BND':local?'BND':'USD', incoterm:local?'Delivered to site':'FOB', quote_date:today(), valid:true };
+  if(newRev&&q) h=Object.assign({},q,{quote_date:today(), quote_ref:'', file_link:'', file_name:''});
+  var byLine={}; ((q&&q.lines)||[]).forEach(function(l){ byLine[l.line]=l; });
+  var v=function(k){ return esc(h[k]==null?'':h[k]); }, curs=Procure.CURRENCIES.filter(function(c){ return c==='BND'||c==='SGD'||Procure.fxRate(c,D.fx)||c===h.currency; });
+  var inc=['Delivered to site','Ex-store (we collect)','EXW','FOB','CFR / CIF Muara','DAP Brunei'];
+  pmodal((q&&!newRev?'Quote '+q.ref:'New quote')+' — '+(s.name||sid),
+    '<div class="form f3"><div class="f"><label for="qf_ref">Supplier quote no.</label><input id="qf_ref" value="'+v('quote_ref')+'"></div><div class="f"><label for="qf_date">Quote date</label><input id="qf_date" type="date" value="'+v('quote_date')+'"></div>'+
+      '<div class="f"><label for="qf_cur">Currency</label><select id="qf_cur">'+curs.map(function(c){ return '<option'+(c===h.currency?' selected':'')+'>'+c+'</option>'; }).join('')+'</select><div class="hint" id="qf_fx"></div></div>'+
+      '<div class="f"><label for="qf_inc">Delivery terms</label><input id="qf_inc" list="qf_incs" value="'+v('incoterm')+'"><datalist id="qf_incs">'+inc.map(function(x){ return '<option value="'+esc(x)+'">'; }).join('')+'</datalist></div>'+
+      '<div class="f"><label for="qf_lead">Lead time (days)</label><input id="qf_lead" inputmode="numeric" value="'+v('lead_days')+'"></div><div class="f"><label for="qf_val">Valid until</label><input id="qf_val" type="date" value="'+v('validity')+'"></div>'+
+      '<div class="f"><label for="qf_pay">Payment terms</label><input id="qf_pay" value="'+v('payment_terms')+'" placeholder="e.g. 30 days, COD, 30% deposit"></div><div class="f"><label for="qf_brand">Brand / origin</label><input id="qf_brand" value="'+v('brand_origin')+'"></div>'+
+      '<div class="f"><label>Valid quote</label><label class="chkrow" style="margin:6px 0 0"><input type="checkbox" id="qf_valid"'+(h.valid!==false?' checked':'')+'> matches the spec, prices every line asked, can deliver in time</label></div></div>'+
+    '<h4 class="psec">Prices <span class="hint">unit prices in the quote currency; blank = not quoted</span></h4><div class="tbl"><table class="mini grid"><thead><tr><th>#</th><th>Item asked</th><th class="r">Qty asked</th><th>Unit price</th><th>MOQ</th><th>Qty quoted</th><th>Brand</th><th title="to spec">Spec</th></tr></thead><tbody id="qf_lines">'+
+      D.items.map(function(it){ var l=byLine[it.line]||{}, lv=function(k){ return esc(l[k]==null?'':l[k]); };
+        return '<tr data-line="'+it.line+'"><td>'+it.line+'</td><td style="max-width:300px">'+esc(it.description)+(it.spec_brand?'<div class="sub2">'+esc(it.spec_brand)+'</div>':'')+'</td><td class="r nw">'+(it.qty==null?'MOQ':esc(it.qty)+' '+esc(it.unit||''))+'</td>'+
+          '<td><input class="ed num" data-k="unit_price" value="'+lv('unit_price')+'" inputmode="decimal"></td><td><input class="ed num" data-k="moq" value="'+lv('moq')+'" inputmode="decimal" style="width:70px"></td><td><input class="ed num" data-k="qty" value="'+lv('qty')+'" inputmode="decimal" style="width:70px" placeholder="'+esc(it.qty==null?'':it.qty)+'"></td>'+
+          '<td><input class="ed" data-k="brand" value="'+lv('brand')+'" style="width:110px"></td><td style="text-align:center"><input type="checkbox" data-k="compliant"'+(l.compliant===false?'':' checked')+'></td></tr>'; }).join('')+'</tbody></table></div>'+
+    '<h4 class="psec">Freight and local costs <span class="hint">freight / insurance in the quote currency; clearing and delivery in B$ (your estimate)</span></h4><div class="form f3">'+
+      '<div class="f"><label for="qf_fr">Freight</label><input id="qf_fr" inputmode="decimal" value="'+v('freight')+'"></div><div class="f"><label for="qf_ins">Insurance</label><input id="qf_ins" inputmode="decimal" value="'+v('insurance')+'"></div>'+
+      '<div class="f"><label for="qf_duty">Import duty %</label><input id="qf_duty" inputmode="decimal" value="'+v('duty_pct')+'" placeholder="0"><div class="hint">check the Brunei Customs tariff for the item</div></div>'+
+      '<div class="f"><label for="qf_clr">Clearing / forwarding B$</label><input id="qf_clr" inputmode="decimal" value="'+v('clearing_bnd')+'"></div><div class="f"><label for="qf_del">Local delivery B$</label><input id="qf_del" inputmode="decimal" value="'+v('delivery_bnd')+'"></div>'+
+      '<div class="f"><label>Quotation file</label><div class="fl"><button class="btn sm" type="button" id="qf_up">Upload to Drive…</button><span class="n" id="qf_fn" style="margin:0">'+(h.file_link?'<a href="'+esc(h.file_link)+'" target="_blank" rel="noopener">'+esc(h.file_name||'file')+'</a>':'')+'</span></div><input id="qf_link" value="'+v('file_link')+'" placeholder="or paste a link (Drive, email)" style="margin-top:4px"></div>'+
+      '<div class="f full"><label for="qf_notes">Notes</label><input id="qf_notes" value="'+v('notes')+'"></div></div>'+
+    '<div class="note" id="qf_sum"></div>',
+    (q&&!newRev&&!lock?'<button class="btn warn" id="qf_del2">Delete</button><button class="btn" id="qf_rev">Revised quote…</button>':'')+'<span style="flex:1"></span><button class="btn" id="qf_c">Cancel</button>'+(lock?'':'<button class="btn pri" id="qf_go">Save quote</button>'));
+  var file=null, num=function(id){ var x=$(id).value.trim().replace(/,/g,''); return x; };
+  var read=function(){ var lines=Array.prototype.map.call(document.querySelectorAll('#qf_lines tr'),function(tr){ var o={line:+tr.dataset.line}; tr.querySelectorAll('[data-k]').forEach(function(x){ o[x.dataset.k]=x.type==='checkbox'?x.checked:x.value.trim().replace(/,/g,''); }); return o; });
+    return { header:{ quote_ref:$('qf_ref').value.trim(), quote_date:$('qf_date').value, currency:$('qf_cur').value, incoterm:$('qf_inc').value.trim(), lead_days:num('qf_lead'), validity:$('qf_val').value, payment_terms:$('qf_pay').value.trim(),
+      brand_origin:$('qf_brand').value.trim(), valid:$('qf_valid').checked, freight:num('qf_fr'), insurance:num('qf_ins'), duty_pct:num('qf_duty'), clearing_bnd:num('qf_clr'), delivery_bnd:num('qf_del'), notes:$('qf_notes').value.trim(),
+      file_link:$('qf_link').value.trim(), file_name:file?file.name:(h.file_name||'') }, lines:lines }; };
+  var host=document.querySelector('#impBody');
+  var sum=function(){ if(!$('qf_lines')){ host.removeEventListener('input',sum); return; } var d=read(), L=Procure.landed(Object.assign({},d.header,{lines:d.lines.map(function(l){ return Object.assign({},l,{unit_price:l.unit_price===''?null:l.unit_price}); })}),D.items,D.fx), m=Procure.money;
+    $('qf_fx').textContent=L.rate==null?'no FX rate - Admin Settings › RFQ settings':(d.header.currency==='BND'?'':'1 '+d.header.currency+' = B$ '+L.rate);
+    $('qf_sum').innerHTML=L.rate==null?'Set the FX rate for '+esc(d.header.currency)+' to see the landed cost.':'Landed at site: <b>B$ '+m(L.total_bnd)+'</b> (goods '+m(L.goods_bnd)+(L.freight_bnd?' + freight '+m(L.freight_bnd):'')+(L.duty_bnd?' + duty '+m(L.duty_bnd):'')+(L.local_bnd?' + local '+m(L.local_bnd):'')+')'+(L.partial?' · <b class="neg">partial: line '+L.missing.join(', ')+' not priced</b>':'')+
+      (d.header.lead_days&&r.required_date?' · '+esc(Procure.leadTimeWarning(today(),r.required_date,+d.header.lead_days)||'lead time OK'):''); };
+  host.addEventListener('input',sum); $('qf_cur').onchange=sum; sum();
+  $('qf_c').onclick=function(){ closeModal(); };
+  if($('qf_rev')) $('qf_rev').onclick=function(){ enterQuote(D,sid,q,true); };
+  if($('qf_del2')) $('qf_del2').onclick=function(){ if(!confirm('Delete quote '+q.ref+'?')) return; api('deleteQuote',{id:q.id}).then(function(){ closeModal(); RF.cur=null; renderRfq(); toast('Deleted'); }).catch(fail); };
+  $('qf_up').onclick=function(){ $('quoteFile').click(); };
+  $('quoteFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return; file=f; $('qf_fn').innerHTML='<span class="spin"></span> uploading '+esc(f.name)+'…';
+    var name=r.rfq_no+'_'+sid+'_'+String(s.name||'').replace(/[^A-Za-z0-9]+/g,'_').slice(0,24)+'_quote_'+today()+(f.name.match(/\.[A-Za-z0-9]+$/)||[''])[0];
+    f.arrayBuffer().then(function(buf){ return driveCall('procUpload',{folder:r.rfq_no+' - '+r.title.replace(/[\/\\:*?"<>|]+/g,'-').slice(0,60), file:{name:name, type:f.type||'application/octet-stream', data:b64(buf)}}); })
+      .then(function(d){ $('qf_link').value=d.url; file={name:name}; $('qf_fn').innerHTML='<a href="'+esc(d.url)+'" target="_blank" rel="noopener">'+esc(name)+'</a> ✓'; })
+      .catch(function(e){ $('qf_fn').textContent='Not uploaded: '+e.message+' — paste a link instead.'; file=null; }); };
+  if($('qf_go')) $('qf_go').onclick=function(){ var d=read(), btn=this;
+    if(!d.lines.some(function(l){ return l.unit_price!==''; })){ toast('Type at least one unit price.',true); return; }
+    var bad=d.lines.filter(function(l){ return l.unit_price!==''&&!/^\d+(\.\d+)?$/.test(l.unit_price); })[0]; if(bad){ toast('Line '+bad.line+': unit price "'+bad.unit_price+'" is not a number.',true); return; }
+    busy(btn,true); api('saveQuote',{rfq_no:r.rfq_no, supplier_id:sid, id:q&&!newRev?q.id:'', new_rev:!!newRev, header:d.header, lines:d.lines}).then(function(x){ closeModal(); toast('Saved '+x.quote.ref); RF.cur=null; RF.list=null; PR.data=null; renderRfq(); })
+      .catch(function(e){ busy(btn,false); fail(e); }); };
+}
+function awardDlg(D, recId){
+  var r=D.rfq, Q=curQuotes(D);
+  pmodal('Record the award — '+r.rfq_no,'<div class="form"><div class="f full"><label for="awS">Supplier</label><select id="awS">'+Q.map(function(q){ var rc=(D.recipients||[]).filter(function(y){ return y.supplier_id===q.supplier_id; })[0]||{}; return '<option value="'+esc(q.supplier_id)+'"'+(q.supplier_id===recId?' selected':'')+'>'+esc((rc.supplier||{}).name||q.supplier_id)+'</option>'; }).join('')+'</select></div>'+
+    '<div class="f"><label for="awBy">Approved by</label><input id="awBy" placeholder="name of the boss / procurement"></div><div class="f"><label for="awD">Date</label><input id="awD" type="date" value="'+today()+'"></div>'+
+    '<div class="f"><label for="awPo">PO no. <span class="hint">optional</span></label><input id="awPo"></div><div class="f"><label for="awN">Note</label><input id="awN"></div></div><p class="n">The RFQ is locked after the award (Reopen undoes it). Then send the thank-you and regret messages.</p>',
+    '<button class="btn" id="awC">Cancel</button><button class="btn pri" id="awGo">Record award</button>');
+  $('awC').onclick=closeModal;
+  $('awGo').onclick=function(){ var b=this; busy(b,true); api('rfqDecide',{rfq_no:r.rfq_no, action:'award', supplier_id:$('awS').value, award_by:$('awBy').value.trim(), award_date:$('awD').value, po_ref:$('awPo').value.trim(), note:$('awN').value.trim()})
+    .then(function(x){ closeModal(); RF.cur.rfq=x.rfq; RF.list=null; (x._log||[]).forEach(function(l){ RF.cur.log.push(l); }); renderRfq(); toast('Awarded'); }).catch(function(e){ busy(b,false); fail(e); }); };
+}
+function cmpTable(D, C, rows){
+  var m=Procure.money, sup=function(id){ var x=(D.recipients||[]).filter(function(y){ return y.supplier_id===id; })[0]; return x&&x.supplier?x.supplier.name:id; };
+  var h='<tr><th>Item</th><th class="r">Qty</th>'+rows.map(function(x){ return '<th class="r">'+esc(sup(x.q.supplier_id))+'<br><span style="font-weight:400">'+esc(x.q.currency)+(x.rank?' · rank '+x.rank:'')+'</span></th>'; }).join('')+'</tr>';
+  var b=D.items.map(function(it){ return '<tr><td>'+it.line+'. '+esc(it.description)+'</td><td class="r">'+(it.qty==null?'MOQ':esc(it.qty)+' '+esc(it.unit||''))+'</td>'+rows.map(function(x){ var l=x.L.lines.filter(function(y){ return y.line===it.line; })[0];
+    return '<td class="r"'+(C.lowLine[it.line]===x.q.supplier_id?' style="background:#e7f6ec"':'')+'>'+(l&&l.unit_price!=null?(x.q.currency!=='BND'?esc(x.q.currency)+' '+m(l.unit_price)+'<br>':'')+'B$ '+m(l.unit_bnd)+(l.moq?'<br>MOQ '+esc(l.moq):''):'—')+'</td>'; }).join('')+'</tr>'; }).join('');
+  var row=function(lab,f,bold){ return '<tr'+(bold?' style="font-weight:700;background:#f3f4fa"':'')+'><td colspan="2">'+lab+'</td>'+rows.map(function(x){ return '<td class="r">'+f(x)+'</td>'; }).join('')+'</tr>'; };
+  return '<table class="it"><thead>'+h+'</thead><tbody>'+b+row('Goods B$',function(x){ return m(x.L.goods_bnd); })+row('Freight + insurance B$',function(x){ return m(x.L.freight_bnd||0); })+row('Duty B$',function(x){ return m(x.L.duty_bnd||0); })+
+    row('Clearing + local delivery B$',function(x){ return m(x.L.local_bnd||0); })+row('Landed total B$',function(x){ return m(x.L.total_bnd); },true)+row('Lead time',function(x){ return (x.q.lead_days==null?'—':esc(x.q.lead_days)+' d')+(x.leadWarning?'<br><span style="color:#b42318">'+esc(x.leadWarning)+'</span>':''); })+
+    row('Valid until',function(x){ return esc(x.q.validity?fmtDate(x.q.validity):'—'); })+row('Payment terms',function(x){ return esc(x.q.payment_terms||'—'); })+row('Delivery terms',function(x){ return esc(x.q.incoterm||'—'); })+
+    row('Status',function(x){ return x.ok?'valid':'<span style="color:#b42318">'+x.flags.map(esc).join('<br>')+'</span>'; })+'</tbody></table>';
+}
+function printApproval(D){
+  var r=D.rfq, C=cmpOf(D), m=Procure.money, c=company(), a=D.approval||{}, rec=r.recommended_supplier||C.best;
+  var rows=C.rows.slice().sort(function(x,y){ return (x.rank||99)-(y.rank||99); }), sup=function(id){ var x=(D.recipients||[]).filter(function(y){ return y.supplier_id===id; })[0]; return x&&x.supplier?x.supplier.name:id; };
+  var K=Procure.rfqKpis([{recipients:D.recipients||[]}]), R=rows.filter(function(x){ return x.q.supplier_id===rec; })[0], res=mlRes(), BC=R&&Object.keys(res).length?Procure.budgetCheck(D.items,res,R.L):null;
+  var fxUsed=rows.map(function(x){ return x.q.currency; }).filter(function(v,i,s){ return v!=='BND'&&v!=='SGD'&&s.indexOf(v)===i; }).map(function(k){ var f=(D.fx||{})[k]||{}; return '1 '+k+' = B$ '+(f.rate||'?')+(f.date?' ('+f.date+(f.source?', '+f.source:'')+')':''); });
+  printDoc('Quotation comparison '+r.rfq_no, letterhead()+
+    '<table class="meta"><tr><td class="k">To</td><td><b>'+esc(a.to||'Quantity Surveyor')+'</b>, '+esc(a.email||'qs@arzabrunei.com')+(a.cc?'<br>Cc: '+esc(a.cc):'')+'</td><td class="k" style="width:70px">Date</td><td>'+esc(Procure.longDate(today()))+'</td></tr>'+
+    '<tr><td class="k">From</td><td colspan="3">'+esc([c.sender_name,c.sender_designation].filter(Boolean).join(', '))+'</td></tr></table>'+
+    '<h1>QUOTATION COMPARISON &amp; APPROVAL — '+esc(r.rfq_no)+'</h1>'+
+    '<table class="meta"><tr><td class="k">Subject</td><td>'+esc(r.title)+'</td></tr>'+(r.project?'<tr><td class="k">Project</td><td>'+esc(r.project)+'</td></tr>':'')+
+    '<tr><td class="k">Urgency</td><td>'+esc(r.urgency)+(r.required_date?' · required on site '+esc(Procure.longDate(r.required_date)):'')+'</td></tr>'+
+    '<tr><td class="k">Suppliers</td><td>'+(D.recipients||[]).length+' listed · '+K.contacted+' contacted · '+K.replied+' replied · '+K.quoted+' quoted · <b>'+C.valid+' valid</b>'+(C.goalMet?'':' <span style="color:#b42318">(goal 3 valid quotes not met)</span>')+'</td></tr></table>'+
+    '<h3>Comparison (landed cost at site, B$)</h3>'+cmpTable(D,C,rows)+
+    (fxUsed.length?'<p style="font-size:9.5px;color:#555">FX: '+fxUsed.map(esc).join(' · ')+'</p>':'')+
+    '<h3>Recommendation</h3><p><b>'+esc(sup(rec)||'—')+'</b>'+(R?' — landed B$ '+m(R.L.total_bnd)+(R.q.lead_days!=null?', lead time '+esc(R.q.lead_days)+' days':''):'')+(r.recommendation?'<br>Reason: '+esc(r.recommendation):'')+
+      (C.saving?'<br>Saving vs the highest valid quote: B$ '+m(C.saving):'')+'</p>'+
+    (BC&&BC.covered?'<h3>Budget check (pricing masterlist)</h3><p>'+BC.covered+' line(s) with a masterlist code: budget B$ '+m(BC.budget)+(BC.priced?' · recommended B$ '+m(BC.quoted)+' · difference '+(BC.diff>0?'+':'')+m(BC.diff):'')+'</p>':'')+
+    '<h3>Attachments</h3><ul>'+rows.map(function(x){ return '<li>'+esc(sup(x.q.supplier_id))+': '+(x.q.quote_ref?'quotation '+esc(x.q.quote_ref)+' ':'')+(x.q.file_link?'<a href="'+esc(x.q.file_link)+'">'+esc(x.q.file_name||'file')+'</a>':'(no file)')+'</li>'; }).join('')+'</ul>'+
+    '<table style="margin-top:22px"><tr><td style="width:50%;padding-right:20px">Prepared by:<br><br>_____________________________<br>'+esc(c.sender_name)+', '+esc(c.sender_designation)+'</td><td>Approved / not approved by:<br><br>_____________________________<br>Name / designation / date</td></tr></table>'+
+    '<div class="ft">'+esc(r.rfq_no)+' · '+esc(c.name)+' · QS CRM</div>', '.it{font-size:10px}');
+}
+function exportComparison(D){
+  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  var r=D.rfq, C=cmpOf(D), rows=C.rows.slice().sort(function(x,y){ return (x.rank||99)-(y.rank||99); }), sup=function(id){ var x=(D.recipients||[]).filter(function(y){ return y.supplier_id===id; })[0]; return x&&x.supplier?x.supplier.name:id; };
+  var head=['Line','Item','Qty','Unit'].concat(rows.map(function(x){ return sup(x.q.supplier_id)+' ('+x.q.currency+')'; })).concat(rows.map(function(x){ return sup(x.q.supplier_id)+' B$/unit'; }));
+  var aoa=[[r.rfq_no+' — '+r.title],['Quotation comparison, '+today()+' · landed cost at site in B$'],[],head].concat(D.items.map(function(it){ var ls=rows.map(function(x){ return x.L.lines.filter(function(y){ return y.line===it.line; })[0]||{}; });
+    return [it.line,it.description,it.qty==null?'MOQ':it.qty,it.unit||''].concat(ls.map(function(l){ return l.unit_price==null?'':l.unit_price; })).concat(ls.map(function(l){ return l.unit_bnd==null?'':+l.unit_bnd.toFixed(4); })); }));
+  var tot=function(lab,f){ return ['',lab,'',''].concat(rows.map(function(){ return ''; })).concat(rows.map(f)); };
+  aoa.push([]); aoa.push(tot('Goods B$',function(x){ return x.L.goods_bnd==null?'':+x.L.goods_bnd.toFixed(2); })); aoa.push(tot('Freight + insurance B$',function(x){ return +(x.L.freight_bnd||0).toFixed(2); }));
+  aoa.push(tot('Duty B$',function(x){ return +(x.L.duty_bnd||0).toFixed(2); })); aoa.push(tot('Clearing + delivery B$',function(x){ return +(x.L.local_bnd||0).toFixed(2); }));
+  aoa.push(tot('Landed total B$',function(x){ return x.L.total_bnd==null?'':+x.L.total_bnd.toFixed(2); })); aoa.push(tot('Lead time (days)',function(x){ return x.q.lead_days==null?'':x.q.lead_days; }));
+  aoa.push(tot('Valid until',function(x){ return x.q.validity||''; })); aoa.push(tot('Payment terms',function(x){ return x.q.payment_terms||''; })); aoa.push(tot('Status',function(x){ return x.ok?'valid'+(x.leadWarning?' - '+x.leadWarning:''):x.flags.join('; '); })); aoa.push(tot('Rank',function(x){ return x.rank||''; }));
+  aoa.push([]); aoa.push(['','Recommended: '+(sup(r.recommended_supplier||C.best)||'—')+(r.recommendation?' — '+r.recommendation:'')]);
+  xlsxFrom([{name:'Comparison', aoa:aoa, cols:[6,50,8,8].concat(rows.map(function(){ return 16; })).concat(rows.map(function(){ return 14; }))},
+    {name:'FX', aoa:[['Currency','B$ per 1','Date','Source']].concat(Object.keys(D.fx||{}).map(function(k){ var f=D.fx[k]; return [k,f.rate,f.date,f.source]; })), cols:[10,10,12,40]}], r.rfq_no+' comparison '+today()+'.xlsx');
+}
+
 /* ---------- events ---------- */
 $('btnLogin').onclick=signIn;
 $('inPw').addEventListener('keydown',function(e){ if(e.key==='Enter') signIn(); });
@@ -4814,7 +5235,7 @@ $('dTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a||S.cu
 
 /* ---------- start ---------- */
 $('btnVer').textContent='v'+APP.version; $('meVer').textContent='v'+APP.version; $('lver').textContent=APP.name+' · v'+APP.version;
-document.title=APP.name+' · v'+APP.version;
+document.title=APP.name;
 clock(); setInterval(clock, 20000); applyTheme();
 if(cfgOk() && !window.supabase){ showLogin(LIBMSG); }
 else if(cfgOk() && window.supabase){

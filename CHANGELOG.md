@@ -2,6 +2,21 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v3.1.3 — 9 Nov 2026
+
+- Quotes: Enter quote on the send list (or + Enter a quote): unit price per line, MOQ, currency, delivery terms, lead time, validity, payment terms, brand, freight / insurance, import duty %, clearing and local delivery, the quotation file (uploaded to Drive › Procurement › <RFQ>) or a link. Revised quotes keep the earlier revision.
+- Comparison on the RFQ page: unit prices in B$ side by side (lowest per line highlighted), landed total at site in B$, lead-time warning, validity, payment terms, checks (partial, expired, not to spec, no FX rate), rank, saving vs the highest valid quote, and a budget check against the pricing masterlist (ML code per item).
+- Recommendation, approval pack PDF on the ARZA letterhead (To: Quantity Surveyor, qs@arzabrunei.com — set in Admin Settings), Mark approval pack sent (FX rates of the day kept), Record award (approved by, date, PO no.) — then Thank-you / Regret buttons by email or WhatsApp. Comparison Excel export.
+- FX table (B$ per USD, MYR, CNY …; B$ = S$) in Admin Settings › RFQ settings, pre-filled with the 9 Nov 2026 mid-market rates — confirm before an approval pack.
+- Find more suppliers: paste the AI's answer straight back into the app — each supplier is checked (format, duplicates, mail server), saved as Unverified and put on the send list with its Email / WhatsApp buttons. Clear guidance when the supplier database is still empty.
+- Dashboard is now the page you land on after signing in, with RFQ tiles (open, chase today, quotes to compare, waiting for approval, awarded this month).
+- Admin Settings (was Team & access) with tabs: Team & access · Company & letterhead · RFQ settings · Connections. The official ARZA letterhead from the Word file (logo, Jawi name, RC no., address, phone, email, website) is built in and used on RFQ PDFs and the approval pack.
+- Connections: paste the Apps Script web app URL once — it is saved in the database for every user (fixes "Drive file service not set" when adding a team member). Test button shows Drive folder, masterlist and team-accounts status.
+- Browser tab title is just "ARZA QS CRM SYSTEM" (no version).
+- Sign out then sign in as someone else: one connection per page (no more "Multiple GoTrueClient" warning); the sign-in page keeps what you already typed.
+- Code.gs changed: ARZA's Supabase URL, publishable key, Drive folder and masterlist links are filled in; re-running setSupabase() no longer removes the saved secret key; ping reports whether team accounts can be created. Paste Code.gs in Apps Script, run setSupabase / setDriveFolder / setMasterlist if needed, then Deploy › Manage deployments › Edit › New version.
+- Database: new tables quotes, quote_lines; RFQ award columns; settings fx and connections. Applied by the Database workflow after merge.
+
 ## v3.1.2 — 8 Nov 2026
 
 - RFQ › RFQs: the RFQ register with KPIs and a Chase today list (reminders due, per the urgency timetable and Brunei working days).
