@@ -2,6 +2,13 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v3.2.2 — 17 Nov 2026
+
+- Notifications: a bell beside the theme button replaces the Dashboard "To do" card. It lists everything that needs attention, on every page: tenders past or near their closing date (7 days), records with no status, revisions waiting for approval, supplier reminders due today, RFQs ready to compare, quotes about to expire, awards with no delivery recorded, suppliers in the review queue, rate proposals and, for the admin, unfinished setup and mailbox errors. Click an item to go there; items clear by themselves once dealt with. Checked every 5 minutes.
+- My profile: add a profile picture (JPG, PNG or WebP). It is cropped to a square, shrunk and shown in the header and the account menu; Remove brings the initials back.
+- Dashboard loads with fewer requests (the bell and the dashboard share them).
+- Database: profiles.avatar. Applied by the Database workflow after merge. No Code.gs change.
+
 ## v3.2.1 — 16 Nov 2026
 
 - Check-up release: fixes, speed and polish found by reviewing v3.2.0 (code check, Supabase security and performance advisors, every screen on desktop and phone).

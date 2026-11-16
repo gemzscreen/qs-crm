@@ -449,6 +449,26 @@ tr.later td{opacity:.62}
 .todo-i .t{flex:1;min-width:0}
 .hbwrap{overflow-x:auto}
 @media (max-width:700px){.hbwrap svg.hbar{min-width:600px;max-width:none}#vRD table.mini td:nth-child(2){min-width:150px}.todo-i{flex-wrap:wrap}.todo-i .t{flex:1 1 100%}}
+
+/* v3.2.2: notifications + profile picture */
+.top .ibtn{position:relative}
+.bdg{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e5484d;color:#fff;font:700 10.5px/17px inherit;font-style:normal;text-align:center;box-shadow:0 0 0 2px var(--bar)}
+.ddm.notif{width:370px;max-width:calc(100vw - 16px);padding:0;max-height:min(70vh,560px);overflow:auto}
+.nt-h{display:flex;align-items:baseline;gap:8px;padding:12px 14px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card);z-index:1}
+.nt-h b{font-size:14px}.nt-h span{flex:1;font-size:12px;color:var(--ink3)}.ddm.notif .nt-h a{display:inline;padding:0;font-size:12px;color:var(--brand2);background:none}
+.ddm.notif a.nt-i{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-bottom:1px solid var(--line2);text-decoration:none;color:var(--ink);border-radius:0;cursor:pointer;white-space:normal}
+.ddm.notif a.nt-i:hover{background:var(--bg)}
+.nt-i .dot{width:9px;height:9px;border-radius:50%;background:var(--info);flex:0 0 9px;margin-top:5px}
+.nt-i.warn .dot{background:#e08a00}
+.ddm.notif .nt-i .tx{display:flex;flex-direction:column;gap:2px;min-width:0;color:var(--ink)}
+.nt-i .tx b{font-size:13px;font-weight:600;line-height:1.35}
+.nt-i .tx span{font-size:12px;color:var(--ink2);overflow-wrap:anywhere}
+.nt-e{padding:26px 14px;text-align:center;color:var(--ink2);font-size:13px}
+.nt-f{padding:8px 14px;font-size:11.5px;color:var(--ink3)}
+.av.pic{background:none;overflow:hidden;padding:0}
+.av.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.pfpic{display:flex;gap:6px;margin-top:8px}
+@media (max-width:600px){.ddm.notif{position:fixed;left:8px;right:8px;top:58px;width:auto}}
 </style>
 </head>
 <body>
@@ -484,6 +504,10 @@ tr.later td{opacity:.62}
       </div></div>
   </nav>
   <div class="sp"></div>
+  <div class="me bell" id="bell">
+    <button id="btnBell" class="ibtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><em class="bdg hidden" id="bellN"></em></button>
+    <div class="ddm right notif" id="bellMenu"></div>
+  </div>
   <button id="btnTheme" class="ibtn" aria-label="Theme"></button>
   <div class="me" id="me">
     <button class="mebtn" id="hello" aria-haspopup="true" aria-expanded="false" title="My account"></button>
@@ -578,7 +602,7 @@ tr.later td{opacity:.62}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.2.1</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.2.2</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -2496,8 +2520,14 @@ tr.later td{opacity:.62}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'3.2.1', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'3.2.2', user:'Gemz' };
 var CHANGELOG = [
+  { v:'3.2.2', date:'17 Nov 2026', items:[
+    'Notifications: a bell beside the theme button replaces the Dashboard "To do" card. It lists everything that needs attention, on every page: tenders past or near their closing date (7 days), records with no status, revisions waiting for approval, supplier reminders due today, RFQs ready to compare, quotes about to expire, awards with no delivery recorded, suppliers in the review queue, rate proposals and, for the admin, unfinished setup and mailbox errors. Click an item to go there; items clear by themselves once dealt with. Checked every 5 minutes.',
+    'My profile: add a profile picture (JPG, PNG or WebP). It is cropped to a square, shrunk and shown in the header and the account menu; Remove brings the initials back.',
+    'Dashboard loads with fewer requests (the bell and the dashboard share them).',
+    'Database: profiles.avatar. Applied by the Database workflow after merge. No Code.gs change.'
+  ]},
   { v:'3.2.1', date:'16 Nov 2026', items:[
     'Check-up release: fixes, speed and polish found by reviewing v3.2.0 (code check, Supabase security and performance advisors, every screen on desktop and phone).',
     'Faster start: the Excel tools (880 KB) no longer hold up the first screen — they load in the background and on demand. The supplier quote page no longer downloads the sign-in library at all.',
@@ -2712,12 +2742,14 @@ function dispName(m){ m=m||S.me; if(!m) return fileMode()?'Read-only file':APP.u
   var e=String(m.email||'').split('@')[0]; return e.charAt(0).toUpperCase()+e.slice(1); }
 function initials(m){ m=m||S.me; var w=nameWords(m&&m.full_name), g=w.filter(function(x){ return !HONORIFIC.test(x); }); if(!g.length) g=w; if(!g.length) g=nameWords(dispName(m));
   return ((g[0]||'?').charAt(0)+(g.length>1?g[g.length-1].charAt(0):'')).toUpperCase(); }
+/* v3.2.2: profile picture (or initials) */
+function avHtml(m){ m=m||S.me; return m&&m.avatar&&/^data:image\//.test(m.avatar)?'<span class="av pic"><img src="'+esc(m.avatar)+'" alt=""></span>':'<span class="av">'+esc(m?initials(m):(fileMode()?'R':'?'))+'</span>'; }
 function roleName(r){ return {admin:'Admin',qs:'QS',viewer:'Viewer',pm:'PM',site:'Site'}[r]||r||''; }
 function drawMe(){
   var h=$('hello'); if(!h) return; var m=S.me;
-  h.innerHTML='<span class="av">'+esc(m?initials(m):(fileMode()?'R':'?'))+'</span><span class="hi">Welcome, <b>'+esc(dispName())+'</b></span>'+(m?'<i class="rolechip">'+esc(roleName(m.role))+'</i>':'')+
+  h.innerHTML=avHtml(m)+'<span class="hi">Welcome, <b>'+esc(dispName())+'</b></span>'+(m?'<i class="rolechip">'+esc(roleName(m.role))+'</i>':'')+
     '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
-  $('meHead').innerHTML='<span class="av">'+esc(m?initials(m):'R')+'</span><div><b>'+esc(m?(m.full_name||dispName()):'Read-only file')+'</b><span>'+esc(m?m.email:(S.fileName||''))+'</span>'+
+  $('meHead').innerHTML=avHtml(m)+'<div><b>'+esc(m?(m.full_name||dispName()):'Read-only file')+'</b><span>'+esc(m?m.email:(S.fileName||''))+'</span>'+
     (m?'<em>'+esc(roleName(m.role))+(canWrite()?'':' · read only')+'</em>':'')+'</div>';
   document.querySelector('#meMenu [data-act=profile]').classList.toggle('hidden', !m);
 }
@@ -2863,6 +2895,8 @@ function enter(){
   c.title = fileMode() ? 'Data from the file on this computer; nothing is saved' : 'Data is live in the QS CRM database';
   $('btnNew').classList.toggle('hidden', ro()); $('btnImport').classList.toggle('hidden', ro());
   $('navUsers').classList.toggle('hidden', !isAdmin());
+  $('bell').classList.toggle('hidden', fileMode()||!S.me); NT.items=[]; notifDraw();
+  clearInterval(NT.timer); if(!fileMode()) NT.timer=setInterval(function(){ if(S.me&&!document.hidden) notifLoad(); }, 300000);   // every 5 minutes
   if(!fileMode()){ prLoad().catch(function(){}); setsLoad().catch(function(){}); }   // review-queue badge, letterhead, Drive link (quietly)
   fillFilters(); showView('dash'); openFromHash();
 }
@@ -2872,7 +2906,9 @@ function refresh(){
 }
 function account(){
   if(!S.me){ return; } var m=S.me, fv=function(k){ return esc(m[k]||''); };
-  modal('My profile', '<div class="prof"><span class="av">'+esc(initials(m))+'</span><div><b>'+esc(m.full_name||dispName())+'</b><span>'+esc(m.designation||'Add your designation below')+'</span></div></div>'+
+  PF.avatar=null;
+  modal('My profile', '<div class="prof"><span id="pfAv">'+avHtml(m)+'</span><div><b>'+esc(m.full_name||dispName())+'</b><span>'+esc(m.designation||'Add your designation below')+'</span>'+
+      '<div class="pfpic"><button class="btn sm" id="pfPic" type="button">'+(m.avatar?'Change picture':'Add a picture')+'</button><button class="btn sm'+(m.avatar?'':' hidden')+'" id="pfPicX" type="button">Remove</button><input type="file" id="pfFile" accept="image/png,image/jpeg,image/webp" class="hidden"></div></div></div>'+
     '<div class="form">'+
     '<div class="f"><label for="pfName">Full name</label><input id="pfName" maxlength="120" autocomplete="name" value="'+fv('full_name')+'" placeholder="e.g. Gem Tubalado"></div>'+
     '<div class="f"><label for="pfDisp">Display name <span class="hint">shown as "Welcome, …"</span></label><input id="pfDisp" maxlength="120" value="'+fv('display_name')+'" placeholder="e.g. Gemz"></div>'+
@@ -2887,10 +2923,26 @@ function account(){
   $('acC').onclick=closeModal; $('acOut').onclick=function(){ closeModal(); signOut(); };
   $('acPw').onclick=function(){ changePw($('pw1').value,$('pw2').value,$('acPw')); };
   $('acGo').onclick=function(){ saveProfile($('acGo')); };
+  $('pfPic').onclick=function(){ $('pfFile').click(); };
+  $('pfFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return;
+    avatarData(f).then(function(url){ PF.avatar=url; $('pfAv').innerHTML=avHtml({avatar:url}); $('pfPicX').classList.remove('hidden'); $('pfPic').textContent='Change picture'; toast('Picture ready — press Save profile'); }).catch(function(e){ toast('Picture: '+e.message,true); }); };
+  $('pfPicX').onclick=function(){ PF.avatar=''; $('pfAv').innerHTML=avHtml({full_name:m.full_name, display_name:m.display_name, email:m.email}); this.classList.add('hidden'); $('pfPic').textContent='Add a picture'; };
   setTimeout(function(){ (m.full_name?$('pfDisp'):$('pfName')).focus(); },30);
+}
+var PF={avatar:null};
+/* picture -> centre square 160 x 160 JPEG data: URL (about 10 KB) */
+function avatarData(file){
+  return new Promise(function(res,rej){ if(!/^image\/(png|jpeg|webp)$/.test(file.type)) return rej(new Error('use a JPG, PNG or WebP image'));
+    var fr=new FileReader(); fr.onload=function(){ var im=new Image(); im.onload=function(){
+      var d=Math.min(im.width,im.height), cv=document.createElement('canvas'), q=0.86, url; cv.width=cv.height=160; var cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,160,160);
+      cx.drawImage(im,(im.width-d)/2,(im.height-d)/2,d,d,0,0,160,160);
+      do{ url=cv.toDataURL('image/jpeg',q); q-=0.12; }while(url.length>58000&&q>0.3);
+      if(url.length>58000) rej(new Error('could not make it small enough')); else res(url); };
+      im.onerror=function(){ rej(new Error('that file is not an image')); }; im.src=fr.result; }; fr.onerror=function(){ rej(new Error('could not read the file')); }; fr.readAsDataURL(file); });
 }
 function saveProfile(btn){
   var p={ full_name:$('pfName').value.trim(), display_name:$('pfDisp').value.trim(), designation:$('pfDes').value.trim(), phone:$('pfPh').value.trim() };
+  if(PF.avatar!=null) p.avatar=PF.avatar;
   if(!p.full_name){ toast('Enter your full name.',true); $('pfName').focus(); return; }
   busy(btn,true);
   api('setProfile',p).then(function(r){ busy(btn,false); var log=r._log; delete r._log; S.me=Object.assign({},S.me,r); (log||[]).forEach(function(l){ S.log.push(l); });
@@ -4181,39 +4233,78 @@ function needLive(el, what){ if(!fileMode()) return false; el.innerHTML='<div cl
 function kpiRow(kp){ return '<div class="kpis">'+kp.map(function(k){ return '<div class="kpi"'+(k[3]?' style="cursor:pointer" data-go="'+esc(k[3])+'"':'')+'><div class="l">'+esc(k[0])+'</div><div class="v">'+k[1]+'</div><div class="s">'+esc(k[2]||'')+'</div></div>'; }).join('')+'</div>'; }
 
 /* ----- dashboard ----- */
-/* v3.2.1: "To do" card - records that need a look (everyone) and unfinished setup (admin) */
-function dbTodo(k){
-  Promise.all([PR.set?PR.set:setsLoad().catch(function(){ return null; }), PR.data?PR.data:prLoad().catch(function(){ return null; })]).then(function(x){
-    var el=$('dbTodo'); if(!el) return; var st=x[0]||{}, pd=x[1], it=[], w=canWrite();
-    if(+k.overdue) it.push(['tenders', '<b>'+k.overdue+' open tender'+(k.overdue>1?'s are':' is')+' past the closing date</b> — '+(w?'set the status (Submitted, No bid, Cancelled …)':'status not updated yet'), 'Open Tenders']);
-    if(+k.no_status) it.push(['tenders', '<b>'+k.no_status+' tender record'+(k.no_status>1?'s have':' has')+' no status</b> — '+(w?'pick one so the pipeline figures are right':'not set yet'), 'Open Tenders']);
-    if(isAdmin()){
-      if(!cfg().driveUrl) it.push(['adm:conn', '<b>Google Drive is not connected</b> — needed for file uploads, the masterlist and adding team accounts', 'Connections']);
-      if(pd && !(pd.suppliers||[]).length) it.push(['suppliers', '<b>No suppliers yet</b> — import your list so RFQs can suggest who to ask', 'Suppliers']);
-      var old=Object.keys(st.fx||{}).filter(function(c){ var d=(st.fx[c]||{}).date; return d && Procure.daysBetween(d, today())>30; });
-      if(old.length) it.push(['adm:rfq', '<b>Exchange rates are over 30 days old</b> ('+esc(old.join(', '))+') — update them before comparing overseas quotes', 'RFQ settings']);
+/* v3.2.2: notifications (bell beside the theme button) - everything that needs attention, worked out from live data.
+   An item disappears by itself once it is dealt with. Replaces the v3.2.1 "To do" card. */
+var NT={ items:[], at:0, dash:null, dashAt:0, timer:null };
+function dashGet(force){ if(!force&&NT.dash&&Date.now()-NT.dashAt<20000) return NT.dash; NT.dashAt=Date.now(); NT.dash=api('dashboard'); NT.dash.catch(function(){ NT.dash=null; }); return NT.dash; }
+function rfGet(){ if(RF.p&&Date.now()-RF.pAt<20000) return RF.p; RF.pAt=Date.now(); RF.p=rfLoad(); RF.p.catch(function(){ RF.p=null; }); return RF.p; }
+function notifLoad(){
+  if(fileMode()||!S.me) return Promise.resolve();
+  var q=function(p){ return p.catch(function(){ return null; }); };
+  return Promise.all([q(dashGet()), q(rfGet()), q(PR.data?Promise.resolve(PR.data):prLoad()), q(PR.set?Promise.resolve(PR.set):setsLoad()), q(api('rateProps',{status:'Proposed'}))]).then(function(x){
+    var D=x[0]||{}, k=D.kpi||{}, L=x[1], pd=x[2], st=x[3]||{}, rp=x[4], it=[], w=canWrite(), pl=function(n,a,b){ return n+' '+(n===1?a:b); };
+    var add=function(lv,t,sub,go){ it.push({lv:lv,t:t,sub:sub,go:go}); };
+    // tenders
+    if(+k.overdue) add('warn', pl(+k.overdue,'open tender is','open tenders are')+' past the closing date', w?'Set the status: Submitted, No bid, Cancelled …':'Status not updated yet', 'tenders');
+    (D.closing||[]).forEach(function(t){ var d=Procure.daysBetween(today(), String(t.closing_date||'').slice(0,10)); if(t.status!=='Submitted'&&d>=0&&d<=7)
+      add(d<=2?'warn':'info', t.arza_no+' closes '+(d===0?'today':d===1?'tomorrow':'in '+d+' days'), (t.title||'')+(t.status?' · '+t.status:''), 'tender:'+t.arza_no); });
+    if(+k.no_status) add('info', pl(+k.no_status,'tender record has','tender records have')+' no status', w?'Pick one so the pipeline figures are right':'Not set yet', 'tenders');
+    if(+k.drafts) add('info', pl(+k.drafts,'revision is','revisions are')+' waiting for approval', 'Rationalized BQ drafts', 'rev');
+    // RFQs
+    if(L){ var all=L.rfqs||[], ch=chaseList(), cmp=all.filter(function(r){ return r.status==='Comparison'; }), expD=(st.rfq_opts||{}).expiry_days||7;
+      if(ch.length) add('warn', pl(ch.length,'supplier reminder is','supplier reminders are')+' due today', 'RFQ › RFQs › Chase today', 'rfqs');
+      cmp.forEach(function(r){ add('info', r.rfq_no+' has 3 valid quotes — ready to compare', r.title, 'rfq:'+r.rfq_no); });
+      Procure.validityAlerts(all, today(), expD).forEach(function(v){ add('warn', v.rfq_no+': a quote '+(v.expired?'has expired':'runs out '+(v.days_left===0?'today':'in '+pl(v.days_left,'day','days'))), v.title, 'rfq:'+v.rfq_no); });
+      all.filter(function(r){ return r.status==='Awarded'&&!r.delivered_on&&r.award_date&&Procure.daysBetween(r.award_date, today())>=14; }).forEach(function(r){ add('info', r.rfq_no+': record the delivery', 'Awarded '+fmtDate(r.award_date)+' — rate the supplier when the goods arrive', 'rfq:'+r.rfq_no); });
     }
-    el.innerHTML=it.length?'<div class="card todo"><h3>To do <span class="n">'+it.length+' item'+(it.length>1?'s':'')+'</span></h3>'+it.map(function(i){ return '<div class="todo-i"><span class="dot"></span><span class="t">'+i[1]+'</span><button class="btn sm" data-todo="'+i[0]+'">'+i[2]+'</button></div>'; }).join('')+'</div>':'';
-    el.onclick=function(e){ var b=e.target.closest('[data-todo]'); if(!b) return; var g=b.dataset.todo; if(g.indexOf('adm:')===0){ ADM.tab=g.slice(4); showView('users'); } else showView(g); };
+    if(pd&&+pd.pending&&w) add('info', pl(+pd.pending,'supplier is','suppliers are')+' waiting in the review queue', 'Approve, merge or reject', 'queue');
+    var np=rp?(rp.proposals||[]).length:0; NT.props=rp?np:null;
+    if(np&&w) add('info', pl(np,'rate proposal','rate proposals')+' for the masterlist', 'Awarded prices to accept or reject', 'rateprops');
+    // setup (admin)
+    if(isAdmin()){
+      if(!cfg().driveUrl) add('warn', 'Google Drive is not connected', 'Needed for file uploads, the masterlist and adding team accounts', 'adm:conn');
+      if(pd && !(pd.suppliers||[]).length) add('info', 'No suppliers yet', 'Import your list so RFQs can suggest who to ask', 'suppliers');
+      var old=Object.keys(st.fx||{}).filter(function(c){ var d=(st.fx[c]||{}).date; return d && Procure.daysBetween(d, today())>30; });
+      if(old.length) add('info', 'Exchange rates are over 30 days old', old.join(', ')+' — update before comparing overseas quotes', 'adm:rfq');
+      if((st.mailbox||{}).enabled && (st.mailbox_status||{}).error) add('warn', 'The mailbox job reported an error', st.mailbox_status.error, 'adm:conn');
+    }
+    it.sort(function(a,b){ return (a.lv==='warn'?0:1)-(b.lv==='warn'?0:1); });
+    NT.items=it; NT.at=Date.now(); notifDraw();
+    if($('dbProps')&&NT.props!=null) $('dbProps').textContent=NT.props; if(NT.props!=null) propBadge(NT.props);
   });
+}
+function notifDraw(){
+  var it=NT.items, n=it.length, b=$('bellN'), m=$('bellMenu'); if(!b||!m) return;
+  b.textContent=n>9?'9+':String(n); b.classList.toggle('hidden',!n); $('btnBell').title=n?n+' notification'+(n>1?'s':''):'Notifications';
+  m.innerHTML='<div class="nt-h"><b>Notifications</b><span>'+(n?n+' to look at':'')+'</span><a href="#" id="ntRef" title="Check again">Refresh</a></div>'+
+    (n?it.map(function(i,ix){ return '<a class="nt-i '+i.lv+'" data-i="'+ix+'" href="#"><span class="dot"></span><span class="tx"><b>'+esc(i.t)+'</b>'+(i.sub?'<span>'+esc(i.sub)+'</span>':'')+'</span></a>'; }).join('')
+      :'<div class="nt-e">All clear — nothing needs your attention.</div>')+
+    '<div class="nt-f">Items clear by themselves once they are dealt with.</div>';
+}
+function notifGo(g){
+  closeMenus();
+  if(g.indexOf('adm:')===0){ ADM.tab=g.slice(4); showView('users'); }
+  else if(g.indexOf('tender:')===0){ showView('tenders'); openDrawer(g.slice(7)); }
+  else if(g.indexOf('rfq:')===0){ RF.no=g.slice(4); showView('rfq'); }
+  else showView(g);
 }
 function renderDash(){
   var el=$('vDB'); if(needLive(el,'The dashboard')) return;
-  el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">What needs attention today, the RFQs in progress, and the money view of all tenders: pipeline, contract value, revisions waiting, won projects and their as-built position.</div></div><span style="flex:1"></span><button class="btn" id="dbRef">Refresh</button></div><div id="dbBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
-  $('dbRef').onclick=renderDash;
-  var rq=document.createElement('div'); rq.id='dbRfq'; var bb=$('dbBody'); if(bb){ var td=document.createElement('div'); td.id='dbTodo'; bb.parentNode.insertBefore(td,bb); bb.parentNode.insertBefore(rq,bb); }
-  rfLoad().then(function(L){ var el2=$('dbRfq'); if(!el2) return; var all=L.rfqs||[], ch=chaseList(), m0=new Date().toISOString().slice(0,7);
+  el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">The RFQs in progress and the money view of all tenders (the bell at the top lists what needs attention): pipeline, contract value, revisions waiting, won projects and their as-built position.</div></div><span style="flex:1"></span><button class="btn" id="dbRef">Refresh</button></div><div id="dbBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
+  $('dbRef').onclick=function(){ NT.dash=null; RF.p=null; renderDash(); };
+  var rq=document.createElement('div'); rq.id='dbRfq'; var bb=$('dbBody'); if(bb) bb.parentNode.insertBefore(rq,bb);
+  rfGet().then(function(L){ var el2=$('dbRfq'); if(!el2) return; var all=L.rfqs||[], ch=chaseList(), m0=new Date().toISOString().slice(0,7);
     var open=all.filter(function(r){ return RFQ_OPEN.indexOf(r.status)>=0; }), cmp=open.filter(function(r){ return r.quotes_n>0 && ['Approval sent'].indexOf(r.status)<0; }), apv=all.filter(function(r){ return r.status==='Approval sent'; }), aw=all.filter(function(r){ return r.status==='Awarded' && String(r.award_date||'').slice(0,7)===m0; });
     var expD=((PR.set||{}).rfq_opts||{}).expiry_days||7, ex=Procure.validityAlerts(all, today(), expD);
     el2.innerHTML='<div class="card dbrfq"><h3>RFQs</h3>'+kpiRow([['Open RFQs',open.length,all.length+' in total','rfqs'],['Chase today',ch.length,ch.length?'reminders due':'nothing due','rfqs'],['Quotes to compare',cmp.length,'RFQs with quotes in','rfqs'],['Waiting for approval',apv.length,'approval pack sent','rfqs'],['Awarded this month',aw.length,'RFQs awarded','rfqs'],
         ['Quotes expiring',ex.length,ex.length?'within '+expD+' days: '+ex.slice(0,3).map(function(x){ return x.rfq_no; }).join(', '):'none within '+expD+' days','rfqs'],['Rate proposals','<span id="dbProps">…</span>','awarded prices for the masterlist','rateprops']])+
       (ex.length?'<div class="note w" style="margin-top:8px">'+ex.map(function(x){ return '<a href="#" class="dbEx" data-rfq="'+esc(x.rfq_no)+'">'+esc(x.rfq_no)+'</a> '+esc(x.title.slice(0,40))+': '+(x.expired?'a quote <b>expired</b> on '+esc(fmtDate(x.valid_until)):'a quote runs out '+esc(fmtDate(x.valid_until))+' ('+x.days_left+' day'+(x.days_left===1?'':'s')+')'); }).join('<br>')+'</div>':'')+'</div>';
-    api('rateProps',{status:'Proposed'}).then(function(d){ var n=(d.proposals||[]).length; if($('dbProps')) $('dbProps').textContent=n; propBadge(n); }).catch(function(){ if($('dbProps')) $('dbProps').textContent='—'; });
+    if(NT.props!=null&&$('dbProps')) $('dbProps').textContent=NT.props;
     el2.onclick=function(e){ var a=e.target.closest('.dbEx'); if(a){ e.preventDefault(); RF.no=a.dataset.rfq; showView('rfq'); return; } var k=e.target.closest('[data-go]'); if(k) showView(k.dataset.go); };
   }).catch(function(){});
-  api('dashboard').then(function(D){
+  notifLoad();
+  dashGet().then(function(D){
     var k=D.kpi||{}, m0=function(v){return money0(v);};
-    dbTodo(k);
     var wonDiff=(Number(k.won_contract)||0)-(Number(k.won_tendered)||0);
     var html=kpiRow([
       ['Open / pricing', (k.open||0)+' · B$'+m0(k.open_value), 'prospect + pricing + pending'+(k.pending?' ('+k.pending+' pending)':''), 'tenders'],
@@ -5771,6 +5862,9 @@ $('btnLogin').onclick=signIn;
 $('inPw').addEventListener('keydown',function(e){ if(e.key==='Enter') signIn(); });
 $('lnkForgot').onclick=forgot;
 $('hello').onclick=function(e){ e.stopPropagation(); toggleMenu($('me')); };
+$('btnBell').onclick=function(e){ e.stopPropagation(); toggleMenu($('bell')); if($('bell').classList.contains('open')&&Date.now()-NT.at>60000) notifLoad(); };
+$('bellMenu').onclick=function(e){ e.preventDefault(); if(e.target.closest('#ntRef')){ e.stopPropagation(); NT.dash=null; RF.p=null; $('ntRef').textContent='Checking…'; notifLoad(); return; }
+  var a=e.target.closest('.nt-i'); if(a){ var i=NT.items[+a.dataset.i]; if(i) notifGo(i.go); } };
 $('meMenu').onclick=function(e){ var a=e.target.closest('a'); if(!a) return; closeMenus(); var k=a.dataset.act;
   if(k==='profile') account(); else if(k==='ver') showVersions(); else if(k==='out') signOut(); else if(a.dataset.v) showView(a.dataset.v); };
 $('btnMenu').onclick=function(e){ e.stopPropagation(); closeMenus(); mobileNav(!$('top').classList.contains('mnav')); };
