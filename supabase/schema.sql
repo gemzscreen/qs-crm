@@ -1,5 +1,5 @@
 -- =====================================================================================================
--- QS CRM (ARZA SDN BHD) — Supabase database, v3.2.0
+-- QS CRM (ARZA SDN BHD) — Supabase database, v3.2.1
 -- Run the whole file once in Supabase › SQL Editor › New query › Run. Safe to run again (upgrades in place).
 --
 -- Security model
@@ -761,6 +761,9 @@ begin
         'open', count(*) filter (where coalesce(status, '') in ('', 'Prospect', 'Pricing', 'Pending')),
         'open_value', coalesce(sum(our_sum) filter (where coalesce(status, '') in ('', 'Prospect', 'Pricing', 'Pending')), 0),
         'pending', count(*) filter (where status = 'Pending'),
+        -- v3.2.1: records that need a look
+        'no_status', count(*) filter (where coalesce(status, '') = ''),
+        'overdue', count(*) filter (where coalesce(status, '') in ('', 'Prospect', 'Pricing', 'Pending') and closing_date < (now() at time zone 'Asia/Brunei')),
         'submitted', count(*) filter (where status = 'Submitted'),
         'submitted_value', coalesce(sum(our_sum) filter (where status = 'Submitted'), 0),
         'won', count(*) filter (where status = 'Won'), 'lost', count(*) filter (where status = 'Lost'),
@@ -1657,7 +1660,7 @@ begin
     delivery_bnd = coalesce(nullif(h ->> 'delivery_bnd', '')::numeric, 0), lead_days = nullif(h ->> 'lead_days', '')::numeric::int,
     validity = nullif(h ->> 'validity', '')::date, payment_terms = nullif(btrim(coalesce(h ->> 'payment_terms', '')), ''),
     brand_origin = nullif(btrim(coalesce(h ->> 'brand_origin', '')), ''), notes = nullif(btrim(coalesce(h ->> 'notes', '')), ''),
-    file_link = coalesce(nullif(btrim(coalesce(h ->> 'file_link', '')), ''), file_link), file_name = coalesce(nullif(btrim(coalesce(h ->> 'file_name', '')), ''), file_name),
+    file_link = coalesce(case when btrim(coalesce(h ->> 'file_link', '')) ~* '^https?://' then btrim(h ->> 'file_link') end, file_link),   -- v3.2.1: web links only file_name = coalesce(nullif(btrim(coalesce(h ->> 'file_name', '')), ''), file_name),
     valid = coalesce((h ->> 'valid')::boolean, true), updated_at = now(), updated_by = me.id
   where id = q.id returning * into q;
   delete from quote_lines where quote_id = q.id;
@@ -2037,7 +2040,7 @@ begin
   if auth.uid() is not null then raise exception 'Mailbox job only'; end if;
   if not coalesce((mb ->> 'enabled')::boolean, false) then return jsonb_build_object('enabled', false); end if;
   update mail_outbox set status = 'Queued' where status = 'Sending' and queued_at < now() - interval '2 hours';   -- a job that died half way
-  sent := (select count(*) from mail_outbox where status = 'Sent' and sent_at >= current_date) + (select count(*) from rfq_clicks where user_name = 'Mailbox job' and at >= current_date and action like 'reminder%');
+  sent := (select count(*) from mail_outbox where status = 'Sent' and sent_at >= current_date);   -- v3.2.1: automatic reminders are outbox rows too (they were counted twice)
   lim := greatest(0, coalesce((mb ->> 'daily_limit')::int, 40) - sent);
   select array_agg(id) into ids from (select id from mail_outbox where status = 'Queued' order by id limit lim) z;
   update mail_outbox set status = 'Sending' where id = any (coalesce(ids, '{}'));
@@ -2173,7 +2176,7 @@ begin
   end loop;
 end $$;
 drop policy if exists crm_read_own on public.profiles;
-create policy crm_read_own on public.profiles for select to authenticated using (id = auth.uid());
+create policy crm_read_own on public.profiles for select to authenticated using (id = (select auth.uid()));   -- v3.2.1: evaluated once, not per row
 
 revoke all on public.profiles, public.tenders, public.bq_items, public.asbuilt_items, public.revisions, public.activity_log, public.lists from anon, authenticated;
 grant select on public.profiles, public.tenders, public.bq_items, public.asbuilt_items, public.revisions, public.activity_log, public.lists to authenticated;
@@ -2218,3 +2221,26 @@ begin
     end loop;
   end if;
 end $$;
+
+-- =====================================================================================================
+-- v3.2.1: hardening + speed (from the Supabase security / performance advisors)
+-- =====================================================================================================
+-- every crm_* function runs with a fixed search_path (the small helpers had none)
+do $$
+declare f record;
+begin
+  for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname like 'crm\_%' and p.prokind = 'f'
+             and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%') loop
+    execute format('alter function %s set search_path = public', f.sig);
+  end loop;
+  -- Supabase's own helper in the public schema: nobody needs to call it through the API
+  for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'rls_auto_enable' loop
+    execute format('revoke all on function %s from public, anon, authenticated', f.sig);
+  end loop;
+end $$;
+-- indexes for the foreign keys that had none
+create index if not exists quotes_sup on public.quotes (supplier_id);
+create index if not exists rfq_items_cat on public.rfq_items (category);
+create index if not exists supplier_categories_code on public.supplier_categories (code);

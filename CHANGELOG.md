@@ -2,6 +2,19 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v3.2.1 — 16 Nov 2026
+
+- Check-up release: fixes, speed and polish found by reviewing v3.2.0 (code check, Supabase security and performance advisors, every screen on desktop and phone).
+- Faster start: the Excel tools (880 KB) no longer hold up the first screen — they load in the background and on demand. The supplier quote page no longer downloads the sign-in library at all.
+- Dashboard: new "To do" card — open tenders past their closing date, records with no status and, for the admin, unfinished setup (Google Drive link, suppliers, old exchange rates). RFQ tiles sit on one tidy row.
+- Fixed: Tenders tile now says Open includes Pending; the comparison said "2 valid quotes" beside "3 valid" on the same page — it now says how many quotes pass the checks.
+- Fixed: the mailbox daily limit counted automatic reminders twice.
+- Safer links: quotation links, folder links and post links open only if they are web, mail or phone links.
+- Phones: RFQ item names no longer squeezed to one word per line; the "Largest priced records" chart is readable (scrolls sideways).
+- Database hardening from the advisors: fixed search path on every function, Supabase helper no longer callable from outside, faster profile rule, three missing indexes. Applied by the Database workflow after merge.
+- Mailbox job: when it is not set up, each scheduled run now ends in seconds without downloading anything.
+- No Code.gs change.
+
 ## v3.2.0 — 9 Nov 2026
 
 - Tenders: new status Pending (priced, revisions still coming) between Pricing and Submitted; Pending counts as open. Dashboard "Closing next" shows every tender closing in the next 30 days and at least the 5 nearest (later ones greyed).

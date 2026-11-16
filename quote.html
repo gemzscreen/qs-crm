@@ -54,7 +54,6 @@ button:disabled{opacity:.6;cursor:default}
 <main id="app"><div class="card">Loading…</div></main>
 <div class="foot" id="ft"></div>
 <script src="config.js"></script>
-<script src="vendor/supabase-js-2.119.0.js"></script>
 <script>
 (function(){
   'use strict';
@@ -62,9 +61,11 @@ button:disabled{opacity:.6;cursor:default}
   var esc=function(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var fmt=function(d){ if(!d) return ''; var x=new Date(d+'T00:00:00'); return isNaN(x)?d:x.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); };
   var bad=function(m){ app.innerHTML='<div class="card"><div class="note bad">'+esc(m)+'</div></div>'; };
-  if(!window.supabase||!C.supabaseUrl){ bad('This page could not load. Please reply to our email instead.'); return; }
-  var sb=window.supabase.createClient(C.supabaseUrl, C.supabaseKey, {auth:{persistSession:false, autoRefreshToken:false, detectSessionInUrl:false}});
-  var call=function(fn,p){ return sb.rpc(fn,{p:p}).then(function(r){ if(r.error) throw new Error(r.error.message); return r.data; }); };
+  if(!C.supabaseUrl||!window.fetch){ bad('This page could not load. Please reply to our email instead.'); return; }
+  // v3.2.1: two plain web requests - no library to download, so the page opens fast on a phone
+  var call=function(fn,p){ return fetch(String(C.supabaseUrl).replace(/\/$/,'')+'/rest/v1/rpc/'+fn,{method:'POST', headers:{'Content-Type':'application/json', apikey:C.supabaseKey, Authorization:'Bearer '+C.supabaseKey}, body:JSON.stringify({p:p})})
+    .then(function(r){ return r.json().catch(function(){ return null; }).then(function(j){ if(!r.ok) throw new Error((j&&j.message)||'Could not reach the server - please try again, or reply by email.'); return j; }); },
+          function(){ throw new Error('No internet connection - please try again, or reply by email.'); }); };
   if(!/^[0-9a-f]{64}$/.test(t)){ bad('This quote link is not complete. Please use the full link from our email or WhatsApp message, or reply by email.'); return; }
   call('crm_qform',{t:t}).then(function(f){ F=f; draw(); }).catch(function(e){ bad(e.message); });
 

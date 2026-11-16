@@ -312,6 +312,14 @@ select pg_temp.ok((public.crm_mjob_pending() ->> 'enabled')::boolean, 'the servi
 reset role;
 select set_config('request.uid', '00000000-0000-0000-0000-000000000001', false);
 
+-- v3.2.1: hardening
+select pg_temp.ok((select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname like 'crm\_%'
+  and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%')) = 0, 'every crm_* function has a fixed search_path');
+insert into public.tenders (arza_no, title, status, closing_date) values ('T990', 'Old one', 'Pricing', now() - interval '3 days'), ('T991', 'No status', null, null);
+select pg_temp.ok((public.crm_dashboard() #>> '{kpi,overdue}') = '1' and (public.crm_dashboard() #>> '{kpi,no_status}')::int >= 1, 'dashboard counts overdue open tenders and records with no status');
+delete from public.tenders where arza_no in ('T990', 'T991');
+select pg_temp.ok((select count(*) from pg_indexes where schemaname = 'public' and indexname in ('quotes_sup', 'rfq_items_cat', 'supplier_categories_code')) = 3, 'foreign-key indexes exist');
+
 -- grants and row-level security as the app's database role
 set role authenticated;
 select pg_temp.ok((select count(*) from public.suppliers) = 3, 'authenticated reads suppliers through RLS');
