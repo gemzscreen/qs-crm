@@ -9,8 +9,7 @@
 <script>/* theme before first paint (no flash) */(function(){var m='auto';try{m=localStorage.getItem('qscrm.theme')||'auto';}catch(e){}var d=m==='auto'?(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):(m==='night'?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
 <title>ARZA QS CRM SYSTEM</title>
 <!-- libraries are served from this site (vendor/); the public CDN is only a fallback -->
-<script src="vendor/xlsx-0.18.5.full.min.js"></script>
-<script>window.XLSX||document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>');</script>
+<!-- v3.2.1: the Excel library (880 KB) is loaded in the background after the page shows - see needXlsx() -->
 <script src="vendor/supabase-js-2.119.0.js"></script>
 <script>window.supabase||document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"><\/script>');</script>
 <script src="config.js"></script>
@@ -440,6 +439,16 @@ tr.later td{opacity:.62}
 #vQP tr.aw td{background:var(--okbg)}
 @media (max-width:1100px){.form.f4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.form.f4{grid-template-columns:1fr}}
+
+/* v3.2.1 */
+.dbrfq .kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:0}
+.card.todo{border-left:4px solid var(--warn,#d98a00)}
+.todo-i{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+.todo-i:first-of-type{border-top:0}
+.todo-i .dot{width:8px;height:8px;border-radius:50%;background:var(--warn,#d98a00);flex:0 0 8px}
+.todo-i .t{flex:1;min-width:0}
+.hbwrap{overflow-x:auto}
+@media (max-width:700px){.hbwrap svg.hbar{min-width:600px;max-width:none}#vRD table.mini td:nth-child(2){min-width:150px}.todo-i{flex-wrap:wrap}.todo-i .t{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -569,7 +578,7 @@ tr.later td{opacity:.62}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.2.0</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.2.1</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -2487,8 +2496,20 @@ tr.later td{opacity:.62}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'3.2.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'3.2.1', user:'Gemz' };
 var CHANGELOG = [
+  { v:'3.2.1', date:'16 Nov 2026', items:[
+    'Check-up release: fixes, speed and polish found by reviewing v3.2.0 (code check, Supabase security and performance advisors, every screen on desktop and phone).',
+    'Faster start: the Excel tools (880 KB) no longer hold up the first screen — they load in the background and on demand. The supplier quote page no longer downloads the sign-in library at all.',
+    'Dashboard: new "To do" card — open tenders past their closing date, records with no status and, for the admin, unfinished setup (Google Drive link, suppliers, old exchange rates). RFQ tiles sit on one tidy row.',
+    'Fixed: Tenders tile now says Open includes Pending; the comparison said "2 valid quotes" beside "3 valid" on the same page — it now says how many quotes pass the checks.',
+    'Fixed: the mailbox daily limit counted automatic reminders twice.',
+    'Safer links: quotation links, folder links and post links open only if they are web, mail or phone links.',
+    'Phones: RFQ item names no longer squeezed to one word per line; the "Largest priced records" chart is readable (scrolls sideways).',
+    'Database hardening from the advisors: fixed search path on every function, Supabase helper no longer callable from outside, faster profile rule, three missing indexes. Applied by the Database workflow after merge.',
+    'Mailbox job: when it is not set up, each scheduled run now ends in seconds without downloading anything.',
+    'No Code.gs change.'
+  ]},
   { v:'3.2.0', date:'9 Nov 2026', items:[
     'Tenders: new status Pending (priced, revisions still coming) between Pricing and Submitted; Pending counts as open. Dashboard "Closing next" shows every tender closing in the next 30 days and at least the 5 nearest (later ones greyed).',
     'Quote scoring: each quote gets a score of 100 from price (landed B$), lead time, payment terms and supplier reliability (replies, on-time deliveries, quality). Weights in Admin Settings › RFQ settings. The proposed supplier is the highest score among the quotes that pass.',
@@ -2650,6 +2671,25 @@ var ICONS = {
 var THEME_NEXT = { auto:'day', day:'night', night:'auto' }, THEME_NAME = { auto:'Auto (follows your device)', day:'Day', night:'Night' };
 var OPEN = ['Prospect','Pricing','Pending'];   // v3.2.0: Pending = priced, revisions still coming before submission
 var $ = function(id){ return document.getElementById(id); };
+/* v3.2.1: links that come from the database or a supplier may only be web, mail or phone links */
+function safeUrl(u){ u=String(u==null?'':u).trim(); return /^(https?:\/\/|mailto:|tel:)/i.test(u)?u:(u?'#':''); }
+/* v3.2.1: Excel library on demand. needXlsx() -> Promise; xlsxReady() for buttons (loads + asks to click again); xlsxBuf(file) for imports */
+var XL={p:null};
+function needXlsx(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  if(XL.p) return XL.p;
+  var one=function(src){ return new Promise(function(ok,no){ var e=document.createElement('script'); e.src=src; e.async=true; e.onload=function(){ window.XLSX?ok(window.XLSX):no(new Error('x')); }; e.onerror=function(){ no(new Error('x')); }; document.head.appendChild(e); }); };
+  XL.p=one('vendor/xlsx-0.18.5.full.min.js').catch(function(){ return one('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'); })
+    .catch(function(){ XL.p=null; throw new Error('The Excel tools did not load - check the internet connection and try again.'); });
+  return XL.p;
+}
+function xlsxReady(){ if(window.XLSX) return true;
+  // not loaded yet (a click in the first seconds): load, then repeat the click for the user
+  var ev=window.event, t=ev&&ev.type==='click'?(ev.target&&ev.target.closest?ev.target.closest('button,a,.btn')||ev.target:null):null;
+  toast('Preparing the Excel tools…');
+  needXlsx().then(function(){ if(t&&document.contains(t)) t.click(); else toast('Excel tools ready — click again'); }, function(e){ toast(e.message,true); });
+  return false; }
+function xlsxBuf(file){ return needXlsx().then(function(){ return file.arrayBuffer(); }); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function money(x){ if(x===''||x==null||isNaN(Number(x))) return ''; return Number(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function money0(x){ return Number(x||0).toLocaleString('en-US',{maximumFractionDigits:0}); }
@@ -2923,7 +2963,7 @@ function render(){
   var noStatus=all.filter(function(t){return !t.status;}).length;
   $('kpis').innerHTML=[
     ['Records', all.length, noStatus? noStatus+' without a status':'All with a status'],
-    ['Open (prospect / pricing)', open.length, soon.length? soon.length+' closing within 7 days':'None closing within 7 days'],
+    ['Open (prospect / pricing / pending)', open.length, soon.length? soon.length+' closing within 7 days':'None closing within 7 days'],
     ['Value priced (B$)', money0(bid), sub.length+' submitted / decided'],
     ['Win rate', (won.length+lost.length)? Math.round(won.length/(won.length+lost.length)*100)+'%':'–', won.length+' won · '+lost.length+' lost'],
     ['Won value (B$)', money0(wonV), won.length? won.length+' contract'+(won.length>1?'s':''):'No results recorded yet']
@@ -3017,7 +3057,7 @@ function drawTab(){
         if(k==='id_scheme') h+='<div class="helpbox hidden" id="schemeBox">'+SCHEME_HELP+'</div>'; }
       else if(k==='folder_link'){
         h+='<div class="fl"><input id="x_'+k+'" type="url" value="'+esc(v)+'"'+(dis?' readonly':'')+' placeholder="Filled in when you upload a file">'+
-          (v?'<a class="btn" href="'+esc(v)+'" target="_blank" rel="noopener">Open folder</a>':'')+
+          (v?'<a class="btn" href="'+esc(safeUrl(v))+'" target="_blank" rel="noopener">Open folder</a>':'')+
           (ro()||t._new?'':'<button class="btn" id="bUpload" type="button">Upload file…</button>')+'</div>'; }
       else if(type==='textarea') h+='<textarea id="x_'+k+'"'+(dis?' readonly':'')+'>'+esc(v)+'</textarea>';
       else { if(type==='datetime-local' && v) v=String(v).replace(' ','T').slice(0,16); if(type==='date'&&v) v=String(v).slice(0,10);
@@ -3162,7 +3202,7 @@ function openFromHash(){
 function b64(buf){ var b=new Uint8Array(buf), s='', CH=0x8000; for(var i=0;i<b.length;i+=CH) s+=String.fromCharCode.apply(null,b.subarray(i,i+CH)); return btoa(s); }
 var MAX_FILE=20*1024*1024;
 function readWorkbook(file){
-  return file.arrayBuffer().then(function(buf){
+  return xlsxBuf(file).then(function(buf){
     var out={ name:file.name, type:file.type||'', size:file.size, data:b64(buf) };
     if(/\.xls[xm]$/i.test(file.name)){
       try{
@@ -3355,7 +3395,7 @@ function hbars(rows, fmtV){
     var path='M'+L0+' '+y+' H'+(L0+w-rr)+' Q'+(L0+w)+' '+y+' '+(L0+w)+' '+(y+rr)+' V'+(y+14-rr)+' Q'+(L0+w)+' '+(y+14)+' '+(L0+w-rr)+' '+(y+14)+' H'+L0+' Z';
     return '<g'+tipAttr(r.k+(r.sub?' — '+r.sub:'')+': '+fmtV(r.v))+'><rect x="0" y="'+(y-4)+'" width="'+W+'" height="'+rowH+'" fill="transparent"/><text x="'+(L0-8)+'" y="'+(y+11)+'" text-anchor="end" class="hl">'+esc(r.k)+'</text>'+(w?'<path d="'+path+'" fill="'+r.color+'"/>':'')+
       '<text x="'+(L0+w+6)+'" y="'+(y+11)+'" class="vl">'+fmtV(r.v)+'</text></g>'; }).join('');
-  return '<svg width="'+W+'" height="'+(rows.length*rowH+8)+'" viewBox="0 0 '+W+' '+(rows.length*rowH+8)+'" class="hbar" role="img" aria-label="bar chart">'+'<line x1="'+L0+'" x2="'+L0+'" y1="2" y2="'+(rows.length*rowH+4)+'" class="axis"/>'+b+'</svg>';
+  return '<div class="hbwrap"><svg width="'+W+'" height="'+(rows.length*rowH+8)+'" viewBox="0 0 '+W+' '+(rows.length*rowH+8)+'" class="hbar" role="img" aria-label="bar chart">'+'<line x1="'+L0+'" x2="'+L0+'" y1="2" y2="'+(rows.length*rowH+4)+'" class="axis"/>'+b+'</svg></div>';
 }
 function legend(items){ return '<ul class="leg row">'+items.map(function(x){ return '<li><i style="background:'+x.color+'"></i><span>'+esc(x.k)+'</span></li>'; }).join('')+'</ul>'; }
 function monthKey(d){ var m=String(d||'').match(/^(\d{4})-(\d{2})/); return m? m[1]+'-'+m[2] : ''; }
@@ -3398,7 +3438,7 @@ function bindTips(root){
 }
 
 function exportReports(){
-  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  if(!xlsxReady()) return;
   var R=repRows(), wb=XLSX.utils.book_new();
   var row=function(k,st){ return {group:k,records:st.n,value_priced:Math.round(st.value*100)/100,open:st.open,submitted:st.sub,won:st.won,lost:st.lost,win_rate:st.rate,won_value:Math.round(st.wonV*100)/100,avg_ours_vs_winner_lost:st.avgDiff}; };
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(R.types.map(function(r){return row(r.k,r.st);})),'By type');
@@ -3574,7 +3614,7 @@ function deleteSet(){
   api('deleteMeasureSet',{arza_no:AB.no, measure_set:AB.set}).then(function(r){ (r._log||[]).forEach(function(l){S.log.push(l);}); toast('Deleted '+r.removed+' lines'); AB.set=''; loadAB(AB.no); }).catch(fail);
 }
 function exportAB(){
-  if(!window.XLSX||!AB.set) return;
+  if(!AB.set||!xlsxReady()) return;
   var C=BQTY.compare(AB.items, abRows()), wb=XLSX.utils.book_new(), t=abTender();
   var r1=C.items.map(function(i){ return {bill:i.bill,item:i.item_id,description:i.description,unit:i.unit,asbuilt_qty:i.ab_qty,rate:i.rate,amount:i.ab_amount,note:i.flag}; });
   var r2=C.items.map(function(i){ return {bill:i.bill,item:i.item_id,description:i.description,unit:i.unit,tendered_qty:i.tend_qty,rationalized_qty:i.qty,asbuilt_qty:i.ab_qty,diff_qty:i.diff_qty,diff_pct:i.diff_pct,rate:i.rate,tendered_amount:i.tend_amount,rationalized_amount:i.t_amount,asbuilt_amount:i.ab_amount,diff_amount:i.diff_amount,revision_change:i.rev_change,flag:i.flag}; });
@@ -3976,7 +4016,7 @@ function drawRVApproval(){
     return;
   }
   var apr=[['Approved on',fmtDate(rec.approved_date)],['For ARZA SDN BHD',rec.arza_rep],['For the client',rec.client_rep+(rec.client_org?', '+rec.client_org:'')],['Letter / document ref',rec.letter_ref],
-    ['Document', rec.doc_link?'<a href="'+esc(rec.doc_link)+'" target="_blank" rel="noopener">'+esc(rec.document||'Open')+'</a>':(rec.document||'none attached'), !!rec.doc_link],['Recorded',fmtDate(rec.approved_at)]];
+    ['Document', rec.doc_link?'<a href="'+esc(safeUrl(rec.doc_link))+'" target="_blank" rel="noopener">'+esc(rec.document||'Open')+'</a>':(rec.document||'none attached'), !!rec.doc_link],['Recorded',fmtDate(rec.approved_at)]];
   if(rec.status==='Void') apr.push(['Voided',(rec.void_reason||'')+' ('+fmtDate(rec.updated_at)+')']);
   b.innerHTML='<div class="grid2"><div class="card"><h3>Approval record — '+esc(rec.rev)+' '+revChip(rec.status)+(cur&&cur.rev===rec.rev?' <span class="chip st-Won">contract BQ</span>':'')+'</h3>'+dl(apr)+'</div><div class="card"><h3>Revision</h3>'+dl(sums)+'</div></div>'+
     (!ro() && cur && cur.rev===rec.rev ? '<div class="bar"><span class="scope">Approved revisions are locked. If the approval was recorded by mistake or the agreement was withdrawn, void it (needs a reason; the lines stay on record).</span><span style="flex:1"></span><button class="btn warn" id="rvVoid">Void '+esc(rec.rev)+'…</button></div>' : '');
@@ -4020,7 +4060,7 @@ function showApprove(){
 
 /* ----- Excel / print ----- */
 function exportRV(){
-  if(!window.XLSX||!RV.no) return;
+  if(!RV.no||!xlsxReady()) return;
   var t=rvTender(), wb=XLSX.utils.book_new(), rec=rvRec(RV.sel), cur=Rev.current(RV.revs);
   var info=[{field:'ARZA no.',value:t.arza_no},{field:'Client ref',value:t.tender_ref},{field:'Title',value:t.title_en||t.title},{field:'Tendered (B$)',value:rvSum('Tendered')},{field:'Contract BQ',value:cur?cur.rev:'Tendered'},{field:'Contract sum (B$)',value:cur?Number(cur.rev_sum):rvSum('Tendered')},{field:'Exported',value:today()}];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(info),'Info');
@@ -4117,7 +4157,7 @@ function migPayload(sheets){
     log:rows('Log').map(function(l){ return {ts:l.timestamp, action:l.action, arza_no:l.arza_no, detail:l.detail, user_name:l.user}; }), lists:lists };
 }
 function showMigrate(file){
-  file.arrayBuffer().then(function(buf){
+  xlsxBuf(file).then(function(buf){
     var wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true}), sheets={};
     wb.SheetNames.forEach(function(n){ sheets[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null}).map(function(r){ return r.map(migVal); }); });
     if(!sheets.Tenders) throw new Error('No "Tenders" tab — is this the QS CRM DB download?');
@@ -4141,11 +4181,27 @@ function needLive(el, what){ if(!fileMode()) return false; el.innerHTML='<div cl
 function kpiRow(kp){ return '<div class="kpis">'+kp.map(function(k){ return '<div class="kpi"'+(k[3]?' style="cursor:pointer" data-go="'+esc(k[3])+'"':'')+'><div class="l">'+esc(k[0])+'</div><div class="v">'+k[1]+'</div><div class="s">'+esc(k[2]||'')+'</div></div>'; }).join('')+'</div>'; }
 
 /* ----- dashboard ----- */
+/* v3.2.1: "To do" card - records that need a look (everyone) and unfinished setup (admin) */
+function dbTodo(k){
+  Promise.all([PR.set?PR.set:setsLoad().catch(function(){ return null; }), PR.data?PR.data:prLoad().catch(function(){ return null; })]).then(function(x){
+    var el=$('dbTodo'); if(!el) return; var st=x[0]||{}, pd=x[1], it=[], w=canWrite();
+    if(+k.overdue) it.push(['tenders', '<b>'+k.overdue+' open tender'+(k.overdue>1?'s are':' is')+' past the closing date</b> — '+(w?'set the status (Submitted, No bid, Cancelled …)':'status not updated yet'), 'Open Tenders']);
+    if(+k.no_status) it.push(['tenders', '<b>'+k.no_status+' tender record'+(k.no_status>1?'s have':' has')+' no status</b> — '+(w?'pick one so the pipeline figures are right':'not set yet'), 'Open Tenders']);
+    if(isAdmin()){
+      if(!cfg().driveUrl) it.push(['adm:conn', '<b>Google Drive is not connected</b> — needed for file uploads, the masterlist and adding team accounts', 'Connections']);
+      if(pd && !(pd.suppliers||[]).length) it.push(['suppliers', '<b>No suppliers yet</b> — import your list so RFQs can suggest who to ask', 'Suppliers']);
+      var old=Object.keys(st.fx||{}).filter(function(c){ var d=(st.fx[c]||{}).date; return d && Procure.daysBetween(d, today())>30; });
+      if(old.length) it.push(['adm:rfq', '<b>Exchange rates are over 30 days old</b> ('+esc(old.join(', '))+') — update them before comparing overseas quotes', 'RFQ settings']);
+    }
+    el.innerHTML=it.length?'<div class="card todo"><h3>To do <span class="n">'+it.length+' item'+(it.length>1?'s':'')+'</span></h3>'+it.map(function(i){ return '<div class="todo-i"><span class="dot"></span><span class="t">'+i[1]+'</span><button class="btn sm" data-todo="'+i[0]+'">'+i[2]+'</button></div>'; }).join('')+'</div>':'';
+    el.onclick=function(e){ var b=e.target.closest('[data-todo]'); if(!b) return; var g=b.dataset.todo; if(g.indexOf('adm:')===0){ ADM.tab=g.slice(4); showView('users'); } else showView(g); };
+  });
+}
 function renderDash(){
   var el=$('vDB'); if(needLive(el,'The dashboard')) return;
-  el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">Money view across all tenders: pipeline, contract value after rationalization, revisions waiting, won projects and their as-built position. Register charts are on Reports.</div></div><span style="flex:1"></span><button class="btn" id="dbRef">Refresh</button></div><div id="dbBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
+  el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">What needs attention today, the RFQs in progress, and the money view of all tenders: pipeline, contract value, revisions waiting, won projects and their as-built position.</div></div><span style="flex:1"></span><button class="btn" id="dbRef">Refresh</button></div><div id="dbBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
   $('dbRef').onclick=renderDash;
-  var rq=document.createElement('div'); rq.id='dbRfq'; var bb=$('dbBody'); if(bb) bb.parentNode.insertBefore(rq,bb);
+  var rq=document.createElement('div'); rq.id='dbRfq'; var bb=$('dbBody'); if(bb){ var td=document.createElement('div'); td.id='dbTodo'; bb.parentNode.insertBefore(td,bb); bb.parentNode.insertBefore(rq,bb); }
   rfLoad().then(function(L){ var el2=$('dbRfq'); if(!el2) return; var all=L.rfqs||[], ch=chaseList(), m0=new Date().toISOString().slice(0,7);
     var open=all.filter(function(r){ return RFQ_OPEN.indexOf(r.status)>=0; }), cmp=open.filter(function(r){ return r.quotes_n>0 && ['Approval sent'].indexOf(r.status)<0; }), apv=all.filter(function(r){ return r.status==='Approval sent'; }), aw=all.filter(function(r){ return r.status==='Awarded' && String(r.award_date||'').slice(0,7)===m0; });
     var expD=((PR.set||{}).rfq_opts||{}).expiry_days||7, ex=Procure.validityAlerts(all, today(), expD);
@@ -4157,6 +4213,7 @@ function renderDash(){
   }).catch(function(){});
   api('dashboard').then(function(D){
     var k=D.kpi||{}, m0=function(v){return money0(v);};
+    dbTodo(k);
     var wonDiff=(Number(k.won_contract)||0)-(Number(k.won_tendered)||0);
     var html=kpiRow([
       ['Open / pricing', (k.open||0)+' · B$'+m0(k.open_value), 'prospect + pricing + pending'+(k.pending?' ('+k.pending+' pending)':''), 'tenders'],
@@ -4254,7 +4311,7 @@ function rateChart(pts){
     legend([{k:'Won',color:'var(--good)'},{k:'Lost',color:'var(--crit)'},{k:'Other / pending',color:'var(--s1)'},{k:'◇ contract (rationalized)',color:'transparent'}]);
 }
 function exportLib(){
-  var d=LB.data; if(!d||!window.XLSX) return;
+  var d=LB.data; if(!d||!xlsxReady()) return;
   api('library', Object.assign({limit:1000}, LB.f)).then(function(all){
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{search:LB.f.q,unit:LB.f.unit,client:LB.f.client_group,type:LB.f.tender_type,status:LB.f.status,year:LB.f.year,source:LB.f.source,lines:all.total,exported:today()}]),'Search');
@@ -4297,7 +4354,7 @@ function mlRows(t){
 function drawMaster(){
   var d=ML.data, b=$('mlBody'); if(!d||!b) return;
   document.querySelectorAll('#mlTabs a').forEach(function(a){ a.classList.toggle('on', a.dataset.t===ML.tab); });
-  $('mlScope').innerHTML='Read only from <b>'+esc(d.name)+'</b> (sheet updated '+esc(fmtDate(d.updated))+', loaded '+esc(ML.at)+'). Prices are changed in the sheet, never here.'+(canWrite()&&d.url?' <a href="'+esc(d.url)+'" target="_blank" rel="noopener">Open the sheet</a>':'');
+  $('mlScope').innerHTML='Read only from <b>'+esc(d.name)+'</b> (sheet updated '+esc(fmtDate(d.updated))+', loaded '+esc(ML.at)+'). Prices are changed in the sheet, never here.'+(canWrite()&&d.url?' <a href="'+esc(safeUrl(d.url))+'" target="_blank" rel="noopener">Open the sheet</a>':'');
   var isR=ML.tab==='rates', M=mlRows(isR?d.rates:d.res), h=M.h, ci=M.ci;
   if(!h.length){ b.innerHTML='<div class="empty">Tab not found or no "Code" header row.</div>'; return; }
   var cTr=isR?ci(/^Trade/i):-1, cDesc=ci(isR?/^Description/i:/^Resource/i), cUnit=ci(/^Unit/i), cConf=ci(/^Conf/i);
@@ -4328,7 +4385,7 @@ function drawMaster(){
 
 /* ---------- export ---------- */
 function exportXlsx(){
-  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  if(!xlsxReady()) return;
   var cols=['arza_no','tender_ref','project_no','title','title_en','client','client_group','tender_type','location','closing_date','status','our_sum','submitted_date','locked','result_date','winner','winning_sum','diff_pct','result_source','completion_period','notes'];
   var rows=filtered().map(function(t){ var o={}; cols.forEach(function(c){ o[c]=t[c]==null?'':t[c]; }); return o; });
   var ws=XLSX.utils.json_to_sheet(rows,{header:cols}), wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Tender register');
@@ -4433,7 +4490,7 @@ function supScorecard(s){
 function openSupplier(id){
   var s=supById(id); if(!s) return;
   var dl=function(rows){ return '<dl class="rec">'+rows.filter(function(r){ return r[1]; }).map(function(r){ return '<dt>'+esc(r[0])+'</dt><dd>'+r[1]+'</dd>'; }).join('')+'</dl>'; };
-  var link=function(u){ u=String(u||'').trim(); if(!u) return ''; var href=/^[a-z]+:\/\//i.test(u)?u:'https://'+u; return '<a href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(u.length>70?u.slice(0,67)+'…':u)+'</a>'; };
+  var link=function(u){ u=String(u||'').trim(); if(!u) return ''; var href=safeUrl(/^[a-z]+:/i.test(u)?u:'https://'+u); return '<a href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(u.length>70?u.slice(0,67)+'…':u)+'</a>'; };
   var links=function(t){ return String(t||'').split(/\s+\/\s+/).filter(Boolean).map(link).join('<br>'); };
   var dns=s.dns||{}, dnsTxt=s.dns?[dns.mx_domain?'mail server for '+esc(dns.mx_domain)+': '+(dns.mx===true?'yes':dns.mx===false?'<b class="neg">none</b>':'not checked'):'', dns.a_domain?'website '+esc(dns.a_domain)+': '+(dns.a===true?'resolves':dns.a===false?'<b class="neg">does not resolve</b>':'not checked'):''].filter(Boolean).join(' · '):'';
   var cons=s.contacts||[];
@@ -4547,7 +4604,7 @@ function editSupplier(id, opt){
   };
 }
 function exportSuppliers(){
-  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  if(!xlsxReady()) return;
   var rows=supFiltered(), wb=XLSX.utils.book_new(), uniq=function(a){ return a.filter(function(v,i){ return v&&a.indexOf(v)===i; }).join(' / '); };
   var main=rows.map(function(s){ var c=s.contacts||[]; return { 'ID':s.supplier_id, 'Supplier':s.name, 'Also known as':s.aliases||'', 'Country':Procure.countryName(s.country), 'City':s.city||'', 'Zone':s.zone?Procure.zoneLabel(+s.zone,s.country):'',
     'Type':s.type||'', 'Categories':(s.categories||[]).map(function(x){ return x.code; }).join(', '), 'Specialty':s.specialty||'', 'Email':uniq(c.map(function(x){ return x.email; })),
@@ -4680,7 +4737,7 @@ function queueDns(all){
 }
 /* read a discovery file in the browser -> discovery rows */
 function readDiscovery(file){
-  return file.arrayBuffer().then(function(buf){
+  return xlsxBuf(file).then(function(buf){
     var wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true}), names=wb.SheetNames, out={kind:'', rows:[], skipped:0, note:''};
     var json=function(n,range){ return XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:'',raw:false,range:range||0,dateNF:'yyyy-mm-dd'}); };
     var find=function(n){ var a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''}); for(var i=0;i<Math.min(a.length,8);i++) if(a[i].map(function(x){ return String(x).trim().toLowerCase(); }).indexOf('company_name')>=0) return i; return -1; };
@@ -4768,7 +4825,7 @@ function renderAdmin(){
   setsLoad().then(function(st){ if(ADM.tab==='company') admCompany(b,st); else if(ADM.tab==='rfq') admRfq(b,st); else admConn(b,st); }).catch(function(e){ prNeedDb(b,e); });
 }
 function renderTeam(b){
-  b.innerHTML='<div class="bar"><div class="scope">Who can sign in to QS CRM and what they can do. Roles: admin — '+ROLE_HELP.admin+' · qs — '+ROLE_HELP.qs+' · viewer — '+ROLE_HELP.viewer+'.</div><span style="flex:1"></span><button class="btn pri" id="usAdd">+ Add team member</button></div>'+
+  b.innerHTML='<div class="bar"><div class="scope">Who can sign in to QS CRM and what they can do. Roles: admin — '+ROLE_HELP.admin+' · qs — '+ROLE_HELP.qs+' · viewer — '+ROLE_HELP.viewer+' · pm / site — read only for now.</div><span style="flex:1"></span><button class="btn pri" id="usAdd">+ Add team member</button></div>'+
     '<div class="card"><div id="usList"><div class="empty"><span class="spin"></span> Loading…</div></div><p class="n">Changes apply at the person\'s next action. A deactivated account cannot sign in to the data. There must always be one active admin.</p></div>';
   $('usAdd').onclick=addUser; loadUsers();
 }
@@ -4919,7 +4976,7 @@ function rfNeedDb(el,e){ var m=String(e&&e.message||e); if(/crm_rfq|function .* 
 function xlsxFrom(sheets, name){ var wb=XLSX.utils.book_new(); sheets.forEach(function(sh){ var ws=sh.aoa?XLSX.utils.aoa_to_sheet(sh.aoa):XLSX.utils.json_to_sheet(sh.rows.length?sh.rows:[{}],sh.header?{header:sh.header}:undefined); if(sh.cols) ws['!cols']=sh.cols.map(function(w){ return {wch:w}; }); XLSX.utils.book_append_sheet(wb,ws,sh.name); }); XLSX.writeFile(wb,name); }
 /* ----- downloadable templates ----- */
 function supplierTemplate(){
-  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  if(!xlsxReady()) return;
   var C=Procure.TEMPLATE_COLS, H=Procure.TEMPLATE_HELP;
   xlsxFrom([
     { name:'Discovery (import)', aoa:[C], cols:C.map(function(c){ return ({company_name:38,address:40,specialty:40,email:34,phone:34,source_url:36,notes:36})[c]||16; }) },
@@ -4930,7 +4987,7 @@ function supplierTemplate(){
   ],'QS CRM supplier import template.xlsx');
 }
 function itemTemplate(){
-  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  if(!xlsxReady()) return;
   var C=Procure.MR_COLS, H=Procure.MR_HELP;
   xlsxFrom([{ name:'Items', aoa:[C], cols:[6,50,26,10,10,14,10,12,12,30] },
     { name:'How to fill', aoa:[['QS CRM — RFQ item list (RFQ › New RFQ › Import item list)'],['One row per item. Blank quantity = the RFQ asks for MOQ + unit price at MOQ.'],[],['Column','What to put','Example']].concat(C.map(function(c){ return [c,H[c][0],H[c][1]]; })), cols:[16,60,46] },
@@ -5028,7 +5085,7 @@ function renderRfqEdit(){
   };
   $('re_imp').onclick=function(){ $('itemFile').click(); };
   $('itemFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return;
-    f.arrayBuffer().then(function(buf){ var wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true}), got=[];
+    xlsxBuf(f).then(function(buf){ var wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true}), got=[];
       wb.SheetNames.some(function(n){ var a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''}), hi=-1;
         for(var i=0;i<Math.min(a.length,10);i++){ var low=a[i].map(function(x){ return String(x).trim().toLowerCase(); }); if(low.indexOf('description')>=0||low.indexOf('item')>=0||low.indexOf('resource')>=0){ hi=i; break; } }
         if(hi<0) return false; got=a.slice(hi+1).map(function(r){ var o={}; a[hi].forEach(function(k,j){ if(k!=='') o[k]=r[j]; }); return Procure.mrItem(o); }).filter(function(x){ return x.description && !/^(e\.g\.|example)/i.test(x.description); }); return got.length>0; });
@@ -5226,7 +5283,7 @@ function printRfq(D, sup){
 }
 /* import an Excel send list (RFQ Text + Send List sheets) with its statuses */
 function importRfqWorkbook(file){
-  Promise.all([file.arrayBuffer(), PR.data?Promise.resolve(PR.data):prLoad(), RF.list?Promise.resolve(RF.list):rfLoad()]).then(function(x){
+  Promise.all([xlsxBuf(file), PR.data?Promise.resolve(PR.data):prLoad(), RF.list?Promise.resolve(RF.list):rfLoad()]).then(function(x){
     var wb=XLSX.read(new Uint8Array(x[0]),{type:'array',cellDates:true});
     if(!wb.Sheets['RFQ Text']||!wb.Sheets['Send List']) throw new Error('needs the sheets "RFQ Text" and "Send List" (Excel send-list format, e.g. RFQ-2611-002)');
     var t={}; XLSX.utils.sheet_to_json(wb.Sheets['RFQ Text'],{header:1,defval:''}).forEach(function(r){ if(r[0]) t[String(r[0]).trim()]=r[1]; });
@@ -5283,7 +5340,7 @@ function renderRfqReports(){
     '<p class="n">Contact target per category = ⌈3 ÷ valid-quote rate⌉ (5–25), used once a category has 5 or more suppliers contacted on RFQs past the chasing stage; otherwise 10. The manual baseline for the KPI report is set in Admin Settings › RFQ settings.</p>';
   $('rrKpi').onclick=function(){ var mo=f.month||(months[0]||today().slice(0,7)); (PR.set?Promise.resolve():setsLoad()).then(function(){ printKpiMonth(mo); }); };
   $('rrM').onchange=function(){ RF.rep.month=this.value; renderRfqReports(); }; $('rrC').onchange=function(){ RF.rep.cat=this.value; renderRfqReports(); };
-  $('rrExp').onclick=function(){ if(!window.XLSX) return; xlsxFrom([{name:'Summary',aoa:[['RFQ reports',f.month||'all months',f.cat||'all categories'],[],['RFQs',K.rfqs],['RFQs sent',K.rfqsSent],['Suppliers contacted',K.contacted],['Replied',K.replied],['Reply rate',K.replyRate],['Quotes',K.quoted],['Valid quotes',K.valid],['RFQs with 3+ valid',K.rfqsOk],['Avg response hours',K.avgResponseHours],['Median response hours',K.medianResponseHours]],cols:[28,14,14]}]
+  $('rrExp').onclick=function(){ if(!xlsxReady()) return; xlsxFrom([{name:'Summary',aoa:[['RFQ reports',f.month||'all months',f.cat||'all categories'],[],['RFQs',K.rfqs],['RFQs sent',K.rfqsSent],['Suppliers contacted',K.contacted],['Replied',K.replied],['Reply rate',K.replyRate],['Quotes',K.quoted],['Valid quotes',K.valid],['RFQs with 3+ valid',K.rfqsOk],['Avg response hours',K.avgResponseHours],['Median response hours',K.medianResponseHours]],cols:[28,14,14]}]
     .concat(cuts.map(function(c){ return {name:'By '+c[0].toLowerCase().replace('sourcing ',''), aoa:[[c[0]].concat(H.slice(1))].concat(c[1]), cols:[34,9,10,9,10,8,8,13]}; }))
     .concat([{name:'By RFQ', aoa:[['RFQ','Status','Listed','Contacted','Reply rate','Quotes','Valid','3+ valid']].concat(perRfq), cols:[50,12,8,10,10,8,8,9]}]), 'QS CRM RFQ report '+today()+'.xlsx'); };
 }
@@ -5362,7 +5419,7 @@ function rdQuotes(D){
     row('Lead time',function(x){ return (x.q.lead_days==null?'—':esc(x.q.lead_days)+' d')+(x.leadWarning?'<div class="neg sub2">'+esc(x.leadWarning)+'</div>':''); })+
     row('Valid until',function(x){ return esc(x.q.validity?fmtDate(x.q.validity):'—'); })+row('Payment terms',function(x){ return esc(x.q.payment_terms||'—'); })+row('Delivery terms',function(x){ return esc(x.q.incoterm||'—'); })+
     row('Must-pass checks',function(x){ return x.pass?'<span class="pos">passes</span>'+(x.leadWarning&&!C.scoring.must_in_time?'<div class="sub2 neg">lead time!</div>':'')+(x.L.partial?'<div class="sub2 neg">partial</div>':''):'<span class="neg">'+x.fails.map(esc).join('<br>')+'</span>'; })+
-    row('Quotation',function(x){ return x.q.file_link?'<a href="'+esc(x.q.file_link)+'" target="_blank" rel="noopener">'+esc(x.q.file_name||'file')+'</a>':(x.q.quote_ref?esc(x.q.quote_ref):'—'); });
+    row('Quotation',function(x){ return x.q.file_link?'<a href="'+esc(safeUrl(x.q.file_link))+'" target="_blank" rel="noopener">'+esc(x.q.file_name||'file')+'</a>':(x.q.quote_ref?esc(x.q.quote_ref):'—'); });
   var recId=r.recommended_supplier||C.top||'', opts=rows.map(function(x){ return '<option value="'+esc(x.q.supplier_id)+'"'+(x.q.supplier_id===recId?' selected':'')+'>'+esc(sup(x.q.supplier_id))+(x.L.total_bnd!=null?' — B$ '+m(x.L.total_bnd):'')+(x.score?' · score '+x.score.total.toFixed(0):'')+(x.pass?'':' (fails must-pass)')+'</option>'; }).join('');
   var sc=C.scoring, mp='<div class="mpbar"><span class="n" style="margin:0"><b>Must pass:</b></span>'+Procure.MUST.map(function(k){ return '<label class="chkrow"><input type="checkbox" class="qMust" data-k="'+k[0]+'"'+(sc['must_'+k[0]]?' checked':'')+(w?'':' disabled')+'> '+esc(k[1])+'</label>'; }).join('')+
     '<span class="n" style="margin:0" title="Admin Settings › RFQ settings">Score weights: '+esc(wtsTxt(sc))+'</span></div>';
@@ -5383,7 +5440,7 @@ function rdQuotes(D){
   } else if(w){
     dec='<div class="form f3" style="margin-top:6px"><div class="f"><label for="qRec">Recommended supplier</label><select id="qRec">'+opts+'</select><div class="hint">Proposed: the highest score among the quotes that pass the must-pass checks'+(C.top?' ('+esc(sup(C.top))+(C.cheapest&&C.cheapest!==C.top?'; cheapest: '+esc(sup(C.cheapest)):'')+')':'')+'.</div></div>'+
       '<div class="f" style="grid-column:span 2"><label for="qWhy">Reason</label><input id="qWhy" maxlength="300" value="'+esc(r.recommendation||'')+'" placeholder="e.g. lowest landed cost, in stock, delivers in 3 days"></div></div>'+
-      '<div class="pact"><span class="n" style="margin:0">'+(C.goalMet?'<b class="pos">3 valid quotes ✓</b>':'<b class="neg">'+C.valid+' valid quote'+(C.valid===1?'':'s')+' — goal is 3</b> (approval pack can still go, it shows the shortfall)')+(r.approval_sent_at?' · approval pack sent '+esc(r.approval_sent_at):'')+'</span><span style="flex:1"></span>'+
+      '<div class="pact"><span class="n" style="margin:0">'+(C.passing>=3?'<b class="pos">'+C.passing+' quotes pass the checks ✓</b>':'<b class="neg">'+C.passing+' quote'+(C.passing===1?'':'s')+' pass'+(C.passing===1?'es':'')+' the checks — goal is 3</b> (approval pack can still go, it shows the shortfall)')+(r.approval_sent_at?' · approval pack sent '+esc(r.approval_sent_at):'')+'</span><span style="flex:1"></span>'+
       '<button class="btn" id="qRecSave">Save recommendation</button><button class="btn" id="qSent">Mark approval pack sent</button><button class="btn pri" id="qAward">Record award…</button></div>';
   }
   return head+mp+expN+'<div class="tbl"><table class="mini cmp"><thead><tr>'+th+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>'+
@@ -5440,7 +5497,7 @@ function enterQuote(D, sid, q, newRev){
       '<div class="f"><label for="qf_fr">Freight</label><input id="qf_fr" inputmode="decimal" value="'+v('freight')+'"></div><div class="f"><label for="qf_ins">Insurance</label><input id="qf_ins" inputmode="decimal" value="'+v('insurance')+'"></div>'+
       '<div class="f"><label for="qf_duty">Import duty %</label><input id="qf_duty" inputmode="decimal" value="'+v('duty_pct')+'" placeholder="0"><div class="hint">check the Brunei Customs tariff for the item</div></div>'+
       '<div class="f"><label for="qf_clr">Clearing / forwarding B$</label><input id="qf_clr" inputmode="decimal" value="'+v('clearing_bnd')+'"></div><div class="f"><label for="qf_del">Local delivery B$</label><input id="qf_del" inputmode="decimal" value="'+v('delivery_bnd')+'"></div>'+
-      '<div class="f"><label>Quotation file</label><div class="fl"><button class="btn sm" type="button" id="qf_up">Upload to Drive…</button><span class="n" id="qf_fn" style="margin:0">'+(h.file_link?'<a href="'+esc(h.file_link)+'" target="_blank" rel="noopener">'+esc(h.file_name||'file')+'</a>':'')+'</span></div><input id="qf_link" value="'+v('file_link')+'" placeholder="or paste a link (Drive, email)" style="margin-top:4px"></div>'+
+      '<div class="f"><label>Quotation file</label><div class="fl"><button class="btn sm" type="button" id="qf_up">Upload to Drive…</button><span class="n" id="qf_fn" style="margin:0">'+(h.file_link?'<a href="'+esc(safeUrl(h.file_link))+'" target="_blank" rel="noopener">'+esc(h.file_name||'file')+'</a>':'')+'</span></div><input id="qf_link" value="'+v('file_link')+'" placeholder="or paste a link (Drive, email)" style="margin-top:4px"></div>'+
       '<div class="f full"><label for="qf_notes">Notes</label><input id="qf_notes" value="'+v('notes')+'"></div></div>'+
     '<div class="note" id="qf_sum"></div>',
     (q&&!newRev&&!lock?'<button class="btn warn" id="qf_del2">Delete</button><button class="btn" id="qf_rev">Revised quote…</button>':'')+'<span style="flex:1"></span><button class="btn" id="qf_c">Cancel</button>'+(lock?'':'<button class="btn pri" id="qf_go">Save quote</button>'));
@@ -5462,7 +5519,7 @@ function enterQuote(D, sid, q, newRev){
   $('quoteFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return; file=f; $('qf_fn').innerHTML='<span class="spin"></span> uploading '+esc(f.name)+'…';
     var name=r.rfq_no+'_'+sid+'_'+String(s.name||'').replace(/[^A-Za-z0-9]+/g,'_').slice(0,24)+'_quote_'+today()+(f.name.match(/\.[A-Za-z0-9]+$/)||[''])[0];
     f.arrayBuffer().then(function(buf){ return driveCall('procUpload',{folder:r.rfq_no+' - '+r.title.replace(/[\/\\:*?"<>|]+/g,'-').slice(0,60), file:{name:name, type:f.type||'application/octet-stream', data:b64(buf)}}); })
-      .then(function(d){ $('qf_link').value=d.url; file={name:name}; $('qf_fn').innerHTML='<a href="'+esc(d.url)+'" target="_blank" rel="noopener">'+esc(name)+'</a> ✓'; })
+      .then(function(d){ $('qf_link').value=d.url; file={name:name}; $('qf_fn').innerHTML='<a href="'+esc(safeUrl(d.url))+'" target="_blank" rel="noopener">'+esc(name)+'</a> ✓'; })
       .catch(function(e){ $('qf_fn').textContent='Not uploaded: '+e.message+' — paste a link instead.'; file=null; }); };
   if($('qf_go')) $('qf_go').onclick=function(){ var d=read(), btn=this;
     if(!d.lines.some(function(l){ return l.unit_price!==''; })){ toast('Type at least one unit price.',true); return; }
@@ -5548,12 +5605,12 @@ function printApproval(D){
     '<h3>Recommendation</h3><p><b>'+esc(sup(rec)||'—')+'</b>'+(R?' — landed B$ '+m(R.L.total_bnd)+(R.q.lead_days!=null?', lead time '+esc(R.q.lead_days)+' days':'')+(R.score?', score '+R.score.total.toFixed(1):''):'')+(r.recommendation?'<br>Reason: '+esc(r.recommendation):'')+
       (R&&!R.pass?'<br><span style="color:#b42318">Note: fails must-pass checks ('+R.fails.map(esc).join(', ')+')</span>':'')+(savingOf(C,rec)?'<br>Saving vs the highest quote that passes: B$ '+m(savingOf(C,rec)):'')+'</p>'+
     (BC&&BC.covered?'<h3>Budget check (pricing masterlist)</h3><p>'+BC.covered+' line(s) with a masterlist code: budget B$ '+m(BC.budget)+(BC.priced?' · recommended B$ '+m(BC.quoted)+' · difference '+(BC.diff>0?'+':'')+m(BC.diff):'')+'</p>':'')+
-    '<h3>Attachments</h3><ul>'+rows.map(function(x){ return '<li>'+esc(sup(x.q.supplier_id))+': '+(x.q.quote_ref?'quotation '+esc(x.q.quote_ref)+' ':'')+(x.q.file_link?'<a href="'+esc(x.q.file_link)+'">'+esc(x.q.file_name||'file')+'</a>':'(no file)')+'</li>'; }).join('')+'</ul>'+
+    '<h3>Attachments</h3><ul>'+rows.map(function(x){ return '<li>'+esc(sup(x.q.supplier_id))+': '+(x.q.quote_ref?'quotation '+esc(x.q.quote_ref)+' ':'')+(x.q.file_link?'<a href="'+esc(safeUrl(x.q.file_link))+'">'+esc(x.q.file_name||'file')+'</a>':'(no file)')+'</li>'; }).join('')+'</ul>'+
     '<table style="margin-top:22px"><tr><td style="width:50%;padding-right:20px">Prepared by:<br><br>_____________________________<br>'+esc(c.sender_name)+', '+esc(c.sender_designation)+'</td><td>Approved / not approved by:<br><br>_____________________________<br>Name / designation / date</td></tr></table>'+
     '<div class="ft">'+esc(r.rfq_no)+' · '+esc(c.name)+' · QS CRM</div>', '.it{font-size:10px}');
 }
 function exportComparison(D){
-  if(!window.XLSX){ toast('Excel library not loaded (offline?)',true); return; }
+  if(!xlsxReady()) return;
   var r=D.rfq, C=cmpOf(D), rows=C.rows.slice().sort(function(x,y){ return (x.srank||99)-(y.srank||99); }), sup=function(id){ var x=(D.recipients||[]).filter(function(y){ return y.supplier_id===id; })[0]; return x&&x.supplier?x.supplier.name:id; };
   var head=['Line','Item','Qty','Unit'].concat(rows.map(function(x){ return sup(x.q.supplier_id)+' ('+x.q.currency+')'; })).concat(rows.map(function(x){ return sup(x.q.supplier_id)+' B$/unit'; }));
   var aoa=[[r.rfq_no+' — '+r.title],['Quotation comparison, '+today()+' · landed cost at site in B$'],[],head].concat(D.items.map(function(it){ var ls=rows.map(function(x){ return x.L.lines.filter(function(y){ return y.line===it.line; })[0]||{}; });
@@ -5591,7 +5648,7 @@ var PLATFORMS=['Alibaba RFQ','Made-in-China','Global Sources','IndiaMART','Faceb
 function rdPosts(D){
   var P=D.posts||[], w=canWrite()&&D.rfq.status!=='Cancelled';
   return '<div class="hrow" style="margin-bottom:6px"><h3 style="margin:0">Marketplace posts</h3><span class="n" style="margin:0 0 0 8px">RFQ posted on B2B marketplaces and groups</span><span style="flex:1"></span>'+(w?'<button class="btn sm" id="psAdd">+ Log a post</button>':'')+'</div>'+
-    (P.length?'<div class="tbl"><table class="mini"><thead><tr><th>Platform</th><th>Posted</th><th class="r">Responses</th><th>Note</th><th></th></tr></thead><tbody>'+P.map(function(p){ return '<tr data-id="'+p.id+'" style="cursor:default"><td>'+(p.url?'<a href="'+esc(p.url)+'" target="_blank" rel="noopener">'+esc(p.platform)+'</a>':esc(p.platform))+'</td><td class="dt">'+esc(fmtDate(p.posted_on))+'</td><td class="r">'+p.responses+'</td><td>'+esc(p.note)+'</td><td class="nw">'+(w?'<button class="btn sm psEd">Edit</button><button class="btn sm psDel">Remove</button>':'')+'</td></tr>'; }).join('')+'</tbody></table></div>'
+    (P.length?'<div class="tbl"><table class="mini"><thead><tr><th>Platform</th><th>Posted</th><th class="r">Responses</th><th>Note</th><th></th></tr></thead><tbody>'+P.map(function(p){ return '<tr data-id="'+p.id+'" style="cursor:default"><td>'+(p.url?'<a href="'+esc(safeUrl(p.url))+'" target="_blank" rel="noopener">'+esc(p.platform)+'</a>':esc(p.platform))+'</td><td class="dt">'+esc(fmtDate(p.posted_on))+'</td><td class="r">'+p.responses+'</td><td>'+esc(p.note)+'</td><td class="nw">'+(w?'<button class="btn sm psEd">Edit</button><button class="btn sm psDel">Remove</button>':'')+'</td></tr>'; }).join('')+'</tbody></table></div>'
       :'<div class="n">None. When the database and the AI search are not enough (e.g. items made only in China), post the RFQ on a marketplace and log it here with the number of responses.</div>');
 }
 function rdPostsWire(D){
@@ -5622,7 +5679,7 @@ function rdMailbox(D,w){
     (O.length?'<h4 style="margin:6px 0 4px">Outgoing</h4><div class="tbl"><table class="mini"><thead><tr><th>Supplier</th><th>Email</th><th>Kind</th><th>Status</th><th>When</th><th></th></tr></thead><tbody>'+O.map(function(o){ return '<tr data-id="'+o.id+'" style="cursor:default"><td>'+esc(sup(o.supplier_id))+'</td><td>'+esc(o.to)+'</td><td>'+esc(o.kind)+'</td><td>'+
       '<span class="chip '+(o.status==='Sent'?'st-Won':o.status==='Failed'?'st-Lost':o.status==='Cancelled'?'st-none':'st-Pricing')+'">'+esc(o.status)+'</span>'+(o.error?'<div class="sub2 neg">'+esc(o.error)+'</div>':'')+'</td><td class="dt">'+esc(o.sent_at||o.queued_at)+'</td><td>'+(w&&['Queued','Failed'].indexOf(o.status)>=0?'<button class="btn sm mbX">Cancel</button>':'')+'</td></tr>'; }).join('')+'</tbody></table></div>':'')+
     (I.length?'<h4 style="margin:10px 0 4px">Replies picked up</h4><div class="tbl"><table class="mini"><thead><tr><th>Received</th><th>From</th><th>Subject</th><th>Attachments</th></tr></thead><tbody>'+I.map(function(m){ return '<tr style="cursor:default"><td class="dt">'+esc(m.received_at)+'</td><td>'+(m.kind==='bounce'?'<span class="chip st-Lost">bounce</span> ':'')+esc(m.supplier_id?sup(m.supplier_id):m.from)+'<div class="sub2">'+esc(m.from)+'</div></td><td>'+esc(m.subject)+(m.snippet?'<div class="sub2">'+esc(m.snippet.slice(0,160))+'</div>':'')+'</td><td>'+
-      (m.attachments||[]).map(function(a){ return a.link?'<a href="'+esc(a.link)+'" target="_blank" rel="noopener">'+esc(a.name)+'</a>':esc(a.name); }).join('<br>')+'</td></tr>'; }).join('')+'</tbody></table></div>':(on?'<p class="n">No replies picked up yet.</p>':''));
+      (m.attachments||[]).map(function(a){ return a.link?'<a href="'+esc(safeUrl(a.link))+'" target="_blank" rel="noopener">'+esc(a.name)+'</a>':esc(a.name); }).join('<br>')+'</td></tr>'; }).join('')+'</tbody></table></div>':(on?'<p class="n">No replies picked up yet.</p>':''));
 }
 function rdMailboxWire(D){
   if($('mbQ')) $('mbQ').onclick=function(){ var b=this, T=rfqTpl(D), O=D.outbox||[];
@@ -5642,7 +5699,7 @@ function renderQPrices(){
   var t=null, load=function(){ QP.f.q=$('qpQ').value.trim();
     Promise.all([api('quotePrices',{q:QP.f.q}), PR.set?PR.set:api('settings').then(function(st){ PR.set=st; return st; })]).then(function(x){ QP.data=x[0].rows||[]; qpDraw(x[1]&&x[1].fx||{}); }).catch(function(e){ $('qpBody').innerHTML='<div class="note w">'+esc(e.message)+'</div>'; }); };
   $('qpQ').oninput=function(){ clearTimeout(t); t=setTimeout(load,350); };
-  $('qpExp').onclick=function(){ if(!window.XLSX||!QP.data) return; xlsxFrom([{name:'Quote prices', aoa:[['Date','RFQ','Line','Item','Spec / brand','Masterlist code','Qty','Unit','Currency','Unit price','B$ per unit','Supplier','Country','Awarded']].concat(QP.data.map(function(r){ return [r.date,r.rfq_no,r.line,r.description,r.spec_brand||r.brand,r.res_code,r.qty,r.unit,r.currency,+r.unit_price,r._bnd==null?'':+r._bnd.toFixed(4),r.supplier,r.country,r.awarded?'yes':'']; })), cols:[11,14,5,44,20,10,8,8,6,10,10,30,8,8]}], 'QS CRM quote prices '+today()+'.xlsx'); };
+  $('qpExp').onclick=function(){ if(!QP.data||!xlsxReady()) return; xlsxFrom([{name:'Quote prices', aoa:[['Date','RFQ','Line','Item','Spec / brand','Masterlist code','Qty','Unit','Currency','Unit price','B$ per unit','Supplier','Country','Awarded']].concat(QP.data.map(function(r){ return [r.date,r.rfq_no,r.line,r.description,r.spec_brand||r.brand,r.res_code,r.qty,r.unit,r.currency,+r.unit_price,r._bnd==null?'':+r._bnd.toFixed(4),r.supplier,r.country,r.awarded?'yes':'']; })), cols:[11,14,5,44,20,10,8,8,6,10,10,30,8,8]}], 'QS CRM quote prices '+today()+'.xlsx'); };
   load();
 }
 function qpDraw(fxNow){
@@ -5747,6 +5804,7 @@ $('dTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a||S.cu
 $('btnVer').textContent='v'+APP.version; $('meVer').textContent='v'+APP.version; $('lver').textContent=APP.name+' · v'+APP.version;
 document.title=APP.name;
 clock(); setInterval(clock, 20000); applyTheme();
+setTimeout(function(){ needXlsx().catch(function(){}); }, 2500);   // v3.2.1: Excel tools in the background, after the first screen
 if(cfgOk() && !window.supabase){ showLogin(LIBMSG); }
 else if(cfgOk() && window.supabase){
   try{ S.sb=sbClient(load('remember')==='1'); }catch(e){ S.sb=null; }

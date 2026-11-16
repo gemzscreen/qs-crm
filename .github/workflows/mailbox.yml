@@ -15,13 +15,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # v3.2.1: when the mailbox is not set up (no secrets) the run ends here in a few seconds - nothing is downloaded
+      - name: Set up?
+        id: cfg
+        env:
+          MAIL_PASS: ${{ secrets.MAIL_PASS }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          if [ -n "$MAIL_PASS" ] && [ -n "$SUPABASE_SERVICE_KEY" ]; then echo "on=1" >> "$GITHUB_OUTPUT"; else echo "Mailbox secrets not set - nothing to do."; fi
       - uses: actions/checkout@v4
+        if: steps.cfg.outputs.on == '1'
       - uses: actions/setup-node@v4
+        if: steps.cfg.outputs.on == '1'
         with:
           node-version: 20
       - name: Mail libraries
+        if: steps.cfg.outputs.on == '1'
         run: npm install --no-save --no-package-lock --no-audit --no-fund imapflow@1 nodemailer@6 mailparser@3
       - name: Run
+        if: steps.cfg.outputs.on == '1'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
