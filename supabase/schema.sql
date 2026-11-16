@@ -1,5 +1,5 @@
 -- =====================================================================================================
--- QS CRM (ARZA SDN BHD) — Supabase database, v3.2.1
+-- QS CRM (ARZA SDN BHD) — Supabase database, v3.2.2
 -- Run the whole file once in Supabase › SQL Editor › New query › Run. Safe to run again (upgrades in place).
 --
 -- Security model
@@ -25,6 +25,8 @@ create table if not exists public.profiles (
 alter table public.profiles add column if not exists display_name text default '';
 alter table public.profiles add column if not exists designation text default '';
 alter table public.profiles add column if not exists phone text default '';
+-- v3.2.2: profile picture - a small image (the app shrinks it to 160 x 160) kept as a data: URL
+alter table public.profiles add column if not exists avatar text default '';
 
 create table if not exists public.tenders (
   arza_no text primary key check (arza_no ~ '^T\d+$'),
@@ -180,7 +182,7 @@ create or replace function public.crm_lj(l public.activity_log) returns jsonb la
 $$ select jsonb_build_object('timestamp', public.crm_ftz(l.ts), 'action', l.action, 'arza_no', l.arza_no, 'detail', l.detail, 'user', l.user_name) $$;
 create or replace function public.crm_pj(p public.profiles) returns jsonb language sql stable as
 $$ select jsonb_build_object('id', p.id, 'email', p.email, 'full_name', p.full_name, 'display_name', coalesce(p.display_name, ''),
-  'designation', coalesce(p.designation, ''), 'phone', coalesce(p.phone, ''), 'role', p.role, 'active', p.active, 'created_at', public.crm_ftz(p.created_at)) $$;
+  'designation', coalesce(p.designation, ''), 'phone', coalesce(p.phone, ''), 'avatar', coalesce(p.avatar, ''), 'role', p.role, 'active', p.active, 'created_at', public.crm_ftz(p.created_at)) $$;
 
 -- ---------- access, log ----------
 create or replace function public.crm_can_read() returns boolean language sql stable security definer set search_path = public as
@@ -627,6 +629,12 @@ begin
     if p ? k and length(btrim(coalesce(p ->> k, ''))) > 120 then raise exception '% is too long (120 characters max)', replace(k, '_', ' '); end if;
   end loop;
   if p ? 'full_name' and btrim(coalesce(p ->> 'full_name', '')) = '' then raise exception 'Enter your full name'; end if;
+  -- v3.2.2: profile picture ('' removes it)
+  if p ? 'avatar' and coalesce(p ->> 'avatar', '') <> '' then
+    if (p ->> 'avatar') !~ '^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$' then raise exception 'The picture must be a JPG, PNG or WebP image'; end if;
+    if length(p ->> 'avatar') > 60000 then raise exception 'The picture is too large'; end if;
+  end if;
+  if p ? 'avatar' and coalesce(p ->> 'avatar', '') <> coalesce(me.avatar, '') then ch := ch || case when coalesce(p ->> 'avatar', '') = '' then 'picture removed' else 'picture' end; end if;
   foreach k in array array['full_name', 'display_name', 'designation', 'phone'] loop
     if p ? k and btrim(coalesce(p ->> k, '')) <> coalesce(case k when 'full_name' then me.full_name when 'display_name' then me.display_name
          when 'designation' then me.designation else me.phone end, '') then ch := ch || replace(k, '_', ' '); end if;
@@ -635,7 +643,8 @@ begin
     full_name = case when p ? 'full_name' then btrim(p ->> 'full_name') else full_name end,
     display_name = case when p ? 'display_name' then btrim(coalesce(p ->> 'display_name', '')) else display_name end,
     designation = case when p ? 'designation' then btrim(coalesce(p ->> 'designation', '')) else designation end,
-    phone = case when p ? 'phone' then btrim(coalesce(p ->> 'phone', '')) else phone end
+    phone = case when p ? 'phone' then btrim(coalesce(p ->> 'phone', '')) else phone end,
+    avatar = case when p ? 'avatar' then coalesce(p ->> 'avatar', '') else avatar end
   where id = me.id returning * into u;
   if cardinality(ch) > 0 then perform crm_log('profile', null, u.email || ' updated ' || array_to_string(ch, ', ')); end if;
   return crm_out(crm_pj(u));

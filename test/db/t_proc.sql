@@ -320,6 +320,13 @@ select pg_temp.ok((public.crm_dashboard() #>> '{kpi,overdue}') = '1' and (public
 delete from public.tenders where arza_no in ('T990', 'T991');
 select pg_temp.ok((select count(*) from pg_indexes where schemaname = 'public' and indexname in ('quotes_sup', 'rfq_items_cat', 'supplier_categories_code')) = 3, 'foreign-key indexes exist');
 
+-- v3.2.2: profile picture
+select pg_temp.err($q$select public.crm_setprofile('{"avatar":"javascript:alert(1)"}')$q$, 'JPG, PNG or WebP', 'profile picture must be an image data URL');
+select pg_temp.err(format($q$select public.crm_setprofile('{"avatar":"data:image/png;base64,%s"}')$q$, repeat('A', 61000)), 'too large', 'profile picture size limit');
+select pg_temp.ok((public.crm_setprofile('{"avatar":"data:image/jpeg;base64,AAAA"}') ->> 'avatar') = 'data:image/jpeg;base64,AAAA', 'profile picture saved');
+select pg_temp.ok((public.crm_setprofile('{"phone":"123"}') ->> 'avatar') like 'data:image/jpeg%', 'other profile edits keep the picture');
+select pg_temp.ok((public.crm_setprofile('{"avatar":""}') ->> 'avatar') = '', 'profile picture removed');
+
 -- grants and row-level security as the app's database role
 set role authenticated;
 select pg_temp.ok((select count(*) from public.suppliers) = 3, 'authenticated reads suppliers through RLS');
