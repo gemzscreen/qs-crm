@@ -469,6 +469,17 @@ tr.later td{opacity:.62}
 .av.pic img{width:100%;height:100%;object-fit:cover;display:block}
 .pfpic{display:flex;gap:6px;margin-top:8px}
 @media (max-width:600px){.ddm.notif{position:fixed;left:8px;right:8px;top:58px;width:auto}}
+
+/* v3.3.0: QS Performance */
+.pfgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.pfgrid .card{margin:0}
+.kpisec h3{display:flex;align-items:baseline;gap:8px}
+.pfn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;flex:0 0 22px}
+table.pft td:first-child{width:56%}
+.pfd{margin-top:8px}.pfd summary{cursor:pointer;font-size:12.5px;color:var(--ink2)}
+#vPF .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.pfgrid>*{min-width:0}
+@media (max-width:1000px){.pfgrid{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -501,6 +512,7 @@ tr.later td{opacity:.62}
       <div class="ddm">
         <a data-v="reports"><b>Tender reports</b><span>Tenders by type, client group, status; win rate and values</span></a>
         <a data-v="rfqreports"><b>RFQ reports</b><span>Reply rate, quotes, response time by category, zone, country, channel</span></a>
+        <a data-v="perf"><b>QS Performance</b><span>Contract KPIs: tenders, awards, savings, value log; monthly PDF</span></a>
       </div></div>
   </nav>
   <div class="sp"></div>
@@ -589,6 +601,7 @@ tr.later td{opacity:.62}
 <main id="vRD" class="hidden pv"></main>
 <main id="vRE" class="hidden pv"></main>
 <main id="vRR" class="hidden pv"></main>
+<main id="vPF" class="hidden pv"></main>
 <main id="vQP" class="hidden pv"></main>
 <main id="vRP" class="hidden pv"></main>
 <input type="file" id="rfFile" accept=".xlsx,.xlsm,.xls" class="hidden">
@@ -602,7 +615,7 @@ tr.later td{opacity:.62}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.2.2</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.3.0</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -2517,11 +2530,203 @@ tr.later td{opacity:.62}
 })(this);
 </script>
 <script>
+/*
+ * QS CRM v3.3.0 — QS Performance (value ledger) calculations.
+ * Measures the QS function against the 8 KPIs of the ARZA contract (clause 12), from the tender register,
+ * the RFQs, the masterlist rate proposals and the manual value log. Month and cumulative (from the start date).
+ * Pure functions: data in, figures out. Works in the browser (global Perf) and in Node (module.exports).
+ * RFQ reply rate / response time reuse Procure.rfqKpis (pass it as opts.procure in Node).
+ */
+(function (root) {
+  'use strict';
+
+  var KPIS = [
+    ['accuracy', 'Accuracy and completeness of project estimates'],
+    ['timely', 'Timely submission of tenders and quotations'],
+    ['competitive', 'Competitiveness and profitability of tender submissions'],
+    ['savings', 'Cost savings through value engineering'],
+    ['budgets', 'Accuracy of project budgets and cost forecasts'],
+    ['database', 'Maintenance of updated pricing databases and cost records'],
+    ['awards', 'Contribution towards successful tender awards'],
+    ['compliance', 'Compliance with Company procedures and reporting requirements']
+  ];
+  var VALUE_KINDS = ['Value engineering accepted', 'Claim/collection received', 'Cost saving', 'Time saved', 'Other'];
+  var SUBMITTED = ['Submitted', 'Won', 'Lost'];
+  var DECIDED = ['Won', 'Lost'];
+
+  function d10(x) { return x ? String(x).slice(0, 10) : ''; }
+  function num(x) { if (x === null || x === undefined || x === '') return null; var n = +String(x).replace(/,/g, ''); return isFinite(n) ? n : null; }
+  function sum(a, f) { return a.reduce(function (s, x) { var v = f(x); return s + (v == null ? 0 : v); }, 0); }
+  function ratio(a, b) { return b ? a / b : null; }
+  function median(a) {
+    var v = a.filter(function (x) { return x != null && isFinite(x); }).slice().sort(function (x, y) { return x - y; });
+    if (!v.length) return null; var m = Math.floor(v.length / 2); return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function monthEnd(ym) { var y = +ym.slice(0, 4), m = +ym.slice(5, 7); return ym + '-' + pad(new Date(Date.UTC(y, m, 0)).getUTCDate()); }
+  function addMonths(ym, k) { var y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + k; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return y + '-' + pad(m + 1); }
+  function monthName(ym) { var M = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; return M[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4); }
+  function inWin(d, w) { d = d10(d); return !!d && d >= w.from && d <= w.to; }
+  // months shown in the month picker: from the start date (or the earliest record) to this month, newest first
+  function months(start, today) {
+    var a = [], cur = d10(today).slice(0, 7), s = (d10(start) || d10(today)).slice(0, 7);
+    while (cur >= s && a.length < 120) { a.push(cur); cur = addMonths(cur, -1); }
+    return a;
+  }
+  function windows(month, start) {
+    var to = monthEnd(month), from = d10(start) || '2000-01-01';
+    return { month: { from: month + '-01', to: to, label: monthName(month) }, cum: { from: from > to ? month + '-01' : from, to: to, label: (d10(start) ? 'since ' + d10(start) : 'all records') + ' to ' + to } };
+  }
+
+  // the date each tender figure is counted on
+  function handledOn(t) { return d10(t.closing_date) || d10(t.submitted_date) || d10(t.created); }
+  function submittedOn(t) { return d10(t.submitted_date) || d10(t.closing_date); }
+  function decidedOn(t) { return d10(t.result_date) || d10(t.closing_date) || d10(t.submitted_date); }
+  // own sum vs the winning sum: + = we were dearer
+  function gap(t) { var o = num(t.our_sum), w = num(t.winning_sum); return o != null && w ? (o - w) / w : null; }
+
+  function tenderPart(T, w) {
+    var handled = T.filter(function (t) { return inWin(handledOn(t), w); });
+    var byStatus = {}; handled.forEach(function (t) { var s = t.status || 'Not set'; byStatus[s] = (byStatus[s] || 0) + 1; });
+    var sub = T.filter(function (t) { return SUBMITTED.indexOf(t.status) >= 0 && inWin(submittedOn(t), w); });
+    var dec = T.filter(function (t) { return DECIDED.indexOf(t.status) >= 0 && inWin(decidedOn(t), w); });
+    var won = dec.filter(function (t) { return t.status === 'Won'; }), lost = dec.filter(function (t) { return t.status === 'Lost'; });
+    // on time: tenders due (closing) in the window that were submitted
+    var due = T.filter(function (t) { return SUBMITTED.indexOf(t.status) >= 0 && inWin(t.closing_date, w); });
+    var dated = due.filter(function (t) { return d10(t.submitted_date); });
+    var late = dated.filter(function (t) { return d10(t.submitted_date) > d10(t.closing_date); });
+    var gaps = dec.map(function (t) { return { t: t, g: gap(t) }; }).filter(function (x) { return x.g != null; });
+    var lostGaps = gaps.filter(function (x) { return x.t.status === 'Lost'; }).map(function (x) { return x.g; });
+    var rat = won.filter(function (t) { return t.contract_rev && num(t.contract_sum) != null && num(t.our_sum); })
+      .map(function (t) { return { arza_no: t.arza_no, title: t.title, tendered: num(t.our_sum), contract: num(t.contract_sum), rev: t.contract_rev, diff: num(t.contract_sum) / num(t.our_sum) - 1 }; });
+    return {
+      handled: handled.length, byStatus: byStatus,
+      submitted: sub.length, submittedValue: sum(sub, function (t) { return num(t.our_sum); }),
+      decided: dec.length, won: won.length, lost: lost.length, winRate: ratio(won.length, dec.length),
+      wonTendered: sum(won, function (t) { return num(t.our_sum); }),
+      wonContract: sum(won, function (t) { var c = num(t.contract_sum); return c != null ? c : num(t.our_sum); }),
+      wonList: won.map(function (t) { return { arza_no: t.arza_no, title: t.title, client_group: t.client_group, tendered: num(t.our_sum), contract: num(t.contract_sum), rev: t.contract_rev, date: decidedOn(t) }; }),
+      due: due.length, onTime: dated.length - late.length, onTimeRate: ratio(dated.length - late.length, dated.length),
+      lateList: late.map(function (t) { return { arza_no: t.arza_no, title: t.title, closing: d10(t.closing_date), submitted: d10(t.submitted_date) }; }),
+      noDate: due.filter(function (t) { return !d10(t.submitted_date); }).map(function (t) { return { arza_no: t.arza_no, title: t.title, closing: d10(t.closing_date) }; }),
+      gaps: gaps.map(function (x) { return { arza_no: x.t.arza_no, title: x.t.title, status: x.t.status, our: num(x.t.our_sum), winning: num(x.t.winning_sum), winner: x.t.winner, gap: x.g }; }),
+      gapLostAvg: lostGaps.length ? sum(lostGaps, function (g) { return g; }) / lostGaps.length : null,
+      gapAbsMedian: median(gaps.map(function (x) { return Math.abs(x.g); })),
+      within5: gaps.filter(function (x) { return Math.abs(x.g) <= 0.05; }).length,
+      resultsRecorded: dec.filter(function (t) { return num(t.winning_sum) != null; }).length,
+      rationalized: rat, ratAvg: rat.length ? sum(rat, function (x) { return x.diff; }) / rat.length : null
+    };
+  }
+
+  // procurement: awarded RFQs (by award date). Saving vs median of the quotes that pass, and vs the masterlist budget of the ML-coded lines
+  function rfqPart(R, w, P) {
+    var aw = R.filter(function (r) { return r.status === 'Awarded' && inWin(r.award_date, w); });
+    var rows = aw.map(function (r) {
+      var a = num(r.award_total_bnd), md = num(r.median_bnd), mb = num(r.ml_budget_bnd), mq = num(r.ml_quoted_bnd);
+      return { rfq_no: r.rfq_no, title: r.title, award_date: d10(r.award_date), awarded: a, median: md, valid_n: r.valid_n,
+        vsMedian: a != null && md != null ? md - a : null, vsMedianPct: a != null && md ? (md - a) / md : null,
+        mlBudget: mb, mlQuoted: mq, mlLines: r.ml_lines, vsMl: mb != null && mq != null && r.ml_lines ? mb - mq : null, vsMlPct: mb && mq != null && r.ml_lines ? (mb - mq) / mb : null,
+        missing: md == null, days: r.rfq_date && r.award_date ? Math.round((Date.parse(d10(r.award_date)) - Date.parse(d10(r.rfq_date))) / 864e5) : null };
+    });
+    var sent = R.filter(function (r) { return r.status !== 'Cancelled' && inWin(r.rfq_date, w); });
+    var k = P && P.rfqKpis ? P.rfqKpis(sent) : null;
+    var withMed = rows.filter(function (x) { return x.vsMedian != null; }), withMl = rows.filter(function (x) { return x.vsMl != null; });
+    return { awarded: rows.length, rows: rows, awardedBnd: sum(rows, function (x) { return x.awarded; }),
+      savingMedian: sum(withMed, function (x) { return x.vsMedian; }), savingMedianBase: sum(withMed, function (x) { return x.median; }),
+      savingMl: sum(withMl, function (x) { return x.vsMl; }), mlBudget: sum(withMl, function (x) { return x.mlBudget; }), mlQuoted: sum(withMl, function (x) { return x.mlQuoted; }),
+      missing: rows.filter(function (x) { return x.missing; }).map(function (x) { return x.rfq_no; }),
+      rfqs: sent.length, replyRate: k ? k.replyRate : null, validRate: k ? k.validRate : null, contacted: k ? k.contacted : null,
+      goalRate: k ? k.rfqSuccess : null, medianResponseHours: k ? k.medianResponseHours : null,
+      medianDaysToAward: median(rows.map(function (x) { return x.days; })) };
+  }
+
+  function dbPart(D, w) {
+    var pr = D.proposals || [];
+    var acc = pr.filter(function (x) { return x.status === 'Accepted' && inWin(x.decided, w); });
+    return { accepted: acc.length, rejected: pr.filter(function (x) { return x.status === 'Rejected' && inWin(x.decided, w); }).length,
+      pending: pr.filter(function (x) { return x.status === 'Proposed'; }).length,
+      quotePrices: sum((D.quote_lines || []).filter(function (x) { return inWin(x.date, w); }), function (x) { return num(x.n); }),
+      suppliers: sum((D.suppliers_added || []).filter(function (x) { return inWin(x.date, w); }), function (x) { return num(x.n); }),
+      codes: acc.map(function (x) { return x.res_code; }) };
+  }
+
+  function valuePart(V, w) {
+    var E = (V || []).filter(function (x) { return inWin(x.entry_date, w); }), by = {};
+    VALUE_KINDS.forEach(function (k) { by[k] = { n: 0, amount: 0, hours: 0, verifiedAmount: 0 }; });
+    E.forEach(function (x) { var o = by[x.kind] || (by[x.kind] = { n: 0, amount: 0, hours: 0, verifiedAmount: 0 }); o.n++; o.amount += num(x.amount_bnd) || 0; o.hours += num(x.hours) || 0; if (x.verified) o.verifiedAmount += num(x.amount_bnd) || 0; });
+    return { entries: E, n: E.length, by: by, verified: E.filter(function (x) { return x.verified; }).length,
+      noEvidence: E.filter(function (x) { return !x.evidence; }).length,
+      hours: sum(E, function (x) { return num(x.hours); }), amount: sum(E, function (x) { return num(x.amount_bnd); }),
+      ve: by['Value engineering accepted'].amount, costSaving: by['Cost saving'].amount, collections: by['Claim/collection received'].amount };
+  }
+
+  // record completeness (KPI 8): share of the checks that are in order
+  function compliance(t, r, v) {
+    var checks = [
+      ['Submitted tenders with a submission date', t.due - t.noDate.length, t.due],
+      ['Decided tenders with the winning sum recorded', t.resultsRecorded, t.decided],
+      ['Won tenders with a contract sum', t.wonList.filter(function (x) { return x.contract != null; }).length, t.won],
+      ['Awarded RFQs with savings recorded', r.awarded - r.missing.length, r.awarded],
+      ['Value-log entries with evidence', v.n - v.noEvidence, v.n],
+      ['Value-log entries verified', v.verified, v.n]
+    ].map(function (c) { return { label: c[0], ok: c[1], of: c[2], rate: ratio(c[1], c[2]) }; });
+    var ok = sum(checks, function (c) { return c.ok; }), of = sum(checks, function (c) { return c.of; });
+    return { checks: checks, rate: ratio(ok, of) };
+  }
+
+  function part(D, R, w, P) {
+    var t = tenderPart(D.tenders || [], w), r = rfqPart(R || [], w, P), db = dbPart(D, w), v = valuePart(D.values, w), c = compliance(t, r, v);
+    return { win: w, tenders: t, rfq: r, db: db, value: v, compliance: c,
+      totals: { contractWon: t.wonContract, savings: r.savingMedian + v.ve + v.costSaving, collections: v.collections, hours: v.hours, onTimeRate: t.onTimeRate, winRate: t.winRate } };
+  }
+
+  // the report: data = crm_perf, rfqs = crm_rfqs().rfqs, opts {month 'YYYY-MM', start, procure}
+  function report(data, rfqs, opts) {
+    opts = opts || {}; data = data || {};
+    var start = d10(opts.start != null ? opts.start : data.start_date), month = opts.month || d10(data.today).slice(0, 7);
+    var P = opts.procure || (typeof root.Procure !== 'undefined' ? root.Procure : null), W = windows(month, start);
+    var trend = [];
+    for (var i = 5; i >= 0; i--) {
+      var ym = addMonths(month, -i), x = tenderPart(data.tenders || [], { from: ym + '-01', to: monthEnd(ym) }), y = rfqPart(rfqs || [], { from: ym + '-01', to: monthEnd(ym) }, null);
+      trend.push({ month: ym, submitted: x.submitted, won: x.won, decided: x.decided, winRate: x.winRate, onTimeRate: x.onTimeRate, gapLostAvg: x.gapLostAvg, wonContract: x.wonContract, rfqSaving: y.savingMedian });
+    }
+    return { month: month, label: W.month.label, start: start, kpis: KPIS, m: part(data, rfqs, W.month, P), c: part(data, rfqs, W.cum, P), trend: trend };
+  }
+
+  // savings of an awarded RFQ, from the scored comparison (Procure.scoreQuotes) and the masterlist budget check
+  // row = the awarded row of the comparison; cmp = scoreQuotes result; bc = Procure.budgetCheck(items, res, row.L) or null
+  function rfqSavings(cmp, row, bc) {
+    var tot = (cmp && cmp.rows || []).filter(function (x) { return x.pass && x.L && x.L.total_bnd != null; }).map(function (x) { return x.L.total_bnd; });
+    var awarded = row && row.L && row.L.total_bnd != null ? row.L.total_bnd : null;
+    if (awarded == null || !tot.length) return null;
+    var ml = bc && bc.priced ? bc.lines.filter(function (l) { return l.quoted != null; }) : [];
+    return { total_bnd: awarded.toFixed(2), median_bnd: median(tot).toFixed(2), valid_n: tot.length,
+      ml_budget_bnd: ml.length ? sum(ml, function (l) { return l.budget; }).toFixed(2) : '', ml_quoted_bnd: ml.length ? sum(ml, function (l) { return l.quoted; }).toFixed(2) : '', ml_lines: ml.length || '' };
+  }
+
+  var api = { KPIS: KPIS, VALUE_KINDS: VALUE_KINDS, report: report, part: part, tenderPart: tenderPart, rfqPart: rfqPart, dbPart: dbPart, valuePart: valuePart, compliance: compliance,
+    rfqSavings: rfqSavings, months: months, windows: windows, monthEnd: monthEnd, addMonths: addMonths, monthName: monthName, median: median, gap: gap };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.Perf = api;
+})(this);
+</script>
+<script>
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'3.2.2', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'3.3.0', user:'Gemz' };
 var CHANGELOG = [
+  { v:'3.3.0', date:'19 Nov 2026', items:[
+    'New: Reports › QS Performance — the QS function measured against the 8 KPIs of the contract (clause 12), month and cumulative from a start date (Admin Settings › Company & letterhead; set to 1 October 2026). Totals at the top: contract value won, savings, collections, hours saved, on-time submission, win rate. One section per KPI, a six-month trend and links to the tenders and RFQs behind each figure.',
+    'Built from existing records, no double entry: tenders handled by status, value submitted, win rate (won ÷ decided), contract value won (approved contract sum, else tendered), own vs winning sum, on-time submission (submission date vs closing date), pricing database upkeep (rate proposals accepted, quote prices captured, suppliers added) and RFQ reply rate / cycle time.',
+    'Procurement savings: the award now records the awarded landed cost against the median landed cost of the quotes that pass the checks, and against the masterlist budget for lines with an ML code. RFQs awarded earlier: “Record savings” on the RFQ page.',
+    'Value log: value engineering accepted, claims / collections received, cost savings, time saved, other — with tender or project reference, amount, hours, description and an evidence link (or upload to Drive). Verified by someone other than the person who recorded it; management (viewer) accounts can verify. A changed figure needs verifying again.',
+    'PDF: “QS Performance Report — <Month YYYY>” on the letterhead, same style as the RFQ monthly KPI report.',
+    'Notification bell: submitted tenders with no result 30+ days after closing, won tenders with no contract sum, value-log entries waiting for verification or without evidence, awarded RFQs without savings.',
+    'Viewers see the full report and value log (read only, plus Verify). No salary or personal data is stored.',
+    'Fixed: Quote prices and Rate proposals pages stayed in the page after signing out.',
+    'Database: value_log; savings columns on rfqs; settings perf. Applied by the Database workflow after merge. No Code.gs change.'
+  ]},
   { v:'3.2.2', date:'17 Nov 2026', items:[
     'Notifications: a bell beside the theme button replaces the Dashboard "To do" card. It lists everything that needs attention, on every page: tenders past or near their closing date (7 days), records with no status, revisions waiting for approval, supplier reminders due today, RFQs ready to compare, quotes about to expire, awards with no delivery recorded, suppliers in the review queue, rate proposals and, for the admin, unfinished setup and mailbox errors. Click an item to go there; items clear by themselves once dealt with. Checked every 5 minutes.',
     'My profile: add a profile picture (JPG, PNG or WebP). It is cropped to a square, shrunk and shown in the header and the account menu; Remove brings the initials back.',
@@ -2844,7 +3049,7 @@ function apiF(action, body){
 /* ---------- login ---------- */
 function showLogin(err){
   var shown=!$('vLogin').classList.contains('hidden');   // already on the login page: keep what is typed
-  $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS','vDB','vLB','vML','vSP','vRQ','vCS','vRF','vRD','vRE','vRR'].forEach(function(id){ $(id).classList.add('hidden'); }); $('top').classList.add('hidden'); $('conn').classList.add('hidden'); closeMenus(); mobileNav(false);
+  $('vLogin').classList.remove('hidden'); ['vMain','vRep','vAB','vRV','vUS','vDB','vLB','vML','vSP','vRQ','vCS','vRF','vRD','vRE','vRR','vQP','vRP','vPF'].forEach(function(id){ var e=$(id); if(e) e.classList.add('hidden'); }); PFM.data=null; $('top').classList.add('hidden'); $('conn').classList.add('hidden'); closeMenus(); mobileNav(false);
   if(!shown || !$('inEmail').value) $('inEmail').value = load('email'); if(!shown || err) $('loginErr').textContent = err||''; closeDrawer();
   var c=cfg(); $('inSbUrl').value=c.supabaseUrl; $('inSbKey').value=c.supabaseKey; $('inDrive').value=c.driveUrl;
   $('cfgBox').classList.toggle('hidden', cfgOk());
@@ -3363,7 +3568,8 @@ function showView(v){
   $('vDB').classList.toggle('hidden', v!=='dash'); $('vLB').classList.toggle('hidden', v!=='library'); $('vML').classList.toggle('hidden', v!=='master');
   $('vSP').classList.toggle('hidden', v!=='suppliers'); $('vRQ').classList.toggle('hidden', v!=='queue'); $('vCS').classList.toggle('hidden', v!=='company');
   $('vRF').classList.toggle('hidden', v!=='rfqs'); $('vRD').classList.toggle('hidden', v!=='rfq'); $('vRE').classList.toggle('hidden', v!=='rfqedit'); $('vRR').classList.toggle('hidden', v!=='rfqreports');
-  $('vQP').classList.toggle('hidden', v!=='qprices'); $('vRP').classList.toggle('hidden', v!=='rateprops');
+  $('vQP').classList.toggle('hidden', v!=='qprices'); $('vRP').classList.toggle('hidden', v!=='rateprops'); $('vPF').classList.toggle('hidden', v!=='perf');
+  if(v==='perf'){ PFM.data=null; RF.p=null; renderPerf(); return; }   // fresh figures each time the report is opened
   if(v==='qprices'){ renderQPrices(); return; } if(v==='rateprops'){ renderRateProps(); return; }
   if(v==='rfq'||v==='rfqedit') document.querySelectorAll('#nav a[data-v="rfqs"]').forEach(function(a){ a.classList.add('on'); a.closest('.dd').classList.add('on'); });
   if(v==='rfqs'){ var had2=!!RF.list; renderRfqs(); if(had2) rfLoad().then(function(){ if(S.view==='rfqs') renderRfqs(); }).catch(function(){}); return; }
@@ -4249,6 +4455,13 @@ function notifLoad(){
     (D.closing||[]).forEach(function(t){ var d=Procure.daysBetween(today(), String(t.closing_date||'').slice(0,10)); if(t.status!=='Submitted'&&d>=0&&d<=7)
       add(d<=2?'warn':'info', t.arza_no+' closes '+(d===0?'today':d===1?'tomorrow':'in '+d+' days'), (t.title||'')+(t.status?' · '+t.status:''), 'tender:'+t.arza_no); });
     if(+k.no_status) add('info', pl(+k.no_status,'tender record has','tender records have')+' no status', w?'Pick one so the pipeline figures are right':'Not set yet', 'tenders');
+    // v3.3.0: QS Performance record gaps
+    if(+k.awaiting_result) add('info', pl(+k.awaiting_result,'submitted tender has','submitted tenders have')+' no bid result 30+ days after closing', w?'Record the result (winner, winning sum) when it is known':'Result not recorded yet', 'tenders');
+    if(+k.won_no_contract) add('info', pl(+k.won_no_contract,'won tender has','won tenders have')+' no contract sum', w?'Approve the rationalized revision or enter the contract sum':'Contract sum not recorded yet', 'tenders');
+    if(+k.value_to_verify) add('info', pl(+k.value_to_verify,'value-log entry is','value-log entries are')+' waiting for verification', 'Reports › QS Performance › Value log', 'perf');
+    if(+k.value_no_evidence&&w) add('info', pl(+k.value_no_evidence,'value-log entry has','value-log entries have')+' no evidence', 'Add the link to the letter, approval or receipt', 'perf');
+    if(+k.rfq_no_savings&&w){ var ns=L?(L.rfqs||[]).filter(function(r){ return r.status==='Awarded'&&r.median_bnd==null; }):[];
+      add('info', pl(+k.rfq_no_savings,'awarded RFQ has','awarded RFQs have')+' no savings recorded', ns.length===1?ns[0].rfq_no+' — open it and press Record savings':'Open each one and press Record savings', ns.length===1?'rfq:'+ns[0].rfq_no:'perf'); }
     if(+k.drafts) add('info', pl(+k.drafts,'revision is','revisions are')+' waiting for approval', 'Rationalized BQ drafts', 'rev');
     // RFQs
     if(L){ var all=L.rfqs||[], ch=chaseList(), cmp=all.filter(function(r){ return r.status==='Comparison'; }), expD=(st.rfq_opts||{}).expiry_days||7;
@@ -4920,6 +5133,13 @@ function renderTeam(b){
     '<div class="card"><div id="usList"><div class="empty"><span class="spin"></span> Loading…</div></div><p class="n">Changes apply at the person\'s next action. A deactivated account cannot sign in to the data. There must always be one active admin.</p></div>';
   $('usAdd').onclick=addUser; loadUsers();
 }
+/* v3.3.0: QS Performance - start date of the cumulative figures */
+function admPerf(b,st){
+  var p=st.perf||{};
+  b.insertAdjacentHTML('beforeend','<div class="card" style="margin-top:14px"><h3>QS Performance</h3><p class="n">Cumulative figures in Reports › QS Performance and its PDF count from this date.</p>'+
+    '<div class="form"><div class="f"><label for="pf_start">Start date</label><input id="pf_start" type="date" max="'+today()+'" value="'+esc(p.start_date||'')+'"></div></div><div class="pact"><button class="btn pri" id="pfStartSave">Save start date</button></div></div>');
+  $('pfStartSave').onclick=function(){ var btn=this; busy(btn,true); api('setJson',{key:'perf', value:{start_date:$('pf_start').value}}).then(function(r){ PR.set.perf=r.value; PFM.data=null; busy(btn,false); toast('Start date saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
+}
 function admCompany(b,st){
   var c=Object.assign({},st.company||{}), eff=company(c);
   b.innerHTML='<div class="grid2"><div class="card"><h3>Company &amp; letterhead</h3><p class="n">The official ARZA letterhead (from the Word file) is built in. Change a field only if the company details change; a blank field uses the built-in value.</p><div class="form">'+
@@ -4941,6 +5161,7 @@ function admCompany(b,st){
     Object.keys(v).forEach(function(k){ if(['logo','logo2','logo_name','logo2_name','logo_link'].indexOf(k)>=0 || v[k]!==CO_DEFAULT[k]) out[k]=v[k]; });   // keep only what differs from the official letterhead
     busy(btn,true); api('setSettings',{key:'company', value:out}).then(function(r){ PR.set.company=r.value; busy(btn,false); toast('Company & letterhead saved'); }).catch(function(e){ busy(btn,false); fail(e); }); };
   $('coTest').onclick=function(){ printLetterTest(read()); };
+  admPerf(b,st);
 }
 function admRfq(b,st){
   var a=st.approval||{}, fx=st.fx||{}, curs=['USD','MYR','CNY'].concat(Object.keys(fx).filter(function(k){ return ['USD','MYR','CNY'].indexOf(k)<0; })).concat(['EUR','AUD','JPY','THB','IDR','VND'].filter(function(k){ return !fx[k]; }).slice(0,2));
@@ -5526,7 +5747,7 @@ function rdQuotes(D){
         var done=(D.clicks||[]).some(function(c){ return c.supplier_id===q.supplier_id&&c.action===kind; });
         return '<tr style="cursor:default" data-sup="'+esc(q.supplier_id)+'"><td>'+esc(sup(q.supplier_id))+'</td><td>'+(kind==='thanks'?'<b>Thank-you (award)</b>':'Regret')+(done?' <span class="pos">✓ sent</span>':'')+'</td><td class="nw btns">'+
           (em?'<a class="btn sm sl-mail" target="_blank" rel="noopener" href="'+esc(em)+'" data-qact="'+kind+'">Email</a>':'')+(wa?'<a class="btn sm sl-wa" target="_blank" rel="noopener" href="'+esc(wa.link)+'" data-qact="'+kind+'">WhatsApp</a>':'')+'</td></tr>'; }).join('')+'</tbody></table></div>'+
-      rdDelivery(D, sup)+rdProposals(D)+
+      rdSavings(D)+rdDelivery(D, sup)+rdProposals(D)+
       (canWrite()?'<div class="pact"><button class="btn sm" id="qReopen">Reopen (cancel the award)</button></div>':'');
   } else if(w){
     dec='<div class="form f3" style="margin-top:6px"><div class="f"><label for="qRec">Recommended supplier</label><select id="qRec">'+opts+'</select><div class="hint">Proposed: the highest score among the quotes that pass the must-pass checks'+(C.top?' ('+esc(sup(C.top))+(C.cheapest&&C.cheapest!==C.top?'; cheapest: '+esc(sup(C.cheapest)):'')+')':'')+'.</div></div>'+
@@ -5554,6 +5775,9 @@ function rdQuotesWire(D){
   document.querySelectorAll('#rdQ .qMust').forEach(function(x){ x.onchange=function(){ var mp={}; document.querySelectorAll('#rdQ .qMust').forEach(function(y){ mp[y.dataset.k]=y.checked; });
     api('rfqDecide',{rfq_no:r.rfq_no, action:'must_pass', must_pass:mp}).then(function(res){ after(res); toast('Must-pass checks saved for '+r.rfq_no); }).catch(fail); }; });
   if($('qDel')) $('qDel').onclick=function(){ deliveryDlg(D); };
+  if($('qSav')) $('qSav').onclick=function(){ var b=this; busy(b,true,'Working…');
+    mlEnsure().catch(function(){}).then(function(){ var sv=rfqSavingsOf(D, r.award_supplier); if(!sv){ busy(b,false); toast('No landed total for the awarded quote — check the quote and the exchange rates',true); return; }
+      return api('rfqDecide',Object.assign({rfq_no:r.rfq_no, action:'savings'},sv)).then(function(){ RF.cur=null; RF.list=null; RF.p=null; NT.dash=null; renderRfq(); notifLoad(); toast('Savings recorded'); }); }).catch(function(e){ busy(b,false); fail(e); }); };
   if($('qProps')) $('qProps').onclick=function(){ showView('rateprops'); };
   if($('qReopen')) $('qReopen').onclick=function(){ var why=prompt('Reopen '+r.rfq_no+' and clear the award. Reason:',''); if(why==null) return; api('rfqDecide',{rfq_no:r.rfq_no, action:'reopen', note:why}).then(after).catch(fail); };
   document.querySelectorAll('#rdQ a[data-qact]').forEach(function(a){ a.addEventListener('click',function(){ var sid=a.closest('tr').dataset.sup;
@@ -5637,11 +5861,11 @@ function awardDlg(D, recId){
   $('awGo').onclick=function(){ var b=this, sid=$('awS').value, row=C.rows.filter(function(x){ return x.q.supplier_id===sid; })[0];
     if(row&&!row.pass&&!confirm(sup(sid)+' fails the must-pass checks ('+row.fails.join(', ')+'). Award anyway?')) return;
     var pick=Array.prototype.map.call(document.querySelectorAll('.awP:checked'),function(x){ return props[+x.dataset.i]; });
-    busy(b,true); api('rfqDecide',{rfq_no:r.rfq_no, action:'award', supplier_id:sid, award_by:$('awBy').value.trim(), award_date:$('awD').value, po_ref:$('awPo').value.trim(), note:$('awN').value.trim(),
+    busy(b,true); api('rfqDecide',Object.assign({rfq_no:r.rfq_no, action:'award', supplier_id:sid, award_by:$('awBy').value.trim(), award_date:$('awD').value, po_ref:$('awPo').value.trim(), note:$('awN').value.trim(),
         total_bnd:row&&row.L.total_bnd!=null?row.L.total_bnd.toFixed(2):'', saving_bnd:savingOf(C,sid)!=null?savingOf(C,sid).toFixed(2):'',
         scores:C.rows.filter(function(x){ return x.score; }).map(function(x){ return {supplier_id:x.q.supplier_id, score:x.score.total, price:x.score.price, lead:x.score.lead, payment:x.score.payment, reliability:x.score.reliability, total_bnd:+x.L.total_bnd.toFixed(2)}; }),
-        proposals:pick})
-    .then(function(x){ closeModal(); RF.cur.rfq=x.rfq; RF.list=null; RF.cur=null; renderRfq(); toast('Awarded'+(pick.length?' · '+pick.length+' rate proposal'+(pick.length>1?'s':''):'')); }).catch(function(e){ busy(b,false); fail(e); }); };
+        proposals:pick}, rfqSavingsOf(D, sid)||{}))
+    .then(function(x){ closeModal(); RF.cur.rfq=x.rfq; RF.p=null; NT.dash=null; RF.list=null; RF.cur=null; renderRfq(); toast('Awarded'+(pick.length?' · '+pick.length+' rate proposal'+(pick.length>1?'s':''):'')); }).catch(function(e){ busy(b,false); fail(e); }); };
 }
 function rdDelivery(D, sup){
   var r=D.rfq, w=canWrite();
@@ -5855,6 +6079,175 @@ function printKpiMonth(month){
       (K.topSuppliers.length?K.topSuppliers.map(function(x){ return '<tr><td>'+esc(x.name)+'</td><td class="r">'+x.contacted+'</td><td class="r">'+x.responded+'</td><td class="r">'+x.valid+'</td><td class="r">'+x.awards+'</td></tr>'; }).join(''):'<tr><td colspan="5">—</td></tr>')+'</tbody></table>'+
     '<p style="font-size:9.5px;color:#555;margin-top:10px">RFQs dated in '+esc(mon)+', cancelled ones left out. Reply rate = replied, quoted or declined ÷ contacted. Valid quote = ticked valid on the send list. Saving = highest valid landed total − awarded landed total.</p>'+
     '<div class="ft">RFQ KPI report '+esc(month)+' · '+esc(c.name)+' · QS CRM</div>', '.it{font-size:10px}');
+}
+
+/* ---------- v3.3.0: Reports › QS Performance (value ledger) ---------- */
+var PFM={ month:'', data:null, rfqs:null, vlAll:false };
+function pfLoad(force){
+  return Promise.all([(force||!PFM.data)?api('perf'):Promise.resolve(PFM.data), force?rfLoad().then(function(d){ RF.p=null; return d; }):rfGet()])
+    .then(function(x){ PFM.data=x[0]; PFM.rfqs=(x[1]&&x[1].rfqs)||[]; return PFM; });
+}
+function pfPct(x,signed){ return x==null?'—':(signed&&x>0?'+':'')+(x*100).toFixed(Math.abs(x)<0.1&&x!==0?1:0)+'%'; }
+function pfB(x){ return x==null?'—':'B$ '+money0(x); }
+function pfOf(a,b){ return b?a+' of '+b+' ('+pfPct(a/b)+')':'—'; }
+/* one KPI = rows of [label, this month, cumulative]; extra = detail html */
+function pfSec(i, rows, extra, foot){
+  var k=Perf.KPIS[i];
+  return '<div class="card kpisec"><h3><span class="pfn">'+(i+1)+'</span>'+esc(k[1])+'</h3><div class="tbl"><table class="mini pft"><thead><tr><th></th><th class="r">Month</th><th class="r">Cumulative</th></tr></thead><tbody>'+
+    rows.map(function(r){ return '<tr style="cursor:default"><td>'+esc(r[0])+'</td><td class="r num">'+r[1]+'</td><td class="r num">'+r[2]+'</td></tr>'; }).join('')+'</tbody></table></div>'+(extra||'')+(foot?'<p class="n">'+foot+'</p>':'')+'</div>';
+}
+function pfRows(K){
+  var m=K.m, c=K.c, T=function(p){ return p.tenders; }, st=function(t){ var o=t.byStatus, ks=Object.keys(o); return ks.length?ks.sort().map(function(k){ return esc(k)+' '+o[k]; }).join(' · '):'—'; };
+  var mlDiff=function(r){ return r.mlBudget?(r.mlQuoted-r.mlBudget)/r.mlBudget:null; };
+  return [
+    [['Decided tenders with the winning sum recorded', pfOf(T(m).resultsRecorded,T(m).decided), pfOf(T(c).resultsRecorded,T(c).decided)],
+     ['Median gap to the winning sum', pfPct(T(m).gapAbsMedian), pfPct(T(c).gapAbsMedian)],
+     ['Bids within ±5% of the winning sum', T(m).within5, T(c).within5],
+     ['Tendered vs rationalized contract sum (average)', pfPct(T(m).ratAvg,true), pfPct(T(c).ratAvg,true)]],
+    [['Tenders submitted that closed in the period', T(m).due, T(c).due],
+     ['Submitted on or before the closing date', pfOf(T(m).onTime,T(m).due-T(m).noDate.length), pfOf(T(c).onTime,T(c).due-T(c).noDate.length)],
+     ['Submitted with no submission date recorded', T(m).noDate.length, T(c).noDate.length]],
+    [['Tenders handled (by status)', T(m).handled+'<div class="sub2">'+st(T(m))+'</div>', T(c).handled+'<div class="sub2">'+st(T(c))+'</div>'],
+     ['Tenders submitted · value', T(m).submitted+' · '+pfB(T(m).submittedValue), T(c).submitted+' · '+pfB(T(c).submittedValue)],
+     ['Win rate (won ÷ decided)', T(m).decided?pfPct(T(m).winRate)+' <span class="n">('+T(m).won+'/'+T(m).decided+')</span>':'—', T(c).decided?pfPct(T(c).winRate)+' <span class="n">('+T(c).won+'/'+T(c).decided+')</span>':'—'],
+     ['Average gap on lost bids (+ = above the winner)', pfPct(T(m).gapLostAvg,true), pfPct(T(c).gapLostAvg,true)]],
+    [['Value engineering accepted (value log)', pfB(m.value.ve), pfB(c.value.ve)],
+     ['Cost savings (value log)', pfB(m.value.costSaving), pfB(c.value.costSaving)],
+     ['Procurement: awarded vs median of valid quotes', pfB(m.rfq.savingMedian)+(m.rfq.savingMedianBase?' <span class="n">('+pfPct(m.rfq.savingMedian/m.rfq.savingMedianBase)+')</span>':''), pfB(c.rfq.savingMedian)+(c.rfq.savingMedianBase?' <span class="n">('+pfPct(c.rfq.savingMedian/c.rfq.savingMedianBase)+')</span>':'')],
+     ['Procurement: awarded vs masterlist budget (ML lines)', pfB(m.rfq.savingMl), pfB(c.rfq.savingMl)]],
+    [['Awarded RFQ cost vs masterlist budget (ML lines)', pfPct(mlDiff(m.rfq),true), pfPct(mlDiff(c.rfq),true)],
+     ['Contract sum vs tendered sum (rationalized, average)', pfPct(T(m).ratAvg,true), pfPct(T(c).ratAvg,true)],
+     ['Awarded RFQs with savings recorded', pfOf(m.rfq.awarded-m.rfq.missing.length,m.rfq.awarded), pfOf(c.rfq.awarded-c.rfq.missing.length,c.rfq.awarded)]],
+    [['Rate proposals accepted into the masterlist', m.db.accepted, c.db.accepted],
+     ['Rate proposals rejected', m.db.rejected, c.db.rejected],
+     ['Quote prices captured (price history)', m.db.quotePrices, c.db.quotePrices],
+     ['Suppliers added to the database', m.db.suppliers, c.db.suppliers]],
+    [['Tenders won', T(m).won, T(c).won],
+     ['Contract value won (approved contract sum, else tendered)', pfB(T(m).wonContract), pfB(T(c).wonContract)],
+     ['Tendered value of the tenders won', pfB(T(m).wonTendered), pfB(T(c).wonTendered)]],
+    m.compliance.checks.map(function(x,i){ var y=c.compliance.checks[i]; return [x.label, x.of?pfOf(x.ok,x.of):'—', y.of?pfOf(y.ok,y.of):'—']; })
+      .concat([['<b>Record completeness</b>', '<b>'+pfPct(m.compliance.rate)+'</b>', '<b>'+pfPct(c.compliance.rate)+'</b>']])
+  ];
+}
+function renderPerf(){
+  var el=$('vPF'); if(needLive(el,'QS Performance')) return;
+  if(!PFM.data){ el.innerHTML='<div class="empty"><span class="spin"></span> Loading…</div>'; pfLoad().then(renderPerf).catch(function(e){ el.innerHTML='<div class="note w">'+esc(/crm_perf|does not exist|schema cache/i.test(e.message)?'QS Performance is not in the database yet — it arrives with the v3.3.0 Database workflow after the pull request is merged.':e.message)+'</div>'; }); return; }
+  var D=PFM.data, ms=Perf.months(D.start_date, D.today); if(!PFM.month||ms.indexOf(PFM.month)<0) PFM.month=ms[0];
+  var K=Perf.report(D, PFM.rfqs, {month:PFM.month, procure:Procure}), m=K.m, c=K.c, w=canWrite(), R=pfRows(K);
+  var tile=function(l,v,s){ return [l,v,s]; };
+  var tot=kpiRow([tile('Contract value won', pfB(m.totals.contractWon), 'since start '+pfB(c.totals.contractWon)), tile('Savings', pfB(m.totals.savings), 'since start '+pfB(c.totals.savings)),
+    tile('Collections', pfB(m.totals.collections), 'since start '+pfB(c.totals.collections)), tile('Hours saved', (m.totals.hours||0).toFixed(1)+' h', 'since start '+(c.totals.hours||0).toFixed(1)+' h'),
+    tile('On-time submission', pfPct(m.totals.onTimeRate), 'since start '+pfPct(c.totals.onTimeRate)), tile('Win rate', pfPct(m.totals.winRate), 'since start '+pfPct(c.totals.winRate))]);
+  var T=c.tenders, lnk=function(no){ return '<a href="#" class="pfT" data-no="'+esc(no)+'">'+esc(no)+'</a>'; }, rl=function(no){ return '<a href="#" class="pfR" data-rfq="'+esc(no)+'">'+esc(no)+'</a>'; };
+  var lst=function(title, rows){ return rows.length?'<details class="pfd"><summary>'+title+' ('+rows.length+')</summary><div class="tbl"><table class="mini"><tbody>'+rows.join('')+'</tbody></table></div></details>':''; };
+  var x1=lst('Bids vs the winning sum, since start', T.gaps.map(function(g){ return '<tr style="cursor:default"><td>'+lnk(g.arza_no)+'</td><td>'+esc(g.title||'')+'</td><td>'+esc(g.status)+'</td><td class="r num">'+pfB(g.our)+'</td><td class="r num">'+pfB(g.winning)+(g.winner?'<div class="sub2">'+esc(g.winner)+'</div>':'')+'</td><td class="r num">'+pfPct(g.gap,true)+'</td></tr>'; }));
+  var x2=lst('Submitted after the closing date', T.lateList.map(function(t){ return '<tr style="cursor:default"><td>'+lnk(t.arza_no)+'</td><td>'+esc(t.title||'')+'</td><td>closing '+esc(fmtDate(t.closing))+'</td><td>submitted '+esc(fmtDate(t.submitted))+'</td></tr>'; }))+
+    lst('No submission date recorded', T.noDate.map(function(t){ return '<tr style="cursor:default"><td>'+lnk(t.arza_no)+'</td><td>'+esc(t.title||'')+'</td><td>closing '+esc(fmtDate(t.closing))+'</td></tr>'; }));
+  var x4=lst('Awarded RFQs, since start', c.rfq.rows.map(function(r){ return '<tr style="cursor:default"><td>'+rl(r.rfq_no)+'</td><td>'+esc(r.title||'')+'</td><td class="r num">'+pfB(r.awarded)+'</td><td class="r num">'+(r.missing?'<span class="neg">savings not recorded</span>':'median of '+r.valid_n+': '+pfB(r.median)+'<div class="sub2">saving '+pfB(r.vsMedian)+' ('+pfPct(r.vsMedianPct)+')</div>')+'</td><td class="r num">'+(r.vsMl!=null?'ML '+pfB(r.vsMl)+' ('+pfPct(r.vsMlPct)+')':'<span class="n">no ML lines</span>')+'</td></tr>'; }));
+  var x7=lst('Tenders won, since start', T.wonList.map(function(t){ return '<tr style="cursor:default"><td>'+lnk(t.arza_no)+'</td><td>'+esc(t.title||'')+'</td><td>'+esc(t.client_group||'')+'</td><td class="r num">'+pfB(t.tendered)+'</td><td class="r num">'+(t.contract!=null?pfB(t.contract)+' <span class="n">'+esc(t.rev||'')+'</span>':'<span class="neg">no contract sum</span>')+'</td></tr>'; }));
+  var trend='<div class="card"><h3>Six-month trend <span class="n">by month, to '+esc(K.label)+'</span></h3><div class="tbl"><table class="mini"><thead><tr><th>Month</th><th class="r">Submitted</th><th class="r">Won</th><th class="r">Win rate</th><th class="r">On time</th><th class="r">Gap on lost bids</th><th class="r">Contract won</th><th class="r">RFQ savings</th></tr></thead><tbody>'+
+    K.trend.map(function(t){ return '<tr style="cursor:default"><td>'+esc(Perf.monthName(t.month))+'</td><td class="r num">'+t.submitted+'</td><td class="r num">'+t.won+'</td><td class="r num">'+(t.decided?pfPct(t.winRate):'—')+'</td><td class="r num">'+pfPct(t.onTimeRate)+'</td><td class="r num">'+pfPct(t.gapLostAvg,true)+'</td><td class="r num">'+pfB(t.wonContract)+'</td><td class="r num">'+pfB(t.rfqSaving)+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
+  var other='<div class="card"><h3>Other recorded value <span class="n">value log</span></h3><div class="tbl"><table class="mini pft"><thead><tr><th></th><th class="r">Month</th><th class="r">Cumulative</th></tr></thead><tbody>'+
+    [['Claims / collections received', pfB(m.value.collections), pfB(c.value.collections)], ['Hours saved', (m.value.hours||0).toFixed(1)+' h', (c.value.hours||0).toFixed(1)+' h'], ['Other entries', m.value.by.Other.n+(m.value.by.Other.amount?' · '+pfB(m.value.by.Other.amount):''), c.value.by.Other.n+(c.value.by.Other.amount?' · '+pfB(c.value.by.Other.amount):'')],
+     ['Entries verified', pfOf(m.value.verified,m.value.n), pfOf(c.value.verified,c.value.n)]].map(function(r){ return '<tr style="cursor:default"><td>'+esc(r[0])+'</td><td class="r num">'+r[1]+'</td><td class="r num">'+r[2]+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
+  el.innerHTML='<div class="bar"><div><h2>QS Performance</h2><div class="scope">The QS function measured against the 8 KPIs of the ARZA contract (clause 12), built from the tender register, the RFQs, the masterlist updates and the value log. <b>Month:</b> '+esc(K.label)+' · <b>Cumulative:</b> '+(K.start?'since '+esc(fmtDate(K.start)):'all records')+'.</div></div><span style="flex:1"></span>'+
+      '<select id="pfMonth" aria-label="Month">'+ms.map(function(x){ return '<option value="'+x+'"'+(x===PFM.month?' selected':'')+'>'+esc(Perf.monthName(x))+'</option>'; }).join('')+'</select>'+
+      '<button class="btn" id="pfRef" title="Load the latest figures">Refresh</button><button class="btn" id="pfPdf">PDF report</button>'+(w?'<button class="btn pri" id="pfAdd">+ Value log entry</button>':'')+'</div>'+
+    tot+'<div class="pfgrid">'+
+      pfSec(0,R[0],x1,'Gap = own sum vs the winning sum (+ = we were dearer). Rationalized = approved contract sum vs tendered sum.')+
+      pfSec(1,R[1],x2,'Counted on the closing date. On time = submission date on or before the closing date.')+
+      pfSec(2,R[2],'','Handled = closing date in the period (records with no closing date: creation date). Decided = Won or Lost, on the result date.')+
+      pfSec(3,R[3],x4,'Savings basis: the median landed cost of the quotes that pass the checks, recorded at award. Value-log figures include entries not yet verified.')+
+      pfSec(4,R[4],'','Budget vs actual on live projects comes with v5 Post-contract.')+
+      pfSec(5,R[5],'',c.db.pending?'<b>'+c.db.pending+'</b> rate proposal'+(c.db.pending>1?'s are':' is')+' still to review (Pricing › Rate proposals).':'')+
+      pfSec(6,R[6],x7,'')+
+      pfSec(7,R[7],'','Records that make the figures above complete and checkable.')+
+    '</div>'+other+trend+
+    '<div class="card" id="pfVl"></div>';
+  pfVlDraw();
+  $('pfMonth').onchange=function(){ PFM.month=this.value; renderPerf(); };
+  $('pfRef').onclick=function(){ var b=this; busy(b,true); pfLoad(true).then(renderPerf).catch(function(e){ busy(b,false); fail(e); }); };
+  $('pfPdf').onclick=function(){ (PR.set?Promise.resolve():setsLoad()).then(function(){ printPerf(K); }); };
+  if($('pfAdd')) $('pfAdd').onclick=function(){ valueDlg(); };
+  el.onclick=function(e){ var a=e.target.closest('.pfT'); if(a){ e.preventDefault(); showView('tenders'); openDrawer(a.dataset.no); return; }
+    var r=e.target.closest('.pfR'); if(r){ e.preventDefault(); RF.no=r.dataset.rfq; showView('rfq'); } };
+}
+function pfVlDraw(){
+  var el=$('pfVl'); if(!el) return; var D=PFM.data, w=canWrite(), adm=isAdmin(), from=D.start_date||'';
+  var E=(D.values||[]).filter(function(x){ return PFM.vlAll||!from||x.entry_date>=from; });
+  el.innerHTML='<div class="hrow" style="margin-bottom:6px"><h3 style="margin:0">Value log</h3><span class="n" style="margin:0 0 0 8px">value engineering, savings, collections and time saved, with evidence. Verified by someone other than the person who recorded it.</span><span style="flex:1"></span>'+
+    (from?'<label class="chkrow" style="margin:0"><input type="checkbox" id="vlAll"'+(PFM.vlAll?' checked':'')+'> show entries before '+esc(fmtDate(from))+'</label>':'')+'</div>'+
+    (E.length?'<div class="tbl"><table class="mini"><thead><tr><th>Date</th><th>Type</th><th>Tender / project</th><th class="r">Amount</th><th class="r">Hours</th><th>Description</th><th>Evidence</th><th>Verified</th><th></th></tr></thead><tbody>'+E.map(function(x){
+      var act=(w&&(!x.verified||adm)?'<button class="btn sm vlEd">Edit</button><button class="btn sm vlDel">Remove</button>':'')+
+        (x.mine?(x.verified?'':'<span class="n">awaiting verification</span>'):'<button class="btn sm vlVer">'+(x.verified?'Undo':'Verify')+'</button>');
+      return '<tr data-id="'+x.id+'" style="cursor:default"><td class="dt">'+esc(fmtDate(x.entry_date))+'</td><td>'+esc(x.kind)+'</td><td>'+(x.arza_no?'<a href="#" class="pfT" data-no="'+esc(x.arza_no)+'">'+esc(x.arza_no)+'</a>'+(x.tender_title?'<div class="sub2">'+esc(x.tender_title)+'</div>':''):'')+(x.project_ref?'<div class="sub2">'+esc(x.project_ref)+'</div>':'')+'</td>'+
+        '<td class="r num">'+(x.amount_bnd!=null?money(x.amount_bnd):'')+'</td><td class="r num">'+(x.hours!=null?esc(x.hours):'')+'</td><td class="dsc">'+esc(x.description)+'<div class="sub2">recorded by '+esc(x.recorded_name)+'</div></td>'+
+        '<td>'+(x.evidence?'<a href="'+esc(safeUrl(x.evidence))+'" target="_blank" rel="noopener">open</a>':'<span class="neg">none</span>')+'</td>'+
+        '<td>'+(x.verified?'<span class="pos">✓ '+esc(x.verified_name)+'</span><div class="sub2">'+esc(x.verified_at)+'</div>':'<span class="n">not yet</span>')+'</td><td class="nw">'+act+'</td></tr>'; }).join('')+'</tbody></table></div>'
+      :'<div class="n">No entries'+(from&&!PFM.vlAll?' since '+esc(fmtDate(from)):'')+' yet.'+(w?' Use “+ Value log entry” for an accepted value-engineering proposal, a collection received, a cost saving or time saved.':'')+'</div>');
+  if($('vlAll')) $('vlAll').onchange=function(){ PFM.vlAll=this.checked; pfVlDraw(); };
+  el.querySelectorAll('tr[data-id]').forEach(function(tr){ var x=(D.values||[]).filter(function(y){ return String(y.id)===tr.dataset.id; })[0];
+    var ed=tr.querySelector('.vlEd'), del=tr.querySelector('.vlDel'), ver=tr.querySelector('.vlVer');
+    if(ed) ed.onclick=function(){ valueDlg(x); };
+    if(del) del.onclick=function(){ if(!confirm('Remove this '+x.kind.toLowerCase()+' entry'+(x.amount_bnd!=null?' (B$ '+money(x.amount_bnd)+')':'')+'?')) return;
+      api('deleteValue',{id:x.id}).then(function(){ PFM.data=null; NT.dash=null; renderPerf(); toast('Entry removed'); }).catch(fail); };
+    if(ver) ver.onclick=function(){ var b=this; busy(b,true); api('verifyValue',{id:x.id, verified:!x.verified}).then(function(r){ Object.assign(x,r.entry); NT.dash=null; renderPerf(); notifLoad(); toast(r.entry.verified?'Verified':'Verification removed'); }).catch(function(e){ busy(b,false); fail(e); }); };
+  });
+}
+function valueDlg(x){
+  x=x||{}; var v=function(k){ return esc(x[k]==null?'':x[k]); }, drive=!!cfg().driveUrl;
+  pmodal(x.id?'Edit value log entry':'New value log entry','<div class="form">'+
+      '<div class="f"><label for="vl_d">Date</label><input id="vl_d" type="date" max="'+today()+'" value="'+esc(x.entry_date||today())+'"></div>'+
+      '<div class="f"><label for="vl_k">Type</label><select id="vl_k">'+Perf.VALUE_KINDS.map(function(k){ return '<option'+(k===x.kind?' selected':'')+'>'+esc(k)+'</option>'; }).join('')+'</select></div>'+
+      '<div class="f"><label for="vl_t">Tender <span class="hint">optional</span></label><input id="vl_t" list="vl_ts" value="'+v('arza_no')+'" placeholder="e.g. T08"><datalist id="vl_ts">'+(S.tenders||[]).map(function(t){ return '<option value="'+esc(t.arza_no)+'">'+esc((t.title_en||t.title||'').slice(0,60))+'</option>'; }).join('')+'</datalist></div>'+
+      '<div class="f"><label for="vl_p">Project / contract ref <span class="hint">if not a tender</span></label><input id="vl_p" maxlength="120" value="'+v('project_ref')+'" placeholder="e.g. MOE FM term contract"></div>'+
+      '<div class="f"><label for="vl_a">Amount (B$)</label><input id="vl_a" inputmode="decimal" value="'+v('amount_bnd')+'" placeholder="saving, VE value or amount collected"></div>'+
+      '<div class="f"><label for="vl_h">Hours saved</label><input id="vl_h" inputmode="decimal" value="'+v('hours')+'" placeholder="e.g. 6.5"></div>'+
+      '<div class="f full"><label for="vl_s">What was done and the result</label><textarea id="vl_s" rows="3" maxlength="1000" placeholder="e.g. Proposed precast drain units instead of cast-in-situ; accepted by JKR, letter ref …">'+v('description')+'</textarea><div class="hint">Business facts only — no salary or personal data.</div></div>'+
+      '<div class="f full"><label for="vl_e">Evidence <span class="hint">link to the letter, approval, receipt or file</span></label><div class="hrow"><input id="vl_e" type="url" value="'+v('evidence')+'" placeholder="https://drive.google.com/…" style="flex:1">'+
+        (drive?'<button class="btn sm" type="button" id="vl_up">Upload file…</button><input type="file" id="vl_f" class="hidden">':'')+'</div></div>'+
+    '</div>'+(x.verified?'<p class="note w">This entry is verified. Changing the date, type, amount or hours sends it back for verification.</p>':''),
+    '<button class="btn" id="vl_c">Cancel</button><button class="btn pri" id="vl_go">Save</button>');
+  $('vl_c').onclick=closeModal;
+  if($('vl_up')){ $('vl_up').onclick=function(){ $('vl_f').click(); };
+    $('vl_f').onchange=function(){ var f=this.files[0], b=$('vl_up'); this.value=''; if(!f) return; if(f.size>20*1024*1024){ toast('File is larger than 20 MB',true); return; }
+      busy(b,true,'Uploading…'); f.arrayBuffer().then(function(buf){ return driveCall('procUpload',{folder:'QS Performance', file:{name:($('vl_d').value||today())+' '+f.name, type:f.type||'application/octet-stream', data:b64(buf)}}); })
+        .then(function(d){ busy(b,false); $('vl_e').value=d.url; toast('Uploaded to Drive › Procurement › QS Performance'); }).catch(function(e){ busy(b,false); fail(e); }); }; }
+  $('vl_go').onclick=function(){ var b=this; busy(b,true);
+    api('saveValue',{id:x.id||'', entry_date:$('vl_d').value, kind:$('vl_k').value, arza_no:$('vl_t').value.trim(), project_ref:$('vl_p').value.trim(), amount_bnd:$('vl_a').value.trim(),
+        hours:$('vl_h').value.trim(), description:$('vl_s').value.trim(), evidence:$('vl_e').value.trim()})
+      .then(function(){ closeModal(); PFM.data=null; NT.dash=null; renderPerf(); notifLoad(); toast('Value log saved'); }).catch(function(e){ busy(b,false); fail(e); }); };
+}
+function printPerf(K){
+  var c=company(), m=K.m, cu=K.c, R=pfRows(K), strip=function(h){ return String(h).replace(/<div class="sub2">/g,'<br><span style="font-size:9px;color:#555">').replace(/<\/div>/g,'</span>').replace(/<span class="n">/g,'<span style="color:#555">'); };
+  var tile=function(l,v,s){ return '<td style="border:1px solid #d6d9e6;padding:7px 9px;width:33%;vertical-align:top"><div style="font-size:9.5px;color:#555;text-transform:uppercase">'+l+'</div><div style="font-size:16px;font-weight:700">'+v+'</div><div style="font-size:9.5px">'+(s||'')+'</div></td>'; };
+  var sec=function(i){ return '<h3>'+(i+1)+'. '+esc(Perf.KPIS[i][1])+'</h3><table class="it pk"><thead><tr><th style="width:56%">Measure</th><th class="r" style="width:22%">'+esc(K.label)+'</th><th class="r" style="width:22%">Cumulative</th></tr></thead><tbody>'+
+    R[i].map(function(r){ return '<tr><td>'+r[0].replace(/<\/?b>/g,'')+'</td><td class="r">'+strip(r[1])+'</td><td class="r">'+strip(r[2])+'</td></tr>'; }).join('')+'</tbody></table>'; };
+  var V=m.value.entries;
+  printDoc('QS Performance Report — '+K.label, letterhead()+'<h1>QS PERFORMANCE REPORT — '+esc(K.label.toUpperCase())+'</h1>'+
+    '<table class="meta"><tr><td class="k">Prepared by</td><td>'+esc([c.sender_name,c.sender_designation].filter(Boolean).join(', '))+'</td><td class="k" style="width:70px">Date</td><td>'+esc(Procure.longDate(today()))+'</td></tr>'+
+      '<tr><td class="k">Period</td><td>'+esc(K.label)+'; cumulative '+(K.start?'since '+esc(Procure.longDate(K.start)):'all records')+'</td><td class="k">Basis</td><td>Contract KPIs (clause 12)</td></tr></table>'+
+    '<table style="width:100%;border-collapse:collapse;margin:8px 0"><tr>'+tile('Contract value won',pfB(m.totals.contractWon),'cumulative '+pfB(cu.totals.contractWon))+tile('Savings',pfB(m.totals.savings),'cumulative '+pfB(cu.totals.savings))+tile('Collections',pfB(m.totals.collections),'cumulative '+pfB(cu.totals.collections))+'</tr><tr>'+
+      tile('Hours saved',(m.totals.hours||0).toFixed(1)+' h','cumulative '+(cu.totals.hours||0).toFixed(1)+' h')+tile('On-time submission',pfPct(m.totals.onTimeRate),'cumulative '+pfPct(cu.totals.onTimeRate))+tile('Win rate',pfPct(m.totals.winRate),'cumulative '+pfPct(cu.totals.winRate))+'</tr></table>'+
+    [0,1,2,3,4,5,6,7].map(sec).join('')+
+    '<h3>Six-month trend</h3><table class="it"><thead><tr><th>Month</th><th class="r">Submitted</th><th class="r">Won</th><th class="r">Win rate</th><th class="r">On time</th><th class="r">Gap on lost bids</th><th class="r">Contract won</th><th class="r">RFQ savings</th></tr></thead><tbody>'+
+      K.trend.map(function(t){ return '<tr><td>'+esc(Perf.monthName(t.month))+'</td><td class="r">'+t.submitted+'</td><td class="r">'+t.won+'</td><td class="r">'+(t.decided?pfPct(t.winRate):'—')+'</td><td class="r">'+pfPct(t.onTimeRate)+'</td><td class="r">'+pfPct(t.gapLostAvg,true)+'</td><td class="r">'+pfB(t.wonContract)+'</td><td class="r">'+pfB(t.rfqSaving)+'</td></tr>'; }).join('')+'</tbody></table>'+
+    '<h3>Value log — '+esc(K.label)+'</h3>'+(V.length?'<table class="it"><thead><tr><th>Date</th><th>Type</th><th>Ref</th><th class="r">B$</th><th class="r">Hours</th><th>Description</th><th>Verified</th></tr></thead><tbody>'+
+      V.map(function(x){ return '<tr><td>'+esc(fmtDate(x.entry_date))+'</td><td>'+esc(x.kind)+'</td><td>'+esc([x.arza_no,x.project_ref].filter(Boolean).join(' · '))+'</td><td class="r">'+(x.amount_bnd!=null?money(x.amount_bnd):'')+'</td><td class="r">'+(x.hours!=null?esc(x.hours):'')+'</td><td>'+esc(x.description)+(x.evidence?'':' <i>(no evidence)</i>')+'</td><td>'+(x.verified?esc(x.verified_name):'not yet')+'</td></tr>'; }).join('')+'</tbody></table>':'<p>No entries this month.</p>')+
+    '<p style="font-size:9.5px;color:#555;margin-top:10px">Figures come from the QS CRM records: tender register (closing, submission and result dates, own, winning and contract sums), RFQs (savings recorded at award against the median landed cost of the quotes that pass the checks, and against the masterlist budget for lines with a masterlist code), masterlist rate proposals and the value log. Value-log amounts include entries not yet verified; the verifier is shown per entry. Win rate = won ÷ (won + lost).</p>'+
+    '<div class="ft">QS Performance Report '+esc(K.month)+' · '+esc(c.name)+' · QS CRM</div>', '.it{font-size:9.5px}.pk{table-layout:fixed}h3{page-break-after:avoid}tr{page-break-inside:avoid}');
+}
+/* v3.3.0: savings of an awarded RFQ, from the comparison and the masterlist */
+function rfqSavingsOf(D, sid){
+  var C=cmpOf(D), row=C.rows.filter(function(x){ return x.q.supplier_id===sid; })[0], res=mlRes();
+  return Perf.rfqSavings(C, row, row&&Object.keys(res).length?Procure.budgetCheck(D.items, res, row.L):null);
+}
+function rdSavings(D){
+  var r=D.rfq; if(r.status!=='Awarded') return '';
+  if(r.median_bnd==null) return '<div class="hrow" style="margin-top:10px"><b>Savings</b>&nbsp;<span class="n">not recorded — needed for the QS Performance report</span><span style="flex:1"></span>'+(canWrite()?'<button class="btn sm" id="qSav">Record savings</button>':'')+'</div>';
+  var a=+r.award_total_bnd, md=+r.median_bnd, s=md-a;
+  return '<div class="hrow" style="margin-top:10px"><b>Savings</b>&nbsp;<span>awarded '+pfB(a)+' vs median of '+esc(r.valid_n)+' valid quote'+(r.valid_n==1?'':'s')+' '+pfB(md)+': <b class="'+(s>=0?'pos':'neg')+'">'+(s>=0?'':'−')+pfB(Math.abs(s))+'</b> ('+pfPct(md?s/md:null)+')'+
+    (r.ml_lines?' · vs masterlist budget on '+r.ml_lines+' line'+(r.ml_lines>1?'s':'')+': '+pfB(r.ml_budget_bnd-r.ml_quoted_bnd):'')+'</span></div>';
 }
 
 /* ---------- events ---------- */

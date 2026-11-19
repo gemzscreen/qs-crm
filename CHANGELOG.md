@@ -2,6 +2,18 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v3.3.0 — 19 Nov 2026
+
+- New: Reports › QS Performance — the QS function measured against the 8 KPIs of the contract (clause 12), month and cumulative from a start date (Admin Settings › Company & letterhead; set to 1 October 2026). Totals at the top: contract value won, savings, collections, hours saved, on-time submission, win rate. One section per KPI, a six-month trend and links to the tenders and RFQs behind each figure.
+- Built from existing records, no double entry: tenders handled by status, value submitted, win rate (won ÷ decided), contract value won (approved contract sum, else tendered), own vs winning sum, on-time submission (submission date vs closing date), pricing database upkeep (rate proposals accepted, quote prices captured, suppliers added) and RFQ reply rate / cycle time.
+- Procurement savings: the award now records the awarded landed cost against the median landed cost of the quotes that pass the checks, and against the masterlist budget for lines with an ML code. RFQs awarded earlier: “Record savings” on the RFQ page.
+- Value log: value engineering accepted, claims / collections received, cost savings, time saved, other — with tender or project reference, amount, hours, description and an evidence link (or upload to Drive). Verified by someone other than the person who recorded it; management (viewer) accounts can verify. A changed figure needs verifying again.
+- PDF: “QS Performance Report — <Month YYYY>” on the letterhead, same style as the RFQ monthly KPI report.
+- Notification bell: submitted tenders with no result 30+ days after closing, won tenders with no contract sum, value-log entries waiting for verification or without evidence, awarded RFQs without savings.
+- Viewers see the full report and value log (read only, plus Verify). No salary or personal data is stored.
+- Fixed: Quote prices and Rate proposals pages stayed in the page after signing out.
+- Database: value_log; savings columns on rfqs; settings perf. Applied by the Database workflow after merge. No Code.gs change.
+
 ## v3.2.2 — 17 Nov 2026
 
 - Notifications: a bell beside the theme button replaces the Dashboard "To do" card. It lists everything that needs attention, on every page: tenders past or near their closing date (7 days), records with no status, revisions waiting for approval, supplier reminders due today, RFQs ready to compare, quotes about to expire, awards with no delivery recorded, suppliers in the review queue, rate proposals and, for the admin, unfinished setup and mailbox errors. Click an item to go there; items clear by themselves once dealt with. Checked every 5 minutes.
