@@ -1,12 +1,13 @@
 -- =====================================================================================================
--- QS CRM (ARZA SDN BHD) — Supabase database, v3.3.0
+-- QS CRM (ARZA SDN BHD) — Supabase database, v4.0.0
 -- Run the whole file once in Supabase › SQL Editor › New query › Run. Safe to run again (upgrades in place).
 --
 -- Security model
 --   * Every person signs in with their own email + password (Supabase Auth). Public sign-up must be OFF.
---   * profiles.role: admin (users + everything) · qs (all data changes) · viewer (read only) · pm / site (v7, read only for now).
+--   * profiles.role: admin (users + everything) · qs (all data changes) · viewer = Management (reads everything, verifies value log)
+--     · pm = Project manager · site = Project engineer (no money) · proc = Procurement (RFQ only). Matrix: crm_perms() (v4.0.0).
 --   * The first account created becomes admin; later accounts start as viewer until the admin changes them.
---   * Tables are read-only through row-level security (signed-in, active users only).
+--   * Tables are read-only through row-level security, per area of the matrix (signed-in, active users only).
 --     All changes go through the crm_* functions below (SECURITY DEFINER) which check the role and the business rules
 --     (lock, one draft revision, approved = locked …) and write the activity log.
 --   * Files stay in Google Drive (Apps Script file service); only links are stored here.
@@ -17,7 +18,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
   full_name text default '',
-  role text not null default 'viewer' check (role in ('admin', 'qs', 'pm', 'site', 'viewer')),
+  role text not null default 'viewer' check (role in ('admin', 'qs', 'pm', 'site', 'viewer', 'proc')),
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
@@ -27,6 +28,9 @@ alter table public.profiles add column if not exists designation text default ''
 alter table public.profiles add column if not exists phone text default '';
 -- v3.2.2: profile picture - a small image (the app shrinks it to 160 x 160) kept as a data: URL
 alter table public.profiles add column if not exists avatar text default '';
+-- v4.0.0: new role proc (Procurement - RFQ tab only)
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles add constraint profiles_role_check check (role in ('admin', 'qs', 'pm', 'site', 'viewer', 'proc'));
 
 create table if not exists public.tenders (
   arza_no text primary key check (arza_no ~ '^T\d+$'),
@@ -206,6 +210,69 @@ begin
   return me;
 end $$;
 
+-- ---------- v4.0.0: one permission matrix (area x action per role) ----------
+-- Labels: admin = Admin · qs = QS · viewer = Management · pm = Project manager · site = Project engineer · proc = Procurement.
+-- Change who may do what HERE (and nowhere else): the app reads the same list through crm_me / crm_list (me.perms).
+-- Areas: dash · tender (Tenders, Contract, Tender reports) · library (BQ Library, Masterlist) · rfq (RFQs, Suppliers, Review queue)
+--        rates (Quote prices, Rate proposals) · perf (QS Performance, value log) · project (v4.1+) · config (RFQ settings, exchange rates) · log
+-- Actions: read · write · plus rfq.award, rfq.manage (reopen / savings), rfq.report (RFQ reports), perf.verify,
+--          project.readall / writeall (all projects, not only assigned ones), project.money (amounts on projects).
+-- admin may do everything (users and Admin Settings stay admin-only through crm_need(false, true)).
+create or replace function public.crm_perms() returns table (role text, area text, action text) language sql immutable as $$
+  select r, a, x from (values
+    ('qs', 'dash', 'read'), ('qs', 'tender', 'read'), ('qs', 'tender', 'write'), ('qs', 'library', 'read'), ('qs', 'library', 'write'),
+    ('qs', 'rfq', 'read'), ('qs', 'rfq', 'write'), ('qs', 'rfq', 'award'), ('qs', 'rfq', 'manage'), ('qs', 'rfq', 'report'),
+    ('qs', 'rates', 'read'), ('qs', 'rates', 'write'), ('qs', 'perf', 'read'), ('qs', 'perf', 'write'), ('qs', 'perf', 'verify'),
+    ('qs', 'project', 'read'), ('qs', 'project', 'readall'), ('qs', 'project', 'write'), ('qs', 'project', 'writeall'), ('qs', 'project', 'money'),
+    ('qs', 'config', 'write'), ('qs', 'log', 'read'),
+    ('viewer', 'dash', 'read'), ('viewer', 'tender', 'read'), ('viewer', 'library', 'read'), ('viewer', 'rfq', 'read'), ('viewer', 'rfq', 'report'),
+    ('viewer', 'rates', 'read'), ('viewer', 'perf', 'read'), ('viewer', 'perf', 'verify'),
+    ('viewer', 'project', 'read'), ('viewer', 'project', 'readall'), ('viewer', 'project', 'money'), ('viewer', 'log', 'read'),
+    ('pm', 'dash', 'read'), ('pm', 'tender', 'read'), ('pm', 'library', 'read'),
+    ('pm', 'project', 'read'), ('pm', 'project', 'readall'), ('pm', 'project', 'write'), ('pm', 'project', 'money'), ('pm', 'log', 'read'),
+    ('site', 'dash', 'read'), ('site', 'project', 'read'), ('site', 'project', 'write'),
+    ('proc', 'rfq', 'read'), ('proc', 'rfq', 'write'), ('proc', 'rfq', 'award')
+  ) m(r, a, x)
+  union all
+  select 'admin', a, x from (values ('dash', 'read'), ('tender', 'read'), ('tender', 'write'), ('library', 'read'), ('library', 'write'),
+    ('rfq', 'read'), ('rfq', 'write'), ('rfq', 'award'), ('rfq', 'manage'), ('rfq', 'report'), ('rates', 'read'), ('rates', 'write'),
+    ('perf', 'read'), ('perf', 'write'), ('perf', 'verify'), ('project', 'read'), ('project', 'readall'), ('project', 'write'), ('project', 'writeall'),
+    ('project', 'money'), ('config', 'write'), ('log', 'read'), ('users', 'write')) m(a, x)
+$$;
+create or replace function public.crm_can(p_role text, p_area text, p_action text) returns boolean language sql immutable as
+$$ select exists (select 1 from public.crm_perms() m where m.role = p_role and m.area = p_area and m.action = p_action) $$;
+/* the signed-in user's role may do it (row-level security policies use this) */
+create or replace function public.crm_area_ok(p_area text, p_action text default 'read') returns boolean language sql stable security definer set search_path = public as
+$$ select exists (select 1 from profiles where id = auth.uid() and active and crm_can(role, p_area, p_action)) $$;
+/* the app's copy of the matrix: ["tender.read", ...] for one role */
+create or replace function public.crm_perms_of(p_role text) returns jsonb language sql immutable as
+$$ select coalesce(jsonb_agg(m.area || '.' || m.action order by m.area, m.action), '[]') from public.crm_perms() m where m.role = p_role $$;
+create or replace function public.crm_area_label(p_area text) returns text language sql immutable as $$
+  select case p_area when 'dash' then 'the Dashboard' when 'tender' then 'Tenders and Contract' when 'library' then 'the BQ Library and Masterlist'
+    when 'rfq' then 'RFQs and suppliers' when 'rates' then 'quote prices and rate proposals' when 'perf' then 'QS Performance'
+    when 'project' then 'Projects' when 'config' then 'RFQ settings' when 'log' then 'the activity log' else coalesce(p_area, '?') end
+$$;
+create or replace function public.crm_role_label(p_role text) returns text language sql immutable as $$
+  select case p_role when 'admin' then 'Admin' when 'qs' then 'QS' when 'viewer' then 'Management' when 'pm' then 'Project manager'
+    when 'site' then 'Project engineer' when 'proc' then 'Procurement' else coalesce(p_role, '?') end
+$$;
+/* every API function starts with this: signed in, active, and the role may do <action> on <area> */
+create or replace function public.crm_needs(p_area text, p_action text default 'read') returns public.profiles
+language plpgsql stable security definer set search_path = public as $$
+declare me profiles := crm_need(false);
+begin
+  if crm_can(me.role, p_area, p_action) then return me; end if;
+  if p_action = 'read' then raise exception 'No access: % accounts cannot open %', crm_role_label(me.role), crm_area_label(p_area); end if;
+  if p_action = 'write' then
+    raise exception 'Read-only account (%) - % cannot change %', me.role, crm_role_label(me.role), crm_area_label(p_area);
+  end if;
+  raise exception 'Not allowed: % accounts cannot do this (% %)', crm_role_label(me.role), p_area, p_action;
+end $$;
+/* activity-log lines a role may see: Project managers only see tender / project lines (no RFQ, supplier or value-log lines) */
+create or replace function public.crm_log_ok(p_role text, p_no text) returns boolean language sql immutable as $$
+  select case when p_role in ('admin', 'qs', 'viewer') then true when p_role = 'pm' then coalesce(p_no, '') ~ '^[TP]\d+$' else false end
+$$;
+
 create or replace function public.crm_log(p_action text, p_no text, p_detail text) returns void
 language sql security definer set search_path = public as $$
   insert into activity_log (action, arza_no, detail, user_id, user_name)
@@ -290,30 +357,31 @@ create or replace function public.crm_ping(p jsonb default '{}') returns jsonb l
 begin perform crm_need(false); return jsonb_build_object('ok', true, 'time', crm_ftz(now())); end $$;
 
 create or replace function public.crm_me(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
-begin return crm_pj(crm_need(false)); end $$;
+declare me profiles := crm_need(false);
+begin return crm_pj(me) || jsonb_build_object('perms', crm_perms_of(me.role)); end $$;   -- v4.0.0: perms = the role's matrix
 
 /* everything the register needs in one call */
 create or replace function public.crm_list(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
-declare me profiles := crm_need(false);
+declare me profiles := crm_need(false); tr boolean;
 begin
+  tr := crm_can(me.role, 'tender', 'read');   -- v4.0.0: Project engineers and Procurement get no tenders (and no money)
   return jsonb_build_object(
-    'tenders', coalesce((select jsonb_agg(crm_tj(t) || jsonb_build_object(
+    'tenders', case when not tr then '[]'::jsonb else coalesce((select jsonb_agg(crm_tj(t) || jsonb_build_object(
         '_bq_lines', (select count(*) from bq_items b where b.arza_no = t.arza_no and b.bq_set = 'Tendered'),
         '_asbuilt_lines', (select count(*) from asbuilt_items a where a.arza_no = t.arza_no),
         '_revs', (select count(*) from revisions r where r.arza_no = t.arza_no and r.status <> 'Void'),
         '_draft', coalesce((select r.rev from revisions r where r.arza_no = t.arza_no and r.status = 'Draft' limit 1), ''))
-      order by t.arza_no) from tenders t), '[]'),
+      order by t.arza_no) from tenders t), '[]') end,
     'lists', crm_lists(),
-    'log', coalesce((select jsonb_agg(crm_lj(l) order by l.id) from activity_log l
-                     where l.id >= coalesce((select id from activity_log order by id desc offset 199 limit 1), 0)), '[]'),
+    'log', coalesce((select jsonb_agg(crm_lj(l) order by l.id) from (select * from activity_log l0 where crm_log_ok(me.role, l0.arza_no) order by l0.id desc limit 200) l), '[]'),
     'drive', '',
-    'me', crm_pj(me));
+    'me', crm_pj(me) || jsonb_build_object('perms', crm_perms_of(me.role)));
 end $$;
 
 create or replace function public.crm_get(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 declare t tenders;
 begin
-  perform crm_need(false); t := crm_tender(p ->> 'arza_no');
+  perform crm_needs('tender', 'read'); t := crm_tender(p ->> 'arza_no');
   return jsonb_build_object('tender', crm_tj(t),
     'bills', coalesce((select jsonb_agg(jsonb_build_object('bill', bill, 'lines', n, 'amount', amt) order by first_id)
       from (select coalesce(bill, '-') bill, count(*) n, round(coalesce(sum(amount), 0), 2) amt, min(id) first_id from bq_items
@@ -324,7 +392,7 @@ end $$;
 
 /* create (no arza_no) or update tender fields; p.lock = true also locks the BQ */
 create or replace function public.crm_save(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); f jsonb := crm_clean(p -> 'fields'); v_no text := nullif(p ->> 'arza_no', ''); t tenders; n tenders;
+declare me profiles := crm_needs('tender', 'write'); f jsonb := crm_clean(p -> 'fields'); v_no text := nullif(p ->> 'arza_no', ''); t tenders; n tenders;
   k text; ch text[] := '{}'; ov text; nv text;
 begin
   if v_no is null then
@@ -361,7 +429,7 @@ end $$;
 
 /* new tender from a priced workbook read in the browser (file goes to Drive afterwards, see crm_setfile) */
 create or replace function public.crm_importtender(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); f jsonb := crm_clean(p -> 'fields'); want text := coalesce(p ->> 'arza_no', ''); taken boolean; v_no text; n tenders; cnt int;
+declare me profiles := crm_needs('tender', 'write'); f jsonb := crm_clean(p -> 'fields'); want text := coalesce(p ->> 'arza_no', ''); taken boolean; v_no text; n tenders; cnt int;
 begin
   taken := exists (select 1 from tenders where arza_no = want);
   v_no := case when want ~ '^T\d+$' and not taken then want else crm_next_no() end;
@@ -378,7 +446,7 @@ end $$;
 
 /* record where a file was stored in Drive */
 create or replace function public.crm_setfile(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no');
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no');
 begin
   update tenders set folder_link = coalesce(nullif(p ->> 'folder_link', ''), folder_link), workbook_file = coalesce(nullif(p ->> 'workbook_file', ''), workbook_file),
     updated_at = now(), updated_by = me.id where arza_no = t.arza_no;
@@ -388,7 +456,7 @@ end $$;
 
 /* file stored in Drive (link) and / or replace the tendered BQ (only when not locked and no revisions) */
 create or replace function public.crm_uploadfile(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no'); msg text[] := '{}'; cnt int; extra jsonb := '{}';
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no'); msg text[] := '{}'; cnt int; extra jsonb := '{}';
 begin
   if coalesce((p ->> 'replaceBQ')::boolean, false) then
     if t.locked = 'Y' then raise exception 'Tendered BQ is locked - unlock first to replace it'; end if;
@@ -414,7 +482,7 @@ end $$;
 create or replace function public.crm_asbuiltdata(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 declare t tenders; cur revisions;
 begin
-  perform crm_need(false); t := crm_tender(p ->> 'arza_no'); cur := crm_current(t.arza_no);
+  perform crm_needs('tender', 'read'); t := crm_tender(p ->> 'arza_no'); cur := crm_current(t.arza_no);
   return jsonb_build_object('items', crm_bqj(t.arza_no, 'Tendered'),
     'revision', case when cur.rev is null then null else crm_rj(cur) end,
     'revLines', case when cur.rev is null then '[]'::jsonb else crm_bqj(t.arza_no, cur.rev) end,
@@ -423,7 +491,7 @@ end $$;
 
 /* save one measure set (same name replaces it) */
 create or replace function public.crm_importasbuilt(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no'); v_set text := btrim(coalesce(p ->> 'measure_set', '')); removed int; cnt int; msg text;
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no'); v_set text := btrim(coalesce(p ->> 'measure_set', '')); removed int; cnt int; msg text;
 begin
   if v_set = '' then raise exception 'Give the measure set a name'; end if;
   delete from asbuilt_items where arza_no = t.arza_no and measure_set = v_set; get diagnostics removed = row_count;
@@ -447,7 +515,7 @@ begin
 end $$;
 
 create or replace function public.crm_deletemeasureset(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no'); n int;
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no'); n int;
 begin
   delete from asbuilt_items where arza_no = t.arza_no and measure_set = coalesce(p ->> 'measure_set', ''); get diagnostics n = row_count;
   perform crm_log('asbuilt', t.arza_no, 'Deleted measure set ' || coalesce(p ->> 'measure_set', '') || ' (' || n || ' lines)');
@@ -456,12 +524,12 @@ end $$;
 
 create or replace function public.crm_lock(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
 begin
-  perform crm_need(true); perform crm_do_lock((crm_tender(p ->> 'arza_no')).arza_no, p ->> 'reason');
+  perform crm_needs('tender', 'write'); perform crm_do_lock((crm_tender(p ->> 'arza_no')).arza_no, p ->> 'reason');
   return crm_out(crm_tj(crm_tender(p ->> 'arza_no')));
 end $$;
 
 create or replace function public.crm_unlock(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no'); live text;
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no'); live text;
 begin
   if length(btrim(coalesce(p ->> 'reason', ''))) < 5 then raise exception 'Give a reason to unlock'; end if;
   select string_agg(rev, ', ' order by crm_revn(rev)) into live from revisions where arza_no = t.arza_no and status <> 'Void';
@@ -473,7 +541,7 @@ end $$;
 
 /* bid result: Won / Lost / Cancelled / No bid */
 create or replace function public.crm_result(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no'); r jsonb := coalesce(p -> 'result', '{}'); st text := r ->> 'status'; ws numeric; dp numeric; txt text;
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no'); r jsonb := coalesce(p -> 'result', '{}'); st text := r ->> 'status'; ws numeric; dp numeric; txt text;
 begin
   if st is null or st not in ('Won', 'Lost', 'Cancelled', 'No bid') then raise exception 'Result must be Won, Lost, Cancelled or No bid'; end if;
   ws := case when st = 'Won' then t.our_sum else crm_n(r -> 'winning_sum') end;
@@ -494,7 +562,7 @@ end $$;
 create or replace function public.crm_revdata(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 declare t tenders;
 begin
-  perform crm_need(false); t := crm_tender(p ->> 'arza_no');
+  perform crm_needs('tender', 'read'); t := crm_tender(p ->> 'arza_no');
   return jsonb_build_object('tender', crm_tj(t), 'items', crm_bqj(t.arza_no, 'Tendered'),
     'lines', coalesce((select jsonb_agg(crm_bj(b) order by b.id) from bq_items b where b.arza_no = t.arza_no and b.bq_set <> 'Tendered'), '[]'),
     'revisions', crm_revs(t.arza_no));
@@ -502,7 +570,7 @@ end $$;
 
 /* create (no rev) or update a Draft revision: record + all its lines */
 create or replace function public.crm_saverevision(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no'); rec revisions; cur revisions; dr text; removed int; m jsonb := coalesce(p -> 'meta', '{}');
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no'); rec revisions; cur revisions; dr text; removed int; m jsonb := coalesce(p -> 'meta', '{}');
 begin
   if t.locked <> 'Y' then raise exception 'Lock the tendered BQ of % first - revisions are made after submission', t.arza_no; end if;
   if coalesce(p ->> 'rev', '') = '' then
@@ -539,7 +607,7 @@ end $$;
 
 /* approval record (both parties): locks the revision and makes it the contract BQ */
 create or replace function public.crm_approverevision(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no'); a jsonb := coalesce(p -> 'approval', '{}'); rec revisions; k text;
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no'); a jsonb := coalesce(p -> 'approval', '{}'); rec revisions; k text;
 begin
   select * into rec from revisions where arza_no = t.arza_no and rev = p ->> 'rev';
   if not found then raise exception 'Revision % not found', p ->> 'rev'; end if;
@@ -566,7 +634,7 @@ begin
 end $$;
 
 create or replace function public.crm_deleterevision(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no'); rec revisions; n int;
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no'); rec revisions; n int;
 begin
   select * into rec from revisions where arza_no = t.arza_no and rev = p ->> 'rev';
   if not found then raise exception 'Revision % not found', p ->> 'rev'; end if;
@@ -579,7 +647,7 @@ end $$;
 
 /* void the latest approved revision (needs a reason, lines are kept) */
 create or replace function public.crm_voidrevision(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); t tenders := crm_tender(p ->> 'arza_no'); cur revisions; prev revisions; dr revisions;
+declare me profiles := crm_needs('tender', 'write'); t tenders := crm_tender(p ->> 'arza_no'); cur revisions; prev revisions; dr revisions;
 begin
   if length(btrim(coalesce(p ->> 'reason', ''))) < 5 then raise exception 'Give a reason to void the revision'; end if;
   cur := crm_current(t.arza_no);
@@ -607,7 +675,7 @@ declare me profiles := crm_need(false, true); u profiles; ch text[] := '{}';
 begin
   select * into u from profiles where id = (p ->> 'id')::uuid;
   if not found then raise exception 'User not found'; end if;
-  if p ? 'role' and (p ->> 'role') not in ('admin', 'qs', 'pm', 'site', 'viewer') then raise exception 'Unknown role %', p ->> 'role'; end if;
+  if p ? 'role' and (p ->> 'role') not in ('admin', 'qs', 'pm', 'site', 'viewer', 'proc') then raise exception 'Unknown role %', p ->> 'role'; end if;
   if u.role = 'admin' and u.active and ((p ? 'role' and p ->> 'role' <> 'admin') or (p ? 'active' and not (p ->> 'active')::boolean))
      and not exists (select 1 from profiles where role = 'admin' and active and id <> u.id) then
     raise exception 'There must be at least one active admin';
@@ -736,7 +804,7 @@ end $$;
 create or replace function public.crm_library(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 declare lim int := least(greatest(coalesce((p ->> 'limit')::int, 200), 1), 1000);
 begin
-  perform crm_need(false);
+  perform crm_needs('library', 'read');
   return (
     with r as (select * from crm_lib_rows(p))
     select jsonb_build_object(
@@ -762,9 +830,14 @@ end $$;
 -- v2.3.0: dashboard (money view: tendered vs contract, revisions waiting, won projects + as-built)
 -- =====================================================================================================
 create or replace function public.crm_dashboard(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare me profiles := crm_needs('dash', 'read'); d jsonb;
 begin
-  perform crm_need(false);
-  return jsonb_build_object(
+  -- v4.0.0: Project engineers see no tender figures (their project tiles come with v4.1)
+  if not crm_can(me.role, 'tender', 'read') then
+    return jsonb_build_object('kpi', '{}'::jsonb, 'rationalization', '[]'::jsonb, 'revised', '[]'::jsonb, 'drafts', '[]'::jsonb,
+      'closing', '[]'::jsonb, 'won_projects', '[]'::jsonb, 'limited', true);
+  end if;
+  d := jsonb_build_object(
     'kpi', (select jsonb_build_object(
         'tenders', count(*),
         'open', count(*) filter (where coalesce(status, '') in ('', 'Prospect', 'Pricing', 'Pending')),
@@ -819,6 +892,10 @@ begin
           'measure_set', l.measure_set, 'measured_on', crm_ftz(l.imported_at), 'items', agg.items, 'measured', agg.measured,
           'asbuilt', case when l.measure_set is not null then agg.ab_value end) order by w.arza_no)
       from won w left join lastset l on l.arza_no = w.arza_no left join agg on agg.arza_no = w.arza_no), '[]'));
+  -- v4.0.0: value-log and savings counts only for roles that see QS Performance / manage RFQs
+  if not crm_can(me.role, 'perf', 'read') then d := jsonb_set(d, '{kpi}', (d -> 'kpi') - 'value_no_evidence' - 'value_to_verify'); end if;
+  if not crm_can(me.role, 'rfq', 'manage') then d := jsonb_set(d, '{kpi}', (d -> 'kpi') - 'rfq_no_savings'); end if;
+  return d;
 end $$;
 
 -- =====================================================================================================
@@ -1038,7 +1115,7 @@ $$;
 /* everything the Suppliers page needs in one call */
 create or replace function public.crm_procdata(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 begin
-  perform crm_need(false);
+  perform crm_needs('rfq', 'read');
   return jsonb_build_object(
     'suppliers', coalesce((select jsonb_agg(crm_supj(s) || jsonb_build_object('stats', crm_supstats(s.supplier_id)) order by s.supplier_id) from suppliers s), '[]'),
     'categories', coalesce((select jsonb_agg(jsonb_build_object('code', code, 'name', name, 'examples', examples, 'ml_prefix', ml_prefix) order by sort) from categories), '[]'),
@@ -1050,7 +1127,7 @@ end $$;
 create or replace function public.crm_supplier(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 declare s suppliers;
 begin
-  perform crm_need(false); s := crm_sup(p ->> 'supplier_id');
+  perform crm_needs('rfq', 'read'); s := crm_sup(p ->> 'supplier_id');
   return jsonb_build_object('supplier', crm_supj(s),
     'log', coalesce((select jsonb_agg(crm_lj(l) order by l.id) from activity_log l where l.arza_no = s.supplier_id), '[]'),
     'sources', coalesce((select jsonb_agg(jsonb_build_object('id', c.id, 'batch', c.batch, 'source_file', c.source_file, 'status', c.status, 'decided_at', crm_ftz(c.decided_at)) order by c.id)
@@ -1059,7 +1136,7 @@ end $$;
 
 /* new (no supplier_id) or update. New: returns {saved:false, dups} when it shares a key with a supplier, unless p.force */
 create or replace function public.crm_savesupplier(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); v_id text := nullif(upper(btrim(coalesce(p ->> 'supplier_id', ''))), ''); old suppliers; s suppliers;
+declare me profiles := crm_needs('rfq', 'write'); v_id text := nullif(upper(btrim(coalesce(p ->> 'supplier_id', ''))), ''); old suppliers; s suppliers;
   f jsonb := coalesce(p -> 'fields', '{}'); v_keys text[] := crm_textarr(p -> 'keys'); d jsonb; k text; ch text[] := '{}';
 begin
   if v_id is null then
@@ -1081,7 +1158,7 @@ end $$;
 
 /* verification (Verified / Failed need a note) and status (Blacklisted needs a reason) */
 create or replace function public.crm_setsupplierstate(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); s suppliers := crm_sup(p ->> 'supplier_id'); v text := nullif(p ->> 'verification', ''); st text := nullif(p ->> 'status', '');
+declare me profiles := crm_needs('rfq', 'write'); s suppliers := crm_sup(p ->> 'supplier_id'); v text := nullif(p ->> 'verification', ''); st text := nullif(p ->> 'status', '');
   note text := btrim(coalesce(p ->> 'note', '')); msg text[] := '{}';
 begin
   if v is not null and v not in ('Unverified', 'Checked', 'Verified', 'Failed') then raise exception 'Unknown verification %', v; end if;
@@ -1106,7 +1183,7 @@ end $$;
 create or replace function public.crm_queue(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 declare st text := coalesce(nullif(p ->> 'status', ''), 'Pending'); lim int := least(greatest(coalesce((p ->> 'limit')::int, 500), 1), 2000);
 begin
-  perform crm_need(false);
+  perform crm_needs('rfq', 'read');
   return jsonb_build_object(
     'rows', coalesce((select jsonb_agg(crm_qj(c) order by c.id) from (select * from discovery_candidates where st = 'All' or status = st order by id desc limit lim) c), '[]'),
     'counts', (select jsonb_build_object('Pending', count(*) filter (where status = 'Pending'), 'Approved', count(*) filter (where status = 'Approved'),
@@ -1115,7 +1192,7 @@ end $$;
 
 /* add discovery rows to the queue: p {batch, source_file, rows:[{row_no, data, checks, keys}]}. A row whose keys equal a Pending row's is skipped. */
 create or replace function public.crm_queueadd(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); r jsonb; v_keys text[]; added int := 0; skipped int := 0; b text := btrim(coalesce(p ->> 'batch', '')); nid bigint; ids jsonb := '[]';
+declare me profiles := crm_needs('rfq', 'write'); r jsonb; v_keys text[]; added int := 0; skipped int := 0; b text := btrim(coalesce(p ->> 'batch', '')); nid bigint; ids jsonb := '[]';
 begin
   if b = '' then b := coalesce(nullif(p ->> 'source_file', ''), 'import') || ' ' || to_char(now(), 'YYYY-MM-DD HH24:MI'); end if;
   if jsonb_typeof(p -> 'rows') <> 'array' or jsonb_array_length(p -> 'rows') = 0 then raise exception 'No rows to add'; end if;
@@ -1135,7 +1212,7 @@ end $$;
 
 /* DNS-over-HTTPS results from the browser: p {rows:[{id, dns}]} */
 create or replace function public.crm_queuedns(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); n int;
+declare me profiles := crm_needs('rfq', 'write'); n int;
 begin
   update discovery_candidates c set dns = x.d -> 'dns' from jsonb_array_elements(coalesce(p -> 'rows', '[]')) x(d)
     where c.id = (x.d ->> 'id')::bigint and c.status = 'Pending' and jsonb_typeof(x.d -> 'dns') = 'object';
@@ -1146,7 +1223,7 @@ end $$;
 /* decisions on queue rows: p {items:[{id, action approve|merge|reject|reopen, supplier_id (merge target), fields, categories, contacts, keys,
    verification (Unverified|Checked from the automatic checks), reason, force}]}. Each item is done on its own; errors are returned per item. */
 create or replace function public.crm_queuedecide(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); it jsonb; c discovery_candidates; s suppliers; t suppliers; act text; v_keys text[]; d jsonb; res jsonb := '[]'; v text;
+declare me profiles := crm_needs('rfq', 'write'); it jsonb; c discovery_candidates; s suppliers; t suppliers; act text; v_keys text[]; d jsonb; res jsonb := '[]'; v text;
   f jsonb; k text; ncon int; ncat int; filled text[];
 begin
   for it in select * from jsonb_array_elements(coalesce(p -> 'items', '[]')) loop
@@ -1396,6 +1473,9 @@ begin
   if not found then raise exception 'RFQ % not found', coalesce(p_no, '(blank)'); end if;
   return r;
 end $$;
+-- v4.0.0: the boss's approval document behind an award (required when Procurement records the award) and who recorded it
+alter table public.rfqs add column if not exists award_doc text;
+alter table public.rfqs add column if not exists award_by_role text;
 create or replace function public.crm_rfqj(r public.rfqs) returns jsonb language sql stable security definer set search_path = public as $$
   select to_jsonb(r) - 'created_by' - 'updated_by' || jsonb_build_object('rfq_date', crm_fd(r.rfq_date), 'required_date', crm_fd(r.required_date), 'deadline', crm_fd(r.deadline),
     'sent_at', crm_ftz(r.sent_at), 'created_at', crm_ftz(r.created_at), 'updated_at', crm_ftz(r.updated_at),
@@ -1424,7 +1504,7 @@ end $$;
 /* register: every RFQ with its recipients (small; the browser builds the chase list and the RFQ reports from it) */
 create or replace function public.crm_rfqs(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 begin
-  perform crm_need(false);
+  perform crm_needs('rfq', 'read');
   return jsonb_build_object('rfqs', coalesce((select jsonb_agg(crm_rfqj(r) || jsonb_build_object(
       'items_n', (select count(*) from rfq_items i where i.rfq_no = r.rfq_no),
       'quotes_n', (select count(*) from quotes q where q.rfq_no = r.rfq_no and q.current),
@@ -1439,7 +1519,7 @@ end $$;
 create or replace function public.crm_rfq(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 declare r rfqs;
 begin
-  perform crm_need(false); r := crm_rfqget(p ->> 'rfq_no');
+  perform crm_needs('rfq', 'read'); r := crm_rfqget(p ->> 'rfq_no');
   return jsonb_build_object('rfq', crm_rfqj(r),
     'items', coalesce((select jsonb_agg(jsonb_build_object('id', i.id, 'line', i.line, 'description', i.description, 'short', coalesce(i.short, ''), 'spec_brand', coalesce(i.spec_brand, ''),
         'qty', i.qty, 'unit', coalesce(i.unit, ''), 'required_date', crm_fd(i.required_date), 'category', i.category, 'res_code', coalesce(i.res_code, ''),
@@ -1465,7 +1545,7 @@ end $$;
 
 /* new (no rfq_no, or an imported number) or update: p {rfq_no, new, header {...}, items [...]} */
 create or replace function public.crm_saverfq(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); h jsonb := coalesce(p -> 'header', '{}'); its jsonb := coalesce(p -> 'items', '[]'); v_no text := nullif(upper(btrim(coalesce(p ->> 'rfq_no', ''))), '');
+declare me profiles := crm_needs('rfq', 'write'); h jsonb := coalesce(p -> 'header', '{}'); its jsonb := coalesce(p -> 'items', '[]'); v_no text := nullif(upper(btrim(coalesce(p ->> 'rfq_no', ''))), '');
   isnew boolean := coalesce((p ->> 'new')::boolean, v_no is null); d date; n int; old rfqs; r rfqs; bad text; req date;
 begin
   if btrim(coalesce(h ->> 'title', '')) = '' then raise exception 'Give the RFQ a title (e.g. "SS304 railing tubes & fittings")'; end if;
@@ -1511,7 +1591,7 @@ end $$;
 
 /* send list: p {rfq_no, add:[{supplier_id, zone, priority, email, whatsapp, phone, status?, emailed_at?, whatsapp_at?, replied_at?, valid_quote?, note?}], remove:[supplier_id]} */
 create or replace function public.crm_setrecipients(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); x jsonb; s suppliers; nadd int := 0; ndel int := 0; names text[] := '{}'; st text;
+declare me profiles := crm_needs('rfq', 'write'); r rfqs := crm_rfqget(p ->> 'rfq_no'); x jsonb; s suppliers; nadd int := 0; ndel int := 0; names text[] := '{}'; st text;
 begin
   if r.status in ('Awarded', 'Cancelled') then raise exception '% is % - the send list cannot change', r.rfq_no, lower(r.status); end if;
   for x in select * from jsonb_array_elements(coalesce(p -> 'add', '[]')) loop
@@ -1542,7 +1622,7 @@ end $$;
 
 /* one click on a send-list button: p {rfq_no, supplier_id, action email|whatsapp|reminder1|reminder2|call} -> timestamps + status */
 create or replace function public.crm_rfqclick(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); a text := coalesce(p ->> 'action', ''); x rfq_recipients; resp boolean;
+declare me profiles := crm_needs('rfq', 'write'); r rfqs := crm_rfqget(p ->> 'rfq_no'); a text := coalesce(p ->> 'action', ''); x rfq_recipients; resp boolean;
 begin
   if a not in ('email', 'whatsapp', 'reminder1', 'reminder2', 'call', 'thanks', 'regret') then raise exception 'Unknown action %', a; end if;
   if r.status = 'Cancelled' then raise exception '% is cancelled', r.rfq_no; end if;
@@ -1570,7 +1650,7 @@ end $$;
 /* status buttons: p {rfq_no, supplier_id, status, valid_quote, note, at}. Replied / Quoted / Declined -> supplier Verified (real reply);
    Bounced with no phone or WhatsApp on file -> supplier Failed. */
 create or replace function public.crm_setrecipient(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); x rfq_recipients; s suppliers; st text := coalesce(p ->> 'status', ''); old text; oldv boolean; msg text;
+declare me profiles := crm_needs('rfq', 'write'); r rfqs := crm_rfqget(p ->> 'rfq_no'); x rfq_recipients; s suppliers; st text := coalesce(p ->> 'status', ''); old text; oldv boolean; msg text;
 begin
   if st not in ('Not contacted', 'Emailed', 'WhatsApp sent', 'Reminder 1', 'Reminder 2', 'Replied', 'Quoted', 'Declined', 'No reply', 'Bounced') then raise exception 'Unknown status %', st; end if;
   select * into x from rfq_recipients where rfq_no = r.rfq_no and supplier_id = upper(p ->> 'supplier_id') for update;
@@ -1597,7 +1677,7 @@ end $$;
 
 /* RFQ status by hand: Short (goal guard), Approval sent, Awarded, Cancelled - or back to automatic (status 'auto') */
 create or replace function public.crm_rfqstatus(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); st text := coalesce(p ->> 'status', ''); note text := btrim(coalesce(p ->> 'note', ''));
+declare me profiles := crm_needs('rfq', 'write'); r rfqs := crm_rfqget(p ->> 'rfq_no'); st text := coalesce(p ->> 'status', ''); note text := btrim(coalesce(p ->> 'note', ''));
 begin
   if st not in ('auto', 'Short', 'Approval sent', 'Awarded', 'Cancelled') then raise exception 'Status must be Short, Approval sent, Awarded, Cancelled or auto'; end if;
   if st = 'Cancelled' and length(note) < 3 then raise exception 'Give the reason for cancelling'; end if;
@@ -1647,7 +1727,7 @@ $$;
 /* save a quote: p {rfq_no, supplier_id, id (edit) | new_rev true (revised quote), header {...}, lines [{line, unit_price, qty, moq, unit, brand, compliant, note}]}
    -> the recipient becomes Quoted (valid tick = header.valid), the supplier Verified (real reply) */
 create or replace function public.crm_savequote(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); s suppliers := crm_sup(p ->> 'supplier_id'); h jsonb := coalesce(p -> 'header', '{}');
+declare me profiles := crm_needs('rfq', 'write'); r rfqs := crm_rfqget(p ->> 'rfq_no'); s suppliers := crm_sup(p ->> 'supplier_id'); h jsonb := coalesce(p -> 'header', '{}');
   q quotes; v_id bigint := nullif(p ->> 'id', '')::bigint; v_rev int; bad text; n int; rc rfq_recipients;
 begin
   if r.status in ('Awarded', 'Cancelled') then raise exception '% is % - quotes cannot change', r.rfq_no, lower(r.status); end if;
@@ -1699,7 +1779,7 @@ begin
 end $$;
 
 create or replace function public.crm_deletequote(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); q quotes; r rfqs;
+declare me profiles := crm_needs('rfq', 'write'); q quotes; r rfqs;
 begin
   select * into q from quotes where id = nullif(p ->> 'id', '')::bigint;
   if not found then raise exception 'Quote not found'; end if;
@@ -1713,7 +1793,7 @@ end $$;
 
 /* FX table (B$ per 1 unit): p {rates: {USD: {rate, date, source}, ...}} - QS or admin */
 create or replace function public.crm_setfx(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); k text; v jsonb; out jsonb := '{}'; ch text[] := '{}'; old jsonb := coalesce((select value from settings where key = 'fx'), '{}');
+declare me profiles := crm_needs('config', 'write'); k text; v jsonb; out jsonb := '{}'; ch text[] := '{}'; old jsonb := coalesce((select value from settings where key = 'fx'), '{}');
 begin
   for k, v in select * from jsonb_each(coalesce(p -> 'rates', '{}')) loop
     if k !~ '^[A-Z]{3}$' or k in ('BND', 'SGD') then raise exception 'Currency % - use a 3-letter code (B$ and S$ are always 1:1)', k; end if;
@@ -1731,7 +1811,10 @@ end $$;
 
 /* recommendation / approval sent / award: p {rfq_no, action recommend|approval_sent|award|reopen, supplier_id, reason, award_by, award_date, po_ref, note, fx} */
 create or replace function public.crm_rfqdecide(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); a text := coalesce(p ->> 'action', ''); s suppliers; msg text;
+declare a text := coalesce(p ->> 'action', '');
+  -- v4.0.0: Procurement may award (with the boss's approval document); reopen and savings stay with QS / admin
+  me profiles := crm_needs('rfq', case when a = 'award' then 'award' when a in ('reopen', 'savings') then 'manage' else 'write' end);
+  r rfqs := crm_rfqget(p ->> 'rfq_no'); s suppliers; msg text; doc text := nullif(btrim(coalesce(p ->> 'award_doc', '')), '');
 begin
   if r.status = 'Cancelled' then raise exception '% is cancelled', r.rfq_no; end if;
   if a in ('recommend', 'award') then
@@ -1749,7 +1832,12 @@ begin
     msg := 'Approval pack sent (recommended ' || r.recommended_supplier || ')';
   elsif a = 'award' then
     if length(btrim(coalesce(p ->> 'award_by', ''))) < 2 then raise exception 'Who approved it? (e.g. the boss''s name)'; end if;
-    update rfqs set status = 'Awarded', award_supplier = s.supplier_id, award_by = btrim(p ->> 'award_by'), award_date = coalesce(nullif(p ->> 'award_date', '')::date, current_date),
+    if doc is not null and doc ~* '^[a-z][a-z0-9+.-]*:' and doc !~* '^https?://' then raise exception 'The approval document must be a web link (https://...) or a reference'; end if;
+    if doc is null and not crm_can(me.role, 'rfq', 'manage') then
+      raise exception 'Attach the boss''s approval (upload it or paste the link / memo ref) - Procurement awards need documented approval';
+    end if;
+    if length(coalesce(doc, '')) > 500 then raise exception 'The approval document link is too long'; end if;
+    update rfqs set status = 'Awarded', award_supplier = s.supplier_id, award_by = btrim(p ->> 'award_by'), award_doc = doc, award_by_role = me.role, award_date = coalesce(nullif(p ->> 'award_date', '')::date, current_date),
       po_ref = nullif(btrim(coalesce(p ->> 'po_ref', '')), ''), award_note = nullif(btrim(coalesce(p ->> 'note', '')), ''),
       recommended_supplier = coalesce(recommended_supplier, s.supplier_id),
       award_total_bnd = nullif(p ->> 'total_bnd', '')::numeric, saving_bnd = nullif(p ->> 'saving_bnd', '')::numeric,
@@ -1764,10 +1852,11 @@ begin
     from jsonb_array_elements(case when jsonb_typeof(p -> 'proposals') = 'array' then p -> 'proposals' else '[]' end) x
     where coalesce(x ->> 'res_code', '') ~* '^[A-Z]{1,3}\d{1,4}[a-z]?$' and coalesce(x ->> 'new_price', '') ~ '^\d+(\.\d+)?$' and coalesce(x ->> 'line', '') ~ '^\d+$';
     msg := 'Awarded to ' || s.supplier_id || ' ' || s.name || ' - approved by ' || btrim(p ->> 'award_by') || coalesce(', PO ' || nullif(btrim(p ->> 'po_ref'), ''), '')
+      || coalesce(', approval doc ' || doc, '') || case when me.role = 'proc' then ' (recorded by Procurement)' else '' end
       || case when r.recommended_supplier is not null and r.recommended_supplier <> s.supplier_id then ' (recommended was ' || r.recommended_supplier || ')' else '' end;
   elsif a = 'reopen' then
     if r.status <> 'Awarded' and r.status <> 'Approval sent' then raise exception '% is not awarded / sent for approval', r.rfq_no; end if;
-    update rfqs set status = 'Draft', award_supplier = null, award_by = null, award_date = null, po_ref = null, award_note = null, approval_sent_at = null,
+    update rfqs set status = 'Draft', award_supplier = null, award_by = null, award_doc = null, award_by_role = null, award_date = null, po_ref = null, award_note = null, approval_sent_at = null,
       award_total_bnd = null, saving_bnd = null, median_bnd = null, valid_n = null, ml_budget_bnd = null, ml_quoted_bnd = null, ml_lines = null, delivered_on = null, delivery_on_time = null, delivery_quality = null, delivery_note = null, updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
     delete from rate_proposals where rfq_no = r.rfq_no and status = 'Proposed';
     perform crm_rfqauto(r.rfq_no);
@@ -1871,7 +1960,7 @@ $$;
 create or replace function public.crm_setjson(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
 declare k text := p ->> 'key'; v jsonb := coalesce(p -> 'value', '{}'); me profiles; out jsonb := '{}'; e record; n numeric; t numeric := 0;
 begin
-  me := crm_need(true, k = 'mailbox');
+  me := case when k = 'mailbox' then crm_need(false, true) else crm_needs('config', 'write') end;
   if jsonb_typeof(v) <> 'object' then raise exception 'Bad setting value'; end if;
   if k = 'scoring' then
     foreach k in array array['price', 'lead', 'payment', 'reliability'] loop
@@ -1976,12 +2065,12 @@ end $$;
 /* ---------- rate proposals ---------- */
 create or replace function public.crm_rateprops(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 begin
-  perform crm_need(false);
+  perform crm_needs('rates', 'read');
   return jsonb_build_object('proposals', coalesce((select jsonb_agg(crm_propj(x) order by (x.status = 'Proposed') desc, x.created_at desc, x.id)
     from rate_proposals x where coalesce(p ->> 'status', '') = '' or x.status = p ->> 'status'), '[]'));
 end $$;
 create or replace function public.crm_ratedecide(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); x rate_proposals; d text := p ->> 'decision';
+declare me profiles := crm_needs('rates', 'write'); x rate_proposals; d text := p ->> 'decision';
 begin
   if d not in ('Accepted', 'Rejected', 'Proposed') then raise exception 'Decision must be Accepted or Rejected'; end if;
   select * into x from rate_proposals where id = nullif(p ->> 'id', '')::bigint for update;
@@ -1998,7 +2087,7 @@ end $$;
 create or replace function public.crm_quoteprices(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 declare w text[] := array(select x from regexp_split_to_table(lower(btrim(coalesce(p ->> 'q', ''))), '\s+') x where x <> '');
 begin
-  perform crm_need(false);
+  perform crm_needs('rates', 'read');
   return jsonb_build_object('rows', coalesce((select jsonb_agg(z order by z ->> 'date' desc, z ->> 'rfq_no' desc) from (
     select jsonb_build_object('date', crm_fd(coalesce(q.quote_date, r.rfq_date)), 'rfq_no', r.rfq_no, 'line', i.line, 'description', i.description, 'spec_brand', coalesce(i.spec_brand, ''),
       'unit', coalesce(nullif(l.unit, ''), i.unit, ''), 'qty', i.qty, 'res_code', coalesce(i.res_code, ''), 'category', i.category, 'unit_price', l.unit_price, 'currency', q.currency,
@@ -2014,7 +2103,7 @@ end $$;
 
 /* ---------- marketplace posts ---------- */
 create or replace function public.crm_savepost(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); x rfq_postings; v_id bigint := nullif(p ->> 'id', '')::bigint;
+declare me profiles := crm_needs('rfq', 'write'); r rfqs := crm_rfqget(p ->> 'rfq_no'); x rfq_postings; v_id bigint := nullif(p ->> 'id', '')::bigint;
 begin
   if length(btrim(coalesce(p ->> 'platform', ''))) < 2 then raise exception 'Which platform?'; end if;
   if coalesce(p ->> 'url', '') <> '' and (p ->> 'url') !~ '^https?://' then raise exception 'The link must start with https://'; end if;
@@ -2033,7 +2122,7 @@ begin
   return crm_out(jsonb_build_object('post', crm_postj(x)));
 end $$;
 create or replace function public.crm_deletepost(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); x rfq_postings;
+declare me profiles := crm_needs('rfq', 'write'); x rfq_postings;
 begin
   delete from rfq_postings where id = nullif(p ->> 'id', '')::bigint returning * into x;
   if not found then raise exception 'Post not found'; end if;
@@ -2043,7 +2132,7 @@ end $$;
 
 /* ---------- mailbox: app side (queue / cancel) ---------- */
 create or replace function public.crm_mailqueue(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); r rfqs := crm_rfqget(p ->> 'rfq_no'); e jsonb; n int := 0; sk int := 0; sid text;
+declare me profiles := crm_needs('rfq', 'write'); r rfqs := crm_rfqget(p ->> 'rfq_no'); e jsonb; n int := 0; sk int := 0; sid text;
 begin
   if not coalesce((select (value ->> 'enabled')::boolean from settings where key = 'mailbox'), false) then
     raise exception 'The mailbox connection is off (Admin Settings › Connections › Mailbox)'; end if;
@@ -2062,7 +2151,7 @@ begin
   return crm_out(jsonb_build_object('queued', n, 'skipped', sk, 'outbox', coalesce((select jsonb_agg(crm_outj(x) order by x.id) from mail_outbox x where x.rfq_no = r.rfq_no), '[]')));
 end $$;
 create or replace function public.crm_mailcancel(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); x mail_outbox;
+declare me profiles := crm_needs('rfq', 'write'); x mail_outbox;
 begin
   update mail_outbox set status = 'Cancelled' where id = nullif(p ->> 'id', '')::bigint and status in ('Queued', 'Failed') returning * into x;
   if not found then raise exception 'Only queued or failed emails can be cancelled'; end if;
@@ -2194,13 +2283,13 @@ create or replace function public.crm_valj(x public.value_log) returns jsonb lan
 $$;
 create or replace function public.crm_valuelog(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
 begin
-  perform crm_need(false);
+  perform crm_needs('perf', 'read');
   return jsonb_build_object('entries', coalesce((select jsonb_agg(crm_valj(x) order by x.entry_date desc, x.id desc) from value_log x
     where (coalesce(p ->> 'from', '') = '' or x.entry_date >= (p ->> 'from')::date) and (coalesce(p ->> 'to', '') = '' or x.entry_date <= (p ->> 'to')::date)), '[]'));
 end $$;
 /* p: id (blank = new), entry_date, kind, arza_no, project_ref, amount_bnd, hours, description, evidence */
 create or replace function public.crm_savevalue(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
-declare me profiles := crm_need(true); x value_log; o value_log; v_id bigint := nullif(p ->> 'id', '')::bigint; v_no text := upper(nullif(btrim(coalesce(p ->> 'arza_no', '')), ''));
+declare me profiles := crm_needs('perf', 'write'); x value_log; o value_log; v_id bigint := nullif(p ->> 'id', '')::bigint; v_no text := upper(nullif(btrim(coalesce(p ->> 'arza_no', '')), ''));
   d date; amt numeric; hrs numeric; ds text := btrim(coalesce(p ->> 'description', '')); ev text := nullif(btrim(coalesce(p ->> 'evidence', '')), ''); nm text;
 begin
   if coalesce(p ->> 'entry_date', '') !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'Enter the date'; end if;
@@ -2237,7 +2326,7 @@ begin
   return crm_out(jsonb_build_object('entry', crm_valj(x)));
 end $$;
 create or replace function public.crm_deletevalue(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(true); x value_log;
+declare me profiles := crm_needs('perf', 'write'); x value_log;
 begin
   select * into x from value_log where id = nullif(p ->> 'id', '')::bigint;
   if not found then raise exception 'Entry not found'; end if;
@@ -2248,7 +2337,7 @@ begin
 end $$;
 /* verification is a second pair of eyes: any active user (management viewers included) except the person who recorded it */
 create or replace function public.crm_verifyvalue(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
-declare me profiles := crm_need(false); x value_log; ok boolean := coalesce((p ->> 'verified')::boolean, true);
+declare me profiles := crm_needs('perf', 'verify'); x value_log; ok boolean := coalesce((p ->> 'verified')::boolean, true);
 begin
   select * into x from value_log where id = nullif(p ->> 'id', '')::bigint for update;
   if not found then raise exception 'Entry not found'; end if;
@@ -2261,7 +2350,7 @@ end $$;
 /* everything the QS Performance report needs, in one call (RFQs come from crm_rfqs) */
 create or replace function public.crm_perf(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public set timezone to 'Asia/Brunei' as $$
 begin
-  perform crm_need(false);
+  perform crm_needs('perf', 'read');
   return jsonb_build_object(
     'start_date', coalesce((select value ->> 'start_date' from settings where key = 'perf'), ''),
     'today', to_char(current_date, 'YYYY-MM-DD'),
@@ -2276,6 +2365,35 @@ begin
         from quote_lines l join quotes q on q.id = l.quote_id and q.current where l.unit_price is not null group by 1) z), '[]'),
     'suppliers_added', coalesce((select jsonb_agg(jsonb_build_object('date', d, 'n', n)) from (select to_char(created_at, 'YYYY-MM-DD') d, count(*) n from suppliers group by 1) z), '[]'),
     'values', coalesce((select jsonb_agg(crm_valj(x) order by x.entry_date desc, x.id desc) from value_log x), '[]'));
+end $$;
+
+-- =====================================================================================================
+-- v4.0.0: Projects groundwork - who is on which project (used from v4.1 Projects)
+-- Project managers read all projects but change only the ones they are on; Project engineers see and change only theirs.
+-- =====================================================================================================
+create table if not exists public.project_members (
+  arza_no text not null references public.tenders (arza_no) on update cascade on delete cascade,
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  proj_role text not null default 'engineer' check (proj_role in ('pm', 'engineer', 'qs', 'viewer')),
+  added_at timestamptz not null default now(), added_by uuid,
+  primary key (arza_no, user_id)
+);
+create index if not exists project_members_user on public.project_members (user_id);
+/* may the signed-in user <action> (read | write | money) project p_no? (all projects with readall / writeall, else only as a member) */
+create or replace function public.crm_project_ok(p_no text, p_action text default 'read') returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from profiles me where me.id = auth.uid() and me.active and (
+    case when p_action = 'money' then crm_can(me.role, 'project', 'money')
+           and (crm_can(me.role, 'project', 'readall') or exists (select 1 from project_members m where m.arza_no = p_no and m.user_id = me.id))
+         else crm_can(me.role, 'project', p_action || 'all')
+           or (crm_can(me.role, 'project', p_action) and exists (select 1 from project_members m where m.arza_no = p_no and m.user_id = me.id)) end))
+$$;
+create or replace function public.crm_needproject(p_no text, p_action text default 'read') returns public.profiles
+language plpgsql stable security definer set search_path = public as $$
+declare me profiles := crm_needs('project', case when p_action = 'money' then 'money' else p_action end);
+begin
+  if crm_project_ok(p_no, p_action) then return me; end if;
+  if p_action = 'read' then raise exception 'No access: you are not on project %', coalesce(p_no, '(blank)'); end if;
+  raise exception 'Read-only: only the team on project % can change it (ask the admin to add you)', coalesce(p_no, '(blank)');
 end $$;
 
 -- ---------- new sign-in accounts -> profile (first account = admin) ----------
@@ -2319,16 +2437,38 @@ alter table public.rfq_postings enable row level security;
 alter table public.mail_outbox enable row level security;
 alter table public.mail_inbox enable row level security;
 alter table public.value_log enable row level security;
+alter table public.project_members enable row level security;
+-- v4.0.0: area policies instead of one crm_read on every table (any signed-in user could read everything before).
+-- The app reads through the crm_* functions (which check the same matrix); these policies close direct REST reads.
 do $$
-declare t text;
+declare t text; x record;
 begin
+  -- drop the old single policy (and earlier v4 ones, so the script stays re-runnable)
   foreach t in array array['tenders', 'bq_items', 'asbuilt_items', 'revisions', 'activity_log', 'lists',
                            'settings', 'categories', 'suppliers', 'supplier_contacts', 'supplier_categories', 'discovery_candidates',
                            'rfqs', 'rfq_items', 'rfq_recipients', 'rfq_clicks', 'quotes', 'quote_lines',
-                           'rate_proposals', 'rfq_postings', 'mail_outbox', 'mail_inbox', 'value_log'] loop
+                           'rate_proposals', 'rfq_postings', 'mail_outbox', 'mail_inbox', 'value_log', 'project_members'] loop
     execute format('drop policy if exists crm_read on public.%I', t);
-    execute format('create policy crm_read on public.%I for select to authenticated using (public.crm_can_read())', t);
   end loop;
+  for x in select * from (values
+      -- shared look-up lists: every active user
+      ('lists', 'any'), ('settings', 'any'), ('categories', 'any'),
+      -- Tenders and Contract (money): not Project engineers, not Procurement
+      ('tenders', 'tender'), ('bq_items', 'tender'), ('asbuilt_items', 'tender'), ('revisions', 'tender'),
+      -- RFQ group: not Project managers, not Project engineers
+      ('suppliers', 'rfq'), ('supplier_contacts', 'rfq'), ('supplier_categories', 'rfq'), ('discovery_candidates', 'rfq'),
+      ('rfqs', 'rfq'), ('rfq_items', 'rfq'), ('rfq_recipients', 'rfq'), ('rfq_clicks', 'rfq'), ('quotes', 'rfq'), ('quote_lines', 'rfq'),
+      ('rfq_postings', 'rfq'), ('mail_outbox', 'rfq'), ('mail_inbox', 'rfq'),
+      ('rate_proposals', 'rates'), ('value_log', 'perf')) v(tbl, area) loop
+    execute format('create policy crm_read on public.%I for select to authenticated using (%s)', x.tbl,
+      case when x.area = 'any' then '(select public.crm_can_read())' else format('(select public.crm_area_ok(%L))', x.area) end);
+  end loop;
+  -- activity log: Management / QS / admin all lines; Project managers tender and project lines only
+  create policy crm_read on public.activity_log for select to authenticated
+    using (public.crm_log_ok((select role from public.profiles where id = (select auth.uid()) and active), arza_no));
+  -- project members: who is on which project (everyone with Projects access sees the team lists; engineers their own rows)
+  create policy crm_read on public.project_members for select to authenticated
+    using ((select public.crm_area_ok('project', 'readall')) or user_id = (select auth.uid()));
 end $$;
 drop policy if exists crm_read_own on public.profiles;
 create policy crm_read_own on public.profiles for select to authenticated using (id = (select auth.uid()));   -- v3.2.1: evaluated once, not per row
@@ -2345,6 +2485,8 @@ revoke all on public.rate_proposals, public.rfq_postings, public.mail_outbox, pu
 grant select on public.rate_proposals, public.rfq_postings, public.mail_outbox, public.mail_inbox to authenticated;
 revoke all on public.value_log from anon, authenticated;
 grant select on public.value_log to authenticated;
+revoke all on public.project_members from anon, authenticated;
+grant select on public.project_members to authenticated;
 
 -- functions: nothing for anon; signed-in users may call only the API functions (each checks the role itself)
 do $$
@@ -2356,7 +2498,7 @@ begin
   for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
            where n.nspname = 'public' and p.proname in ('crm_ping', 'crm_me', 'crm_list', 'crm_get', 'crm_save', 'crm_importtender', 'crm_setfile', 'crm_uploadfile',
              'crm_asbuiltdata', 'crm_importasbuilt', 'crm_deletemeasureset', 'crm_lock', 'crm_unlock', 'crm_result', 'crm_revdata', 'crm_saverevision',
-             'crm_approverevision', 'crm_deleterevision', 'crm_voidrevision', 'crm_users', 'crm_setuser', 'crm_migrate', 'crm_can_read',
+             'crm_approverevision', 'crm_deleterevision', 'crm_voidrevision', 'crm_users', 'crm_setuser', 'crm_migrate', 'crm_can_read', 'crm_area_ok', 'crm_log_ok',
              'crm_library', 'crm_dashboard', 'crm_setprofile',
              'crm_procdata', 'crm_supplier', 'crm_savesupplier', 'crm_setsupplierstate', 'crm_queue', 'crm_queueadd', 'crm_queuedns', 'crm_queuedecide',
              'crm_settings', 'crm_setsettings', 'crm_setholidays',

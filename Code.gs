@@ -1,5 +1,5 @@
 /**
- * QS CRM — Google Drive file service (Apps Script), v3.2.0
+ * QS CRM — Google Drive file service (Apps Script), v4.0.0
  * From v2.1.0 the data lives in Supabase. This script only:
  *   - stores tender files in Google Drive (one sub-folder per tender) and returns the links;
  *   - optionally creates sign-in accounts for the Users page (needs the Supabase service key);
@@ -9,8 +9,11 @@
  *     The secret key is the only value never written here: re-running setSupabase() keeps the one already saved.
  *   - v3.2.0: mlUpdate writes an accepted rate proposal into the masterlist Res tab (price, confidence A, source) and logs the
  *     old price in a "QS CRM updates" tab; setJobKey() (optional) lets the mailbox job store reply attachments in Drive.
+ *   - v4.0.0: follows the role matrix that crm_me returns (me.perms): tender files = Tenders writers; Procurement files
+ *     (quotes, the boss's award approval, value-log evidence, logo) = RFQ / QS Performance writers incl. Procurement;
+ *     masterlist reading = BQ Library or RFQ readers (not Project engineers); masterlist changes = rate-proposal writers.
  * Every call carries the user's Supabase session token; the script asks Supabase who it is (crm_me) and
- * only QS / admin users may upload, only the admin may create users.
+ * checks the role's permissions; only the admin may create users.
  *
  * Setup (once) — in a new Apps Script project (script.google.com › New project) or the old one (replace all code):
  *  1. setSupabase(): Project URL and publishable key are filled in. To add users from the app, paste the secret key
@@ -97,11 +100,18 @@ function doPost(e) {
   }
 }
 
+/* v4.0.0: the role matrix from crm_me (me.perms = ["tender.write", ...]); without it (mailbox job, older database): admin / qs only */
+function can_(me, area, action) {
+  if (me && me.perms && me.perms.indexOf) return me.perms.indexOf(area + '.' + action) >= 0;
+  return !!me && (['admin', 'qs'].indexOf(me.role) >= 0 || action === 'read');
+}
+
 var ACTIONS = {
-  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), users: !!p.getProperty('SUPABASE_SERVICE'), version: '3.2.0' }; },
+  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), users: !!p.getProperty('SUPABASE_SERVICE'), version: '4.0.0' }; },
 
   /* v2.2.0: pricing masterlist, read only (any active signed-in user). Tabs Rates + Res, header row = the row starting with "Code" */
   masterlist: function (req, me) {
+    if (!can_(me, 'library', 'read') && !can_(me, 'rfq', 'read')) throw new Error('No access - this account cannot open the masterlist');
     var id = PropertiesService.getScriptProperties().getProperty('MASTERLIST_ID');
     if (!id) throw new Error('Masterlist not set - run setMasterlist() in Apps Script');
     var ss = SpreadsheetApp.openById(id), tz = Session.getScriptTimeZone();
@@ -125,7 +135,7 @@ var ACTIONS = {
 
   /* store one file in the tender's folder: req.arza_no, req.tender_ref, req.folder_link (existing), req.file {name, type, data(base64)} */
   upload: function (req, me) {
-    if (['admin', 'qs'].indexOf(me.role) < 0) throw new Error('Read-only account - only QS and admin users can store files');
+    if (!can_(me, 'tender', 'write')) throw new Error('Read-only account - only QS and admin users can store tender files');
     if (!req.file || !req.file.data) throw new Error('No file');
     if (!/^T\d+$/.test(String(req.arza_no || ''))) throw new Error('Tender number missing');
     var lock = LockService.getScriptLock(); lock.waitLock(20000);
@@ -139,7 +149,7 @@ var ACTIONS = {
 
   /* v3.1.0: one Procurement file: req.folder (e.g. "Company", later "RFQ-2611-003 - SS304 railing tubes"), req.file {name, type, data(base64)} */
   procUpload: function (req, me) {
-    if (['admin', 'qs'].indexOf(me.role) < 0) throw new Error('Read-only account - only QS and admin users can store files');
+    if (!can_(me, 'rfq', 'write') && !can_(me, 'perf', 'write')) throw new Error('Read-only account - only QS, Procurement and admin users can store files');
     if (!req.file || !req.file.data) throw new Error('No file');
     var name = String(req.folder || '').replace(/[\/\\:*?"<>|]+/g, '-').trim().slice(0, 120);
     if (!name) throw new Error('Folder name missing');
@@ -156,7 +166,7 @@ var ACTIONS = {
 
   /* v3.2.0: accepted rate proposal -> masterlist Res tab. req: code, price (B$ per unit), source, unit. Returns {code, old, price}. */
   mlUpdate: function (req, me) {
-    if (['admin', 'qs'].indexOf(me.role) < 0) throw new Error('Read-only account - only QS and admin users can change the masterlist');
+    if (!can_(me, 'rates', 'write')) throw new Error('Read-only account - only QS and admin users can change the masterlist');
     var id = PropertiesService.getScriptProperties().getProperty('MASTERLIST_ID');
     if (!id) throw new Error('Masterlist not set - run setMasterlist() in Apps Script');
     var code = String(req.code || '').trim(), price = Number(req.price);

@@ -615,7 +615,7 @@ table.pft td:first-child{width:56%}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.3.1</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v4.0.0</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -2714,8 +2714,17 @@ table.pft td:first-child{width:56%}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'3.3.1', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'4.0.0', user:'Gemz' };
 var CHANGELOG = [
+  { v:'4.0.0', date:'20 Nov 2026', items:[
+    'Roles and access (v4 Projects groundwork): one permission matrix decides who may open and change each part of the app, and the database enforces it — before, any signed-in account could read every table.',
+    'Six roles: Admin · QS · Management (reads everything incl. money, verifies value-log entries) · Project manager (Tenders, Contract, BQ Library and Masterlist read only, his own projects from v4.1, no RFQs or QS Performance) · Project engineer (his own projects only, never any amount) · Procurement (new: RFQs, Suppliers and Review queue only).',
+    'Procurement can record an award only with the boss’s approval document: upload the signed approval / email in the award window or paste its link or memo reference. The RFQ page shows the document and “recorded by Procurement”. Reopening an award and recording savings stay with QS / admin.',
+    'Menus show only the pages the account may open; Procurement starts on RFQs. The notification bell and the dashboard only use what the role may see. The Project engineer dashboard is a placeholder until the Projects tab (v4.1).',
+    'Admin Settings › Users: the role list has the new labels and Procurement; a short note under each role says what it can do.',
+    'Database: area policies instead of one read policy; project team table ready for v4.1 (Project managers change only the projects they are on). Run automatically by the Database workflow.',
+    'Apps Script (Code.gs) changed: file uploads, the masterlist and masterlist updates follow the same roles (Procurement may upload quotes and award approvals; Project engineers cannot read the masterlist). Paste Code.gs in Apps Script and Deploy › Manage deployments › Edit › New version. Until then Procurement pastes the approval link instead of uploading.'
+  ]},
   { v:'3.3.1', date:'19 Nov 2026', items:[
     'QS Performance: the page heading no longer names the contract clause (“of the ARZA contract (clause 12)” removed).',
     'QS Performance PDF: the “Basis — Contract KPIs (clause 12)” field is removed from the report header; the Period line now spans the row.',
@@ -2940,9 +2949,28 @@ function fmtDate(d){ if(!d) return ''; var s=String(d); var m=s.match(/^(\d{4})-
   var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m[2]-1]; return (+m[3])+' '+mo+' '+m[1]+(m[4]?' '+m[4]:''); }
 function toast(msg,bad){ var t=document.createElement('div'); t.className='toast'+(bad?' bad':''); t.textContent=msg; document.body.appendChild(t); setTimeout(function(){t.remove();}, bad?5000:2500); }
 function fileMode(){ return S.mode==='file'; }
-function canWrite(){ return S.mode==='api' && !!S.me && ['admin','qs'].indexOf(S.me.role)>=0; }
+/* v4.0.0: one permission matrix, kept in the database (crm_perms) and sent with the account as me.perms = ["tender.read", ...].
+   Areas: dash · tender · library · rfq · rates · perf · project · config · log. Read-only file mode: every page may be read, nothing changed.
+   An older database without me.perms: admin / qs change everything, other roles read (the v3 rule). */
+function can(area, action){ action=action||'read';
+  if(fileMode()) return action==='read';
+  if(S.mode!=='api'||!S.me) return false;
+  var P=S.me.perms; if(Array.isArray(P)) return P.indexOf(area+'.'+action)>=0;
+  if(['admin','qs'].indexOf(S.me.role)>=0) return true;
+  return action==='read'||(area==='perf'&&action==='verify'); }
+function canWrite(area){ return can(area||'tender','write'); }
+function anyWrite(){ return ['tender','rfq','rates','perf','project','library'].some(function(a){ return can(a,'write'); }); }
 function isAdmin(){ return S.mode==='api' && !!S.me && S.me.role==='admin'; }
-function ro(){ return !canWrite(); }   // read-only: file mode or a viewer account
+function ro(){ return !canWrite(); }   // read-only for tenders: file mode or an account without Tenders write
+/* which area a page belongs to (menus and showView follow can()) */
+var VIEW_AREA={ dash:'dash', tenders:'tender', rev:'tender', asbuilt:'tender', reports:'tender', library:'library', master:'library',
+  qprices:'rates', rateprops:'rates', rfqs:'rfq', rfq:'rfq', rfqedit:'rfq', suppliers:'rfq', queue:'rfq', rfqreports:'rfq.report', perf:'perf' };
+function canView(v){ var a=VIEW_AREA[v]; if(!a) return true; a=a.split('.'); return can(a[0], a[1]||'read'); }
+function homeView(){ return ['dash','rfqs','tenders'].filter(canView)[0]||'dash'; }
+function applyMenus(){
+  document.querySelectorAll('#nav a[data-v]').forEach(function(a){ a.classList.toggle('hidden', !canView(a.dataset.v)); });
+  document.querySelectorAll('#nav .dd').forEach(function(d){ d.classList.toggle('hidden', !d.querySelector('a[data-v]:not(.hidden)')); });
+}
 /* the name people see: display name, else the full name (short ones) or first name, else the email name */
 var HONORIFIC=/^(hj|hjh|haji|hajah|awg|awang|dk|dayang|pg|pengiran|dr|ir|mr|mrs|ms|dato|datin|datuk|tuan|puan|en|encik|cik)\.?$/i;
 function nameWords(n){ return String(n||'').replace(/\([^)]*\)/g,' ').split(/\s+/).filter(function(w){ return /^[A-Za-z\u00C0-\u024F]/.test(w); }); }
@@ -2954,13 +2982,13 @@ function initials(m){ m=m||S.me; var w=nameWords(m&&m.full_name), g=w.filter(fun
   return ((g[0]||'?').charAt(0)+(g.length>1?g[g.length-1].charAt(0):'')).toUpperCase(); }
 /* v3.2.2: profile picture (or initials) */
 function avHtml(m){ m=m||S.me; return m&&m.avatar&&/^data:image\//.test(m.avatar)?'<span class="av pic"><img src="'+esc(m.avatar)+'" alt=""></span>':'<span class="av">'+esc(m?initials(m):(fileMode()?'R':'?'))+'</span>'; }
-function roleName(r){ return {admin:'Admin',qs:'QS',viewer:'Viewer',pm:'PM',site:'Site'}[r]||r||''; }
+function roleName(r){ return {admin:'Admin',qs:'QS',viewer:'Management',pm:'Project manager',site:'Project engineer',proc:'Procurement'}[r]||r||''; }
 function drawMe(){
   var h=$('hello'); if(!h) return; var m=S.me;
   h.innerHTML=avHtml(m)+'<span class="hi">Welcome, <b>'+esc(dispName())+'</b></span>'+(m?'<i class="rolechip">'+esc(roleName(m.role))+'</i>':'')+
     '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
   $('meHead').innerHTML=avHtml(m)+'<div><b>'+esc(m?(m.full_name||dispName()):'Read-only file')+'</b><span>'+esc(m?m.email:(S.fileName||''))+'</span>'+
-    (m?'<em>'+esc(roleName(m.role))+(canWrite()?'':' · read only')+'</em>':'')+'</div>';
+    (m?'<em>'+esc(roleName(m.role))+(anyWrite()?'':' · read only')+'</em>':'')+'</div>';
   document.querySelector('#meMenu [data-act=profile]').classList.toggle('hidden', !m);
 }
 function clock(){
@@ -3100,15 +3128,15 @@ function signOut(){ var sb=S.sb; S.sb=null; S.me=null; S.mode=''; S.tenders=[];
   try{ Promise.race([sb.auth.signOut(), new Promise(function(r){ setTimeout(r,4000); })]).then(done, done); }catch(e){ done(); } }
 function enter(){
   $('vLogin').classList.add('hidden'); $('vMain').classList.remove('hidden'); $('top').classList.remove('hidden'); drawMe(); clock();
-  var c=$('conn'); c.classList.remove('hidden','off'); c.classList.toggle('ro', ro());
-  c.querySelector('span').textContent = fileMode() ? 'Read-only file · '+S.fileName : 'Connected · Supabase'+(canWrite()?'':' · read only');
+  var c=$('conn'); c.classList.remove('hidden','off'); c.classList.toggle('ro', !anyWrite());
+  c.querySelector('span').textContent = fileMode() ? 'Read-only file · '+S.fileName : 'Connected · Supabase'+(anyWrite()?'':' · read only');
   c.title = fileMode() ? 'Data from the file on this computer; nothing is saved' : 'Data is live in the QS CRM database';
   $('btnNew').classList.toggle('hidden', ro()); $('btnImport').classList.toggle('hidden', ro());
-  $('navUsers').classList.toggle('hidden', !isAdmin());
+  $('navUsers').classList.toggle('hidden', !isAdmin()); applyMenus();
   $('bell').classList.toggle('hidden', fileMode()||!S.me); NT.items=[]; notifDraw();
   clearInterval(NT.timer); if(!fileMode()) NT.timer=setInterval(function(){ if(S.me&&!document.hidden) notifLoad(); }, 300000);   // every 5 minutes
-  if(!fileMode()){ prLoad().catch(function(){}); setsLoad().catch(function(){}); }   // review-queue badge, letterhead, Drive link (quietly)
-  fillFilters(); showView('dash'); openFromHash();
+  if(!fileMode()){ if(can('rfq')) prLoad().catch(function(){}); setsLoad().catch(function(){}); }   // review-queue badge, letterhead, Drive link (quietly)
+  fillFilters(); showView(homeView()); openFromHash();
 }
 function refresh(){
   if(fileMode()) return Promise.resolve();
@@ -3125,7 +3153,7 @@ function account(){
     '<div class="f"><label for="pfDes">Designation <span class="hint">used on approvals</span></label><input id="pfDes" maxlength="120" autocomplete="organization-title" value="'+fv('designation')+'" placeholder="e.g. Senior QS"></div>'+
     '<div class="f"><label for="pfPh">Phone</label><input id="pfPh" maxlength="120" type="tel" autocomplete="tel" value="'+fv('phone')+'" placeholder="+673 …"></div>'+
     '<div class="f"><label>Email</label><input value="'+fv('email')+'" disabled></div>'+
-    '<div class="f"><label>Access</label><input value="'+esc(roleName(m.role)+(canWrite()?' · can edit':' · read only'))+'" disabled></div>'+
+    '<div class="f"><label>Access</label><input value="'+esc(roleName(m.role)+(anyWrite()?' · can edit':' · read only'))+'" disabled></div>'+
     '</div><div class="pfsec">Change password</div>'+
     '<div class="form"><div class="f"><label for="pw1">New password</label><input id="pw1" type="password" autocomplete="new-password" placeholder="at least 8 characters"></div><div class="f"><label for="pw2">Repeat new password</label><input id="pw2" type="password" autocomplete="new-password"></div></div>'+
     '<div class="pfmeta">Member since '+esc(fmtDate(m.created_at))+'</div>',
@@ -3563,6 +3591,7 @@ function showUpload(f){
 function showView(v){
   if(v==='import'){ startImport(); return; }
   if(v==='company'){ ADM.tab='company'; v='users'; }
+  if(!canView(v)){ var h=homeView(); if(S.me) toast(roleName(S.me.role)+' accounts cannot open that page',true); if(v===h) return; v=h; }   // v4.0.0
   if(S.view==='rev' && v!=='rev' && !rvLeave()) return;
   if(v!=='rev'){ RV.dirty=false; RV.edit=null; }
   S.view=v;
@@ -4369,19 +4398,22 @@ function printRV(){
 }
 
 /* ---------- users & setup (admin) ---------- */
-var ROLE_HELP={ admin:'everything + users', qs:'all changes (tenders, BQ, revisions, as-built)', viewer:'read only (management, client)', pm:'read only for now (site modules in v7)', site:'read only for now (site modules in v7)' };
+var ROLES=['admin','qs','viewer','pm','site','proc'];
+var ROLE_HELP={ admin:'everything + users and settings', qs:'all changes (tenders, contract, pricing, RFQs, QS Performance)', viewer:'Management: reads everything incl. money, verifies value-log entries',
+  pm:'Project manager: reads Tenders, Contract, BQ Library; changes his own projects (v4.1); no RFQs', site:'Project engineer: his own projects only, no amounts anywhere (v4.1)',
+  proc:'Procurement: RFQs, suppliers, review queue; awards with the boss\'s approval document' };
 function renderUsers(){ renderAdmin(); }
 function loadUsers(){
   return api('users').then(function(U){
     S.users=U;
     $('usList').innerHTML='<div class="tbl"><table><thead><tr><th>Name</th><th>Designation</th><th>Email</th><th>Role</th><th>Active</th><th>Added</th></tr></thead><tbody>'+
       U.map(function(u){ var me=S.me&&u.id===S.me.id; return '<tr data-id="'+esc(u.id)+'"><td><input class="nm" data-k="full_name" value="'+esc(u.full_name||'')+'" placeholder="name"></td><td class="n" style="white-space:nowrap">'+esc(u.designation||'—')+'</td><td>'+esc(u.email)+(me?' <span class="chip st-Won">you</span>':'')+'</td>'+
-        '<td><select data-k="role">'+['admin','qs','viewer','pm','site'].map(function(r){ return '<option value="'+r+'"'+(r===u.role?' selected':'')+'>'+r+'</option>'; }).join('')+'</select> <span class="n">'+esc(ROLE_HELP[u.role]||'')+'</span></td>'+
+        '<td><select data-k="role">'+ROLES.map(function(r){ return '<option value="'+r+'"'+(r===u.role?' selected':'')+'>'+esc(roleName(r))+'</option>'; }).join('')+'</select> <span class="n">'+esc(ROLE_HELP[u.role]||'')+'</span></td>'+
         '<td><label class="chkrow" style="margin:0"><input type="checkbox" data-k="active"'+(u.active?' checked':'')+'> active</label></td><td class="dt">'+esc(fmtDate(String(u.created_at||'').slice(0,10)))+'</td></tr>'; }).join('')+'</tbody></table></div>';
     $('usList').onchange=function(e){
       var el=e.target, tr=el.closest('tr[data-id]'); if(!tr||!el.dataset.k) return;
       var b={id:tr.dataset.id}; b[el.dataset.k] = el.type==='checkbox' ? el.checked : el.value.trim();
-      api('setUser',b).then(function(u){ (u._log||[]).forEach(function(l){S.log.push(l);}); toast('Saved '+u.email); if(S.me&&u.id===S.me.id){ S.me.full_name=u.full_name; S.me.role=u.role; drawMe(); } loadUsers(); })
+      api('setUser',b).then(function(u){ (u._log||[]).forEach(function(l){S.log.push(l);}); toast('Saved '+u.email); if(S.me&&u.id===S.me.id){ S.me.full_name=u.full_name; if(S.me.role!==u.role){ S.me.role=u.role; refresh().then(function(){ applyMenus(); }); } drawMe(); } loadUsers(); })
         .catch(function(err){ fail(err); loadUsers(); });
     };
   }).catch(function(e){ $('usList').innerHTML='<div class="note w">'+esc(e.message)+'</div>'; });
@@ -4389,7 +4421,7 @@ function loadUsers(){
 function tempPw(){ var a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', s=''; var r=new Uint32Array(12); (window.crypto||{getRandomValues:function(x){ for(var i=0;i<x.length;i++) x[i]=Math.random()*1e9; return x; }}).getRandomValues(r); for(var i=0;i<12;i++) s+=a[r[i]%a.length]; return s; }
 function addUser(){
   modal('Add team member', '<div class="form"><div class="f"><label for="nu_email">Email</label><input id="nu_email" type="email"></div><div class="f"><label for="nu_name">Full name</label><input id="nu_name"></div>'+
-    '<div class="f"><label for="nu_role">Role</label><select id="nu_role">'+['viewer','qs','admin'].map(function(r){ return '<option value="'+r+'">'+r+' — '+esc(ROLE_HELP[r])+'</option>'; }).join('')+'</select></div>'+
+    '<div class="f"><label for="nu_role">Role</label><select id="nu_role">'+['viewer','qs','pm','site','proc','admin'].map(function(r){ return '<option value="'+r+'">'+esc(roleName(r))+' — '+esc(ROLE_HELP[r])+'</option>'; }).join('')+'</select></div>'+
     '<div class="f"><label for="nu_pw">Temporary password</label><input id="nu_pw" value="'+tempPw()+'"><div class="hint">Give it to the person (not by email); they change it under My profile (their name, top right).</div></div></div>'+
     '<p class="n" style="font-size:12px;color:var(--ink3)">Needs the service key in the Drive file service (setSupabase). Without it: Supabase › Authentication › Users › Add user (tick Auto Confirm), then set the role here.</p>',
     '<button class="btn" id="nuC">Cancel</button><button class="btn pri" id="nuGo">Create account</button>');
@@ -4452,8 +4484,9 @@ function rfGet(){ if(RF.p&&Date.now()-RF.pAt<20000) return RF.p; RF.pAt=Date.now
 function notifLoad(){
   if(fileMode()||!S.me) return Promise.resolve();
   var q=function(p){ return p.catch(function(){ return null; }); };
-  return Promise.all([q(dashGet()), q(rfGet()), q(PR.data?Promise.resolve(PR.data):prLoad()), q(PR.set?Promise.resolve(PR.set):setsLoad()), q(api('rateProps',{status:'Proposed'}))]).then(function(x){
-    var D=x[0]||{}, k=D.kpi||{}, L=x[1], pd=x[2], st=x[3]||{}, rp=x[4], it=[], w=canWrite(), pl=function(n,a,b){ return n+' '+(n===1?a:b); };
+  var no=Promise.resolve(null), cr=can('rfq');   // v4.0.0: each source only for the roles that may read it
+  return Promise.all([q(can('dash')?dashGet():no), q(cr?rfGet():no), q(!cr?no:PR.data?Promise.resolve(PR.data):prLoad()), q(PR.set?Promise.resolve(PR.set):setsLoad()), q(can('rates')?api('rateProps',{status:'Proposed'}):no)]).then(function(x){
+    var D=x[0]||{}, k=D.kpi||{}, L=x[1], pd=x[2], st=x[3]||{}, rp=x[4], it=[], w=canWrite('tender'), pl=function(n,a,b){ return n+' '+(n===1?a:b); };
     var add=function(lv,t,sub,go){ it.push({lv:lv,t:t,sub:sub,go:go}); };
     // tenders
     if(+k.overdue) add('warn', pl(+k.overdue,'open tender is','open tenders are')+' past the closing date', w?'Set the status: Submitted, No bid, Cancelled …':'Status not updated yet', 'tenders');
@@ -4464,8 +4497,8 @@ function notifLoad(){
     if(+k.awaiting_result) add('info', pl(+k.awaiting_result,'submitted tender has','submitted tenders have')+' no bid result 30+ days after closing', w?'Record the result (winner, winning sum) when it is known':'Result not recorded yet', 'tenders');
     if(+k.won_no_contract) add('info', pl(+k.won_no_contract,'won tender has','won tenders have')+' no contract sum', w?'Approve the rationalized revision or enter the contract sum':'Contract sum not recorded yet', 'tenders');
     if(+k.value_to_verify) add('info', pl(+k.value_to_verify,'value-log entry is','value-log entries are')+' waiting for verification', 'Reports › QS Performance › Value log', 'perf');
-    if(+k.value_no_evidence&&w) add('info', pl(+k.value_no_evidence,'value-log entry has','value-log entries have')+' no evidence', 'Add the link to the letter, approval or receipt', 'perf');
-    if(+k.rfq_no_savings&&w){ var ns=L?(L.rfqs||[]).filter(function(r){ return r.status==='Awarded'&&r.median_bnd==null; }):[];
+    if(+k.value_no_evidence&&canWrite('perf')) add('info', pl(+k.value_no_evidence,'value-log entry has','value-log entries have')+' no evidence', 'Add the link to the letter, approval or receipt', 'perf');
+    if(+k.rfq_no_savings&&can('rfq','manage')){ var ns=L?(L.rfqs||[]).filter(function(r){ return r.status==='Awarded'&&r.median_bnd==null; }):[];
       add('info', pl(+k.rfq_no_savings,'awarded RFQ has','awarded RFQs have')+' no savings recorded', ns.length===1?ns[0].rfq_no+' — open it and press Record savings':'Open each one and press Record savings', ns.length===1?'rfq:'+ns[0].rfq_no:'perf'); }
     if(+k.drafts) add('info', pl(+k.drafts,'revision is','revisions are')+' waiting for approval', 'Rationalized BQ drafts', 'rev');
     // RFQs
@@ -4475,9 +4508,9 @@ function notifLoad(){
       Procure.validityAlerts(all, today(), expD).forEach(function(v){ add('warn', v.rfq_no+': a quote '+(v.expired?'has expired':'runs out '+(v.days_left===0?'today':'in '+pl(v.days_left,'day','days'))), v.title, 'rfq:'+v.rfq_no); });
       all.filter(function(r){ return r.status==='Awarded'&&!r.delivered_on&&r.award_date&&Procure.daysBetween(r.award_date, today())>=14; }).forEach(function(r){ add('info', r.rfq_no+': record the delivery', 'Awarded '+fmtDate(r.award_date)+' — rate the supplier when the goods arrive', 'rfq:'+r.rfq_no); });
     }
-    if(pd&&+pd.pending&&w) add('info', pl(+pd.pending,'supplier is','suppliers are')+' waiting in the review queue', 'Approve, merge or reject', 'queue');
+    if(pd&&+pd.pending&&canWrite('rfq')) add('info', pl(+pd.pending,'supplier is','suppliers are')+' waiting in the review queue', 'Approve, merge or reject', 'queue');
     var np=rp?(rp.proposals||[]).length:0; NT.props=rp?np:null;
-    if(np&&w) add('info', pl(np,'rate proposal','rate proposals')+' for the masterlist', 'Awarded prices to accept or reject', 'rateprops');
+    if(np&&canWrite('rates')) add('info', pl(np,'rate proposal','rate proposals')+' for the masterlist', 'Awarded prices to accept or reject', 'rateprops');
     // setup (admin)
     if(isAdmin()){
       if(!cfg().driveUrl) add('warn', 'Google Drive is not connected', 'Needed for file uploads, the masterlist and adding team accounts', 'adm:conn');
@@ -4508,14 +4541,18 @@ function notifGo(g){
 }
 function renderDash(){
   var el=$('vDB'); if(needLive(el,'The dashboard')) return;
+  if(!can('tender')){   // v4.0.0: Project engineers - no tender figures; their project tiles come with v4.1 Projects
+    el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">Welcome, '+esc(dispName())+' ('+esc(roleName(S.me&&S.me.role))+').</div></div></div>'+
+      '<div class="card"><h3>My projects</h3><div class="empty" style="padding:18px">Your projects will show here once the Projects tab is live (v4.1): programme, daily progress, quantities, manpower and work orders for the projects you are assigned to. Amounts are not shown to Project engineers.</div></div>';
+    notifLoad(); return; }
   el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">The RFQs in progress and the money view of all tenders (the bell at the top lists what needs attention): pipeline, contract value, revisions waiting, won projects and their as-built position.</div></div><span style="flex:1"></span><button class="btn" id="dbRef">Refresh</button></div><div id="dbBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
   $('dbRef').onclick=function(){ NT.dash=null; RF.p=null; renderDash(); };
   var rq=document.createElement('div'); rq.id='dbRfq'; var bb=$('dbBody'); if(bb) bb.parentNode.insertBefore(rq,bb);
-  rfGet().then(function(L){ var el2=$('dbRfq'); if(!el2) return; var all=L.rfqs||[], ch=chaseList(), m0=new Date().toISOString().slice(0,7);
+  (can('rfq')?rfGet():Promise.reject()).then(function(L){ var el2=$('dbRfq'); if(!el2) return; var all=L.rfqs||[], ch=chaseList(), m0=new Date().toISOString().slice(0,7);
     var open=all.filter(function(r){ return RFQ_OPEN.indexOf(r.status)>=0; }), cmp=open.filter(function(r){ return r.quotes_n>0 && ['Approval sent'].indexOf(r.status)<0; }), apv=all.filter(function(r){ return r.status==='Approval sent'; }), aw=all.filter(function(r){ return r.status==='Awarded' && String(r.award_date||'').slice(0,7)===m0; });
     var expD=((PR.set||{}).rfq_opts||{}).expiry_days||7, ex=Procure.validityAlerts(all, today(), expD);
     el2.innerHTML='<div class="card dbrfq"><h3>RFQs</h3>'+kpiRow([['Open RFQs',open.length,all.length+' in total','rfqs'],['Chase today',ch.length,ch.length?'reminders due':'nothing due','rfqs'],['Quotes to compare',cmp.length,'RFQs with quotes in','rfqs'],['Waiting for approval',apv.length,'approval pack sent','rfqs'],['Awarded this month',aw.length,'RFQs awarded','rfqs'],
-        ['Quotes expiring',ex.length,ex.length?'within '+expD+' days: '+ex.slice(0,3).map(function(x){ return x.rfq_no; }).join(', '):'none within '+expD+' days','rfqs'],['Rate proposals','<span id="dbProps">…</span>','awarded prices for the masterlist','rateprops']])+
+        ['Quotes expiring',ex.length,ex.length?'within '+expD+' days: '+ex.slice(0,3).map(function(x){ return x.rfq_no; }).join(', '):'none within '+expD+' days','rfqs']].concat(can('rates')?[['Rate proposals','<span id="dbProps">…</span>','awarded prices for the masterlist','rateprops']]:[]))+
       (ex.length?'<div class="note w" style="margin-top:8px">'+ex.map(function(x){ return '<a href="#" class="dbEx" data-rfq="'+esc(x.rfq_no)+'">'+esc(x.rfq_no)+'</a> '+esc(x.title.slice(0,40))+': '+(x.expired?'a quote <b>expired</b> on '+esc(fmtDate(x.valid_until)):'a quote runs out '+esc(fmtDate(x.valid_until))+' ('+x.days_left+' day'+(x.days_left===1?'':'s')+')'); }).join('<br>')+'</div>':'')+'</div>';
     if(NT.props!=null&&$('dbProps')) $('dbProps').textContent=NT.props;
     el2.onclick=function(e){ var a=e.target.closest('.dbEx'); if(a){ e.preventDefault(); RF.no=a.dataset.rfq; showView('rfq'); return; } var k=e.target.closest('[data-go]'); if(k) showView(k.dataset.go); };
@@ -4663,7 +4700,7 @@ function mlRows(t){
 function drawMaster(){
   var d=ML.data, b=$('mlBody'); if(!d||!b) return;
   document.querySelectorAll('#mlTabs a').forEach(function(a){ a.classList.toggle('on', a.dataset.t===ML.tab); });
-  $('mlScope').innerHTML='Read only from <b>'+esc(d.name)+'</b> (sheet updated '+esc(fmtDate(d.updated))+', loaded '+esc(ML.at)+'). Prices are changed in the sheet, never here.'+(canWrite()&&d.url?' <a href="'+esc(safeUrl(d.url))+'" target="_blank" rel="noopener">Open the sheet</a>':'');
+  $('mlScope').innerHTML='Read only from <b>'+esc(d.name)+'</b> (sheet updated '+esc(fmtDate(d.updated))+', loaded '+esc(ML.at)+'). Prices are changed in the sheet, never here.'+(canWrite('library')&&d.url?' <a href="'+esc(safeUrl(d.url))+'" target="_blank" rel="noopener">Open the sheet</a>':'');
   var isR=ML.tab==='rates', M=mlRows(isR?d.rates:d.res), h=M.h, ci=M.ci;
   if(!h.length){ b.innerHTML='<div class="empty">Tab not found or no "Code" header row.</div>'; return; }
   var cTr=isR?ci(/^Trade/i):-1, cDesc=ci(isR?/^Description/i:/^Resource/i), cUnit=ci(/^Unit/i), cConf=ci(/^Conf/i);
@@ -4740,7 +4777,7 @@ function renderSuppliers(){
     ['With WhatsApp', act.filter(function(s){ return (s.contacts||[]).some(function(c){ return c.whatsapp; }); }).length, 'one-tap follow-up'],
     ['Review queue', D.pending||0, D.pending?'waiting for your decision':'nothing waiting', 'queue']];
   el.innerHTML='<div class="bar"><div><h2>Suppliers</h2><div class="scope">Own supplier database: contacts, categories, sourcing zone and verification. New suppliers from AI discovery come in through the Review queue.</div></div><span style="flex:1"></span>'+
-      '<button class="btn exp" id="spExp" title="Download the suppliers (as filtered) to Excel">Export</button>'+(canWrite()?'<button class="btn imp" id="spImp" title="Import a discovery file / Gemini directory into the review queue">Import</button><button class="btn pri" id="spNew">+ New supplier</button>':'')+'</div>'+
+      '<button class="btn exp" id="spExp" title="Download the suppliers (as filtered) to Excel">Export</button>'+(canWrite('rfq')?'<button class="btn imp" id="spImp" title="Import a discovery file / Gemini directory into the review queue">Import</button><button class="btn pri" id="spNew">+ New supplier</button>':'')+'</div>'+
     kpiRow(kp)+
     '<div class="bar"><input type="search" id="spQ" placeholder="Search name, alias, city, specialty, email, phone…" value="'+esc(f.q)+'">'+
       '<select id="spCat">'+opt(Procure.CATEGORIES.map(function(c){ return [c[0],c[0]+' — '+c[1]]; }),f.cat,'All categories')+'</select>'+
@@ -4813,7 +4850,7 @@ function openSupplier(id){
     '<p class="n">Email opens Roundcube (qs@arzabrunei.com) with the To: field filled; Roundcube adds your signature and Bcc. WhatsApp opens a chat; landlines get no WhatsApp button.</p>'+
     '<h4 class="psec">Scorecard</h4>'+supScorecard(s)+
     '<h4 class="psec">History</h4><div id="spLog" class="n"><span class="spin"></span> Loading…</div>';
-  var w=canWrite();
+  var w=canWrite('rfq');
   pmodal(s.supplier_id+' — '+s.name, body, '<span class="msg">'+esc(s.supplier_id)+'</span>'+(w?'<button class="btn" id="spState">Verification / status…</button><button class="btn" id="spEdit">Edit</button>':'')+'<button class="btn pri" id="spClose">Close</button>');
   $('spClose').onclick=closeModal;
   if(w){ $('spEdit').onclick=function(){ editSupplier(s.supplier_id); }; $('spState').onclick=function(){ supState(s.supplier_id); }; }
@@ -4931,7 +4968,7 @@ function exportSuppliers(){
 /* ----- Review queue: discovery files -> checks -> approve / merge / reject ----- */
 function renderQueue(){
   var el=$('vRQ'); if(needLive(el,'RFQ')) return;
-  var st=PR.qs, w=canWrite();
+  var st=PR.qs, w=canWrite('rfq');
   el.innerHTML='<div class="bar"><div><h2>Review queue</h2><div class="scope">Suppliers found by Claude / Gemini / Google wait here as <b>Unverified</b> until you approve them. Automatic checks: format (offline), mail server and website (DNS), duplicates. Nothing is contacted from here.</div></div><span style="flex:1"></span>'+
     '<button class="btn" id="rqTpl" title="Excel template with the columns the importer reads, help and examples">Download template</button>'+(w?'<button class="btn" id="rqDns" title="Look up the mail server (MX) of each email domain and the website domain (A) - free DNS-over-HTTPS">Run DNS checks</button><button class="btn imp" id="rqImp" title="Discovery CSV / sheet (17 columns), RFQ send list (Discovery (import) sheet) or the Gemini supplier directory">Import file…</button>':'')+'</div>'+
     '<div class="tabs abtabs" id="rqTabs">'+['Pending','Approved','Merged','Rejected','All'].map(function(t){ return '<a data-s="'+t+'"'+(t===st?' class="on"':'')+'>'+t+' <span class="n" data-c="'+t+'"></span></a>'; }).join('')+'</div>'+
@@ -4953,7 +4990,7 @@ function dnsCell(r){ if(!r.dns) return '<span class="n">not checked</span>'; var
   if(t.a) out.push('<span class="'+(d.a===true?'pos':d.a===false?'neg':'n')+'" title="website '+esc(t.a)+'">Web '+(d.a===true?'✓':d.a===false?'✗':'?')+'</span>');
   return out.join(' ')||'<span class="n">nothing to look up</span>'; }
 function drawQueue(){
-  var Q=PR.Q, b=$('rqBody'); if(!Q||!b) return; var w=canWrite(), pend=PR.qs==='Pending';
+  var Q=PR.Q, b=$('rqBody'); if(!Q||!b) return; var w=canWrite('rfq'), pend=PR.qs==='Pending';
   Object.keys(Q.counts).forEach(function(k){ var x=document.querySelector('#rqTabs [data-c="'+k+'"]'); if(x) x.textContent=Q.counts[k]?'('+Q.counts[k]+')':''; });
   var rows=Q.rows||[];
   if(!rows.length){ b.innerHTML='<div class="empty">'+(pend?'Nothing waiting. Import a discovery file: the RFQ send list ("Discovery (import)" sheet), the Gemini supplier directory, or a CSV with the 17 discovery columns.':'No rows.')+'</div>'; return; }
@@ -5279,7 +5316,7 @@ function printDoc(title, body, extraCss){
 }
 function printLetterTest(c){ var e=company(c);
   printDoc('Letterhead test', letterhead(c)+'<h1>REQUEST FOR QUOTATION</h1><p>Test page: this is how RFQ PDFs and the quotation comparison / approval pack start.</p><p>Contact: '+[e.sender_name,e.sender_designation,e.sender_email,e.sender_phone].filter(Boolean).map(esc).join(' · ')+'</p><div class="ft">Please quote the RFQ no. in your reply</div>'); }
-$('rqFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return; if(ro()){ toast('Read-only account.',true); return; } showQueueImport(f); };
+$('rqFile').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return; if(!canWrite('rfq')){ toast('Read-only account.',true); return; } showQueueImport(f); };
 
 /* ---------- v3.1.2: RFQs — item list, shortlist, send list with Email / WhatsApp buttons, chase list, RFQ PDF, RFQ reports ---------- */
 var RF={ list:null, cur:null, no:'', f:{q:'',st:'open'}, rep:{month:'',cat:''} };
@@ -5321,7 +5358,7 @@ function chaseList(){
 function renderRfqs(){
   var el=$('vRF'); if(needLive(el,'RFQ')) return;
   if(!RF.list){ el.innerHTML='<div class="empty"><span class="spin"></span> Loading RFQs…</div>'; rfLoad().then(renderRfqs).catch(function(e){ rfNeedDb(el,e); }); return; }
-  var all=RF.list.rfqs||[], open=all.filter(function(r){ return RFQ_OPEN.indexOf(r.status)>=0; }), ch=chaseList(), K=Procure.rfqKpis(all), w=canWrite();
+  var all=RF.list.rfqs||[], open=all.filter(function(r){ return RFQ_OPEN.indexOf(r.status)>=0; }), ch=chaseList(), K=Procure.rfqKpis(all), w=canWrite('rfq');
   var pct=function(x){ return Math.round((x||0)*100)+'%'; };
   el.innerHTML='<div class="bar"><div><h2>RFQs</h2><div class="scope">From the boss\'s list to 3 valid quotes: New RFQ → add suppliers → click Email, then WhatsApp → chase → record replies.</div></div><span style="flex:1"></span>'+
     '<button class="btn" id="rfTplI" title="Excel template for an item list">Item-list template</button>'+(w?'<button class="btn imp" id="rfImp" title="Import an Excel send list (RFQ Text + Send List sheets, e.g. RFQ-2611-002) with its statuses">Import RFQ workbook</button><button class="btn pri" id="rfNew">+ New RFQ</button>':'')+'</div>'+
@@ -5352,7 +5389,7 @@ function itemRow(it){ it=it||{}; var v=function(k){ return esc(it[k]==null?'':it
     '<td><input class="ed" data-k="res_code" list="mlCodes" value="'+v('res_code')+'" style="width:64px" placeholder="M09"></td>'+
     '<td style="text-align:center"><input type="checkbox" data-k="only_overseas"'+(it.only_overseas?' checked':'')+' title="Only made overseas (e.g. China)"></td><td><button class="dbtn idel" type="button" title="Remove">×</button></td></tr>'; }
 function renderRfqEdit(){
-  var el=$('vRE'); if(needLive(el,'RFQ')) return; if(!canWrite()){ el.innerHTML='<div class="empty">Read-only account.</div>'; return; }
+  var el=$('vRE'); if(needLive(el,'RFQ')) return; if(!canWrite('rfq')){ el.innerHTML='<div class="empty">Read-only account.</div>'; return; }
   var edit=RF.no&&RF.cur&&RF.cur.rfq.rfq_no===RF.no ? RF.cur : null, h=edit?edit.rfq:{ rfq_date:today(), delivery_place:'Bandar Seri Begawan, Brunei', certs:'mill certificate / material test report' }, items=edit?edit.items:[];
   var hol=(RF.list&&RF.list.holidays)||[];
   el.innerHTML='<div class="bar"><div><h2>'+(edit?'Edit '+esc(h.rfq_no):'New RFQ')+'</h2><div class="scope">Type the boss\'s list into the table (Tab moves to the next box), paste it from Excel, or import an item-list file. Urgency and the quote deadline follow from the earliest required-on-site date.</div></div></div>'+
@@ -5432,11 +5469,11 @@ function renderRfq(){
   if(!RF.cur||RF.cur.rfq.rfq_no!==RF.no){ el.innerHTML='<div class="empty"><span class="spin"></span> Loading '+esc(RF.no)+'…</div>';
     Promise.all([api('rfq',{rfq_no:RF.no}), PR.set?Promise.resolve(PR.set):api('settings').then(function(st){ PR.set=st; return st; },function(){ return null; }), PR.data?Promise.resolve(PR.data):prLoad().catch(function(){ return null; })])
       .then(function(x){ RF.cur=x[0]; renderRfq(); if(RF.openShortlist){ RF.openShortlist=false; shortlist(); } }).catch(function(e){ rfNeedDb(el,e); }); return; }
-  var D=RF.cur, r=D.rfq, its=D.items, rec=D.recipients||[], w=canWrite()&&['Awarded','Cancelled'].indexOf(r.status)<0, T=rfqTpl(D);
+  var D=RF.cur, r=D.rfq, its=D.items, rec=D.recipients||[], w=canWrite('rfq')&&['Awarded','Cancelled'].indexOf(r.status)<0, T=rfqTpl(D);
   var plan=Procure.sourcingPlan(r.urgency, its.some(function(x){ return x.only_overseas; }));
   var K=Procure.rfqKpis([{recipients:rec}]);
   el.innerHTML='<div class="bar"><div><div class="crumb"><a href="#" id="rdBack">RFQs</a> ›</div><h2>'+esc(r.rfq_no)+' — '+esc(r.title)+'</h2><div class="scope">'+rsChip(r.status)+' '+uChip(r.urgency)+' · RFQ date '+esc(fmtDate(r.rfq_date))+' · quote deadline <b>'+esc(r.deadline?Procure.longDate(r.deadline):'not set')+'</b>'+(r.project?' · '+esc(r.project):'')+(r.mr_ref?' · '+esc(r.mr_ref):'')+(r.status_note?' · <i>'+esc(r.status_note)+'</i>':'')+'</div></div><span style="flex:1"></span>'+
-    '<button class="btn" id="rdPdf" title="RFQ as a PDF (print / save as PDF) - attach it to emails for long lists">RFQ PDF</button>'+(canWrite()?'<button class="btn" id="rdSt">Status…</button>':'')+(w?'<button class="btn" id="rdEdit">Edit items</button>':'')+'</div>'+
+    '<button class="btn" id="rdPdf" title="RFQ as a PDF (print / save as PDF) - attach it to emails for long lists">RFQ PDF</button>'+(canWrite('rfq')?'<button class="btn" id="rdSt">Status…</button>':'')+(w?'<button class="btn" id="rdEdit">Edit items</button>':'')+'</div>'+
     '<div class="grid2 rd"><div class="card"><h3>Items <span class="n">'+its.length+' · '+(T.qtyMode==='moq'?'asking MOQ + price at MOQ':'firm quantities')+'</span></h3><div class="tbl"><table class="mini"><thead><tr><th>#</th><th>Item</th><th class="r">Qty</th><th>Unit</th><th>Needed</th><th>Cat.</th></tr></thead><tbody>'+its.map(function(x){
       return '<tr style="cursor:default"><td>'+x.line+'</td><td>'+esc(x.description)+(x.spec_brand?'<div class="sub2">'+esc(x.spec_brand)+'</div>':'')+(x.only_overseas?' <span class="chip st-Prospect">overseas only</span>':'')+' <a href="#" class="rdHist n" data-q="'+esc(histWords(x.description))+'" title="Earlier quoted prices for this material">price history</a></td><td class="r">'+(x.qty==null?'<span class="n">MOQ</span>':esc(x.qty))+'</td><td>'+esc(x.unit)+'</td><td class="dt">'+esc(x.required_date?fmtDate(x.required_date):'')+'</td><td>'+(x.category?catChips([x.category]):'')+'</td></tr>'; }).join('')+'</tbody></table></div></div>'+
     '<div class="card"><h3>Goal: 3 valid quotes</h3>'+kpiRow([['On the list',rec.length,'suppliers'],['Contacted',K.contacted,K.contacted?Math.round(K.replyRate*100)+'% replied':'—'],['Quotes',K.quoted,K.valid+' valid'+(K.valid>=3?' ✓':'')]])+
@@ -5459,7 +5496,7 @@ function renderRfq(){
   if(w){ $('rdEdit').onclick=function(){ if((D.quotes||[]).length && !confirm('Quotes are already entered for this RFQ. Changing the item lines (order, number of lines) also changes which quoted price belongs to which line. Continue?')) return; showView('rfqedit'); }; $('rdAdd').onclick=shortlist; $('rdMore').onclick=findMore; $('rdQuick').onclick=quickAdd; }
   var tb=$('rdRows'); if(!tb) return;
   tb.addEventListener('click',function(e){
-    var a=e.target.closest('a[data-act]'); if(a){ if(!canWrite()) return; var tr=a.closest('tr'), sid=tr.dataset.sup, act=a.dataset.act;
+    var a=e.target.closest('a[data-act]'); if(a){ if(!canWrite('rfq')) return; var tr=a.closest('tr'), sid=tr.dataset.sup, act=a.dataset.act;
       if(a.dataset.attach) toast('Long RFQ: attach the RFQ PDF in Roundcube before you press Send (RFQ PDF button).');
       api('rfqClick',{rfq_no:r.rfq_no, supplier_id:sid, action:act}).then(function(x){ var i=D.recipients.findIndex(function(y){ return y.supplier_id===sid; }); if(i>=0){ Object.assign(D.recipients[i],x.recipient); } D.rfq.status=x.rfq_status; RF.list=null; tr.outerHTML=slRow(D.recipients[i]); })
         .catch(fail); return; }
@@ -5477,7 +5514,7 @@ function renderRfq(){
   });
 }
 function slRow(x){
-  var D=RF.cur, s=x.supplier||{}, T=rfqTpl(D), w=canWrite()&&['Awarded','Cancelled'].indexOf(D.rfq.status)<0, ql=qlOn(D)&&x.token?Procure.quoteLink(qlBase(),x.token):'', sup={zone:x.zone||s.zone, email:x.email, whatsapp:x.whatsapp, quote_link:ql};
+  var D=RF.cur, s=x.supplier||{}, T=rfqTpl(D), w=canWrite('rfq')&&['Awarded','Cancelled'].indexOf(D.rfq.status)<0, ql=qlOn(D)&&x.token?Procure.quoteLink(qlBase(),x.token):'', sup={zone:x.zone||s.zone, email:x.email, whatsapp:x.whatsapp, quote_link:ql};
   var mb=(D.outbox||[]).filter(function(o){ return o.supplier_id===x.supplier_id&&o.status!=='Cancelled'; }).pop();
   var em=x.email?Procure.buildEmailFit(T,sup):null, contacted=x.status!=='Not contacted', resp=Procure.RESPONDED.indexOf(x.status)>=0;
   var wa=x.whatsapp?Procure.buildWhatsApp(x.email?'wa_follow':'wa_full',T,sup):null;
@@ -5494,8 +5531,8 @@ function slRow(x){
     var re=x.email?Procure.buildReminderEmail(k,T,sup,ex):null, rw=x.whatsapp?Procure.buildWhatsApp(k,T,sup,ex):null, isDue=due.due===k;
     chase='<div class="'+(isDue?'due':'')+'">'+(isDue?'<b>due</b> ':'<span class="n">'+(due.t?'due '+esc(k==='reminder1'?due.t.reminder1:due.t.reminder2):'')+'</span> ')+btn(re&&re.link,k,'✉ '+lab,'',false)+btn(rw&&rw.link,k,'WA '+lab,'sl-wa',false)+'</div>';
   } else if(due.due==='noreply') chase='<div class="due"><b>no reply</b> — set the status</div>';
-  var st='<select class="slSt"'+(canWrite()?'':' disabled')+'>'+Procure.RECIPIENT_STATUS.map(function(v){ return '<option'+(v===x.status?' selected':'')+'>'+v+'</option>'; }).join('')+'</select>'+
-    (x.status==='Quoted'?'<label class="chkrow" style="margin:4px 0 0"><input type="checkbox" class="slValid"'+(x.valid_quote?' checked':'')+(canWrite()?'':' disabled')+'> valid quote</label>':'')+(x.note?'<div class="sub2">'+esc(x.note)+'</div>':'')+
+  var st='<select class="slSt"'+(canWrite('rfq')?'':' disabled')+'>'+Procure.RECIPIENT_STATUS.map(function(v){ return '<option'+(v===x.status?' selected':'')+'>'+v+'</option>'; }).join('')+'</select>'+
+    (x.status==='Quoted'?'<label class="chkrow" style="margin:4px 0 0"><input type="checkbox" class="slValid"'+(x.valid_quote?' checked':'')+(canWrite('rfq')?'':' disabled')+'> valid quote</label>':'')+(x.note?'<div class="sub2">'+esc(x.note)+'</div>':'')+
     (w&&contacted?'<div><button class="btn sm slQ" type="button" title="Type in the supplier\'s prices">'+((D.quotes||[]).some(function(q){ return q.current&&q.supplier_id===x.supplier_id; })?'Quote ✓':'Enter quote')+'</button></div>':'');
   var st2=x.stats||{};
   return '<tr data-sup="'+esc(x.supplier_id)+'" class="st-'+esc(x.status.replace(/\s+/g,'-'))+'" style="cursor:default"><td class="dsc"><a href="#" class="slSup" data-sup="'+esc(x.supplier_id)+'"><b>'+esc(s.name||x.supplier_id)+'</b></a><div class="sub2">'+esc(x.supplier_id)+' · '+esc(Procure.countryName(s.country))+(s.city?' · '+esc(s.city):'')+'</div><div>'+zChip(x.zone||s.zone,s.country)+' '+vChip(s.verification)+(st2.contacted>1?' <span class="n" title="earlier RFQs">replied '+st2.responded+'/'+st2.contacted+'</span>':'')+'</div></td>'+
@@ -5542,7 +5579,7 @@ function findMore(o){
   pmodal('Find more suppliers — '+r.rfq_no,'<p class="n">The app cannot search the internet by itself (free tools only), so the search is done by Claude or Gemini:</p>'+
     (o.zones?'<div class="note w">Short of quotes: this prompt searches the <b>next zone</b> — '+o.zones.map(function(z){ return ZONE_TXT[z]; }).join(', ')+'.</div>':'')+
     '<div class="hrow"><b>① Copy this prompt</b> and paste it into Claude or Gemini.'+(saved?' <span class="chip st-Submitted" title="Admin Settings › RFQ settings › Discovery prompts">saved '+esc(cat)+' prompt</span>':'')+'<span style="flex:1"></span>'+
-      (canWrite()&&cat?'<button class="btn sm" id="fmSave" title="Keep your edited wording for every '+esc(cat)+' RFQ">Save as '+esc(cat)+' prompt</button>':'')+'<button class="btn sm pri" id="fmCopy">Copy prompt</button></div><textarea id="fmT" style="width:100%;height:150px;font:12px var(--mono);margin-top:6px">'+esc(txt)+'</textarea>'+
+      (can('config','write')&&cat?'<button class="btn sm" id="fmSave" title="Keep your edited wording for every '+esc(cat)+' RFQ">Save as '+esc(cat)+' prompt</button>':'')+'<button class="btn sm pri" id="fmCopy">Copy prompt</button></div><textarea id="fmT" style="width:100%;height:150px;font:12px var(--mono);margin-top:6px">'+esc(txt)+'</textarea>'+
     '<div class="hrow" style="margin-top:12px"><b>② Paste the AI\'s answer here</b> (the table / CSV it gives back).</div><textarea id="fmA" style="width:100%;height:150px;font:12px var(--mono);margin-top:6px" placeholder="company_name,country,city,…"></textarea>'+
     '<div class="hrow" style="margin-top:6px"><button class="btn sm pri" id="fmChk">Check the answer</button><span class="n" style="margin:0">Each supplier is checked (format, duplicates, mail server) and saved as Unverified, then put on this send list.</span></div><div id="fmPrev"></div>',
     '<button class="btn" id="fmTpl">Supplier template</button><span style="flex:1"></span><button class="btn" id="fmC">Close</button><button class="btn pri hidden" id="fmAdd">Add to the send list</button>');
@@ -5714,7 +5751,7 @@ function qlBase(){ return location.origin+location.pathname.replace(/[^\/]*$/,''
 function qlOn(D){ return !(D.opts&&D.opts.quote_link===false); }
 function wtsTxt(sc){ return 'price '+sc.price+' · lead time '+sc.lead+' · payment '+sc.payment+' · reliability '+sc.reliability; }
 function rdQuotes(D){
-  var r=D.rfq, Q=curQuotes(D), w=canWrite()&&['Awarded','Cancelled'].indexOf(r.status)<0, sup=function(id){ var x=(D.recipients||[]).filter(function(y){ return y.supplier_id===id; })[0]; return x&&x.supplier?x.supplier.name:id; };
+  var r=D.rfq, Q=curQuotes(D), w=canWrite('rfq')&&['Awarded','Cancelled'].indexOf(r.status)<0, sup=function(id){ var x=(D.recipients||[]).filter(function(y){ return y.supplier_id===id; })[0]; return x&&x.supplier?x.supplier.name:id; };
   var head='<div class="hrow" style="margin-bottom:6px"><h3 style="margin:0">Quotes &amp; comparison</h3><span class="n" style="margin:0 0 0 6px">'+Q.length+' quote'+(Q.length===1?'':'s')+'</span><span style="flex:1"></span>'+
     (w&&(D.recipients||[]).length?'<button class="btn sm pri" id="qAdd">+ Enter a quote</button>':'')+(Q.length?'<button class="btn sm exp" id="qXls">Comparison Excel</button><button class="btn sm" id="qPack">Approval pack PDF</button>':'')+'</div>';
   if(!Q.length) return head+'<div class="empty" style="padding:18px">No quotes yet. When a supplier sends a quotation (email, WhatsApp, PDF), click <b>+ Enter a quote</b> (or <b>Quote</b> on the send list) and type the unit prices; the comparison builds itself.</div>';
@@ -5744,7 +5781,8 @@ function rdQuotes(D){
   var expN=exp.length?'<div class="note w">'+exp.map(function(q){ var d=Procure.daysBetween(today(),q.validity); return '<b>'+esc(sup(q.supplier_id))+'</b>: quote '+(d<0?'expired on ':'valid until ')+esc(fmtDate(q.validity))+(d>=0?' ('+(d===0?'today':d+' day'+(d===1?'':'s')+' left')+')':''); }).join('<br>')+' — decide before then, or ask the supplier to extend the validity.</div>':'';
   var dec='';
   if(r.status==='Awarded'){ var aw=r.award_supplier;
-    dec='<div class="note ok"><b>Awarded to '+esc(sup(aw))+'</b> on '+esc(fmtDate(r.award_date))+' — approved by '+esc(r.award_by||'')+(r.po_ref?' · PO '+esc(r.po_ref):'')+(r.award_note?' · '+esc(r.award_note):'')+'</div>'+
+    dec='<div class="note ok"><b>Awarded to '+esc(sup(aw))+'</b> on '+esc(fmtDate(r.award_date))+' — approved by '+esc(r.award_by||'')+(r.award_doc?' · '+(/^https?:\/\//i.test(r.award_doc)?'<a href="'+esc(safeUrl(r.award_doc))+'" target="_blank" rel="noopener">approval document</a>':'approval ref '+esc(r.award_doc)):'')+
+      (r.award_by_role==='proc'?' · recorded by Procurement':'')+(r.po_ref?' · PO '+esc(r.po_ref):'')+(r.award_note?' · '+esc(r.award_note):'')+'</div>'+
       '<p class="n">Tell the suppliers (keeps them replying next time): thank-you to the winner, regret to the others who quoted.</p><div class="tbl"><table class="mini"><tbody>'+
       Q.map(function(q){ var rc=(D.recipients||[]).filter(function(y){ return y.supplier_id===q.supplier_id; })[0]||{}, kind=q.supplier_id===aw?'thanks':'regret', T=rfqTpl(D), s2={zone:rc.zone, email:rc.email, whatsapp:rc.whatsapp};
         var wa=rc.whatsapp?Procure.buildWhatsApp(kind,T,s2):null, txt=Procure.buildWhatsApp(kind,T,s2).text, subj=(kind==='thanks'?'Award: ':'')+Procure.fill(Procure.TEMPLATES.subject,{rfq_no:r.rfq_no,title:r.title});
@@ -5753,12 +5791,12 @@ function rdQuotes(D){
         return '<tr style="cursor:default" data-sup="'+esc(q.supplier_id)+'"><td>'+esc(sup(q.supplier_id))+'</td><td>'+(kind==='thanks'?'<b>Thank-you (award)</b>':'Regret')+(done?' <span class="pos">✓ sent</span>':'')+'</td><td class="nw btns">'+
           (em?'<a class="btn sm sl-mail" target="_blank" rel="noopener" href="'+esc(em)+'" data-qact="'+kind+'">Email</a>':'')+(wa?'<a class="btn sm sl-wa" target="_blank" rel="noopener" href="'+esc(wa.link)+'" data-qact="'+kind+'">WhatsApp</a>':'')+'</td></tr>'; }).join('')+'</tbody></table></div>'+
       rdSavings(D)+rdDelivery(D, sup)+rdProposals(D)+
-      (canWrite()?'<div class="pact"><button class="btn sm" id="qReopen">Reopen (cancel the award)</button></div>':'');
+      (can('rfq','manage')?'<div class="pact"><button class="btn sm" id="qReopen">Reopen (cancel the award)</button></div>':'');
   } else if(w){
     dec='<div class="form f3" style="margin-top:6px"><div class="f"><label for="qRec">Recommended supplier</label><select id="qRec">'+opts+'</select><div class="hint">Proposed: the highest score among the quotes that pass the must-pass checks'+(C.top?' ('+esc(sup(C.top))+(C.cheapest&&C.cheapest!==C.top?'; cheapest: '+esc(sup(C.cheapest)):'')+')':'')+'.</div></div>'+
       '<div class="f" style="grid-column:span 2"><label for="qWhy">Reason</label><input id="qWhy" maxlength="300" value="'+esc(r.recommendation||'')+'" placeholder="e.g. lowest landed cost, in stock, delivers in 3 days"></div></div>'+
       '<div class="pact"><span class="n" style="margin:0">'+(C.passing>=3?'<b class="pos">'+C.passing+' quotes pass the checks ✓</b>':'<b class="neg">'+C.passing+' quote'+(C.passing===1?'':'s')+' pass'+(C.passing===1?'es':'')+' the checks — goal is 3</b> (approval pack can still go, it shows the shortfall)')+(r.approval_sent_at?' · approval pack sent '+esc(r.approval_sent_at):'')+'</span><span style="flex:1"></span>'+
-      '<button class="btn" id="qRecSave">Save recommendation</button><button class="btn" id="qSent">Mark approval pack sent</button><button class="btn pri" id="qAward">Record award…</button></div>';
+      '<button class="btn" id="qRecSave">Save recommendation</button><button class="btn" id="qSent">Mark approval pack sent</button>'+(can('rfq','award')?'<button class="btn pri" id="qAward">Record award…</button>':'')+'</div>';
   }
   return head+mp+expN+'<div class="tbl"><table class="mini cmp"><thead><tr>'+th+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>'+
     (BC&&BC.covered?'<p class="n">Budget check (masterlist): '+BC.covered+' line'+(BC.covered>1?'s':'')+' with a code — masterlist B$ '+m(BC.budget)+(BC.priced?' vs proposed B$ '+m(BC.quoted)+' (<b class="'+(BC.diff>0?'neg':'pos')+'">'+(BC.diff>0?'+':'')+m(BC.diff)+'</b>)':'')+'.</p>':'')+
@@ -5795,7 +5833,7 @@ function pickSupplierForQuote(D){
   $('pqC').onclick=closeModal; $('pqGo').onclick=function(){ var sid=$('pqS').value, q=curQuotes(D).filter(function(x){ return x.supplier_id===sid; })[0]; enterQuote(D,sid,q); };
 }
 function enterQuote(D, sid, q, newRev){
-  var r=D.rfq, rc=(D.recipients||[]).filter(function(x){ return x.supplier_id===sid; })[0]||{}, s=rc.supplier||{}, lock=['Awarded','Cancelled'].indexOf(r.status)>=0||!canWrite();
+  var r=D.rfq, rc=(D.recipients||[]).filter(function(x){ return x.supplier_id===sid; })[0]||{}, s=rc.supplier||{}, lock=['Awarded','Cancelled'].indexOf(r.status)>=0||!canWrite('rfq');
   var local=(rc.zone||s.zone)<=3, h=q&&!newRev?q:{ currency:(rc.zone||s.zone)===1?'BND':local?'BND':'USD', incoterm:local?'Delivered to site':'FOB', quote_date:today(), valid:true };
   if(newRev&&q) h=Object.assign({},q,{quote_date:today(), quote_ref:'', file_link:'', file_name:''});
   var byLine={}; ((q&&q.lines)||[]).forEach(function(l){ byLine[l.line]=l; });
@@ -5853,7 +5891,11 @@ function awardDlg(D, recId){
   var r=D.rfq, Q=curQuotes(D), C=cmpOf(D), m=Procure.money, sup=function(id){ var x=(D.recipients||[]).filter(function(y){ return y.supplier_id===id; })[0]; return x&&x.supplier?x.supplier.name:id; };
   pmodal('Record the award — '+r.rfq_no,'<div class="form"><div class="f full"><label for="awS">Supplier</label><select id="awS">'+Q.map(function(q){ return '<option value="'+esc(q.supplier_id)+'"'+(q.supplier_id===recId?' selected':'')+'>'+esc(sup(q.supplier_id))+'</option>'; }).join('')+'</select></div>'+
     '<div class="f"><label for="awBy">Approved by</label><input id="awBy" placeholder="name of the boss / procurement"></div><div class="f"><label for="awD">Date</label><input id="awD" type="date" value="'+today()+'"></div>'+
-    '<div class="f"><label for="awPo">PO no. <span class="hint">optional</span></label><input id="awPo"></div><div class="f"><label for="awN">Note</label><input id="awN"></div></div><div id="awProps"></div>'+
+    '<div class="f"><label for="awPo">PO no. <span class="hint">optional</span></label><input id="awPo"></div><div class="f"><label for="awN">Note</label><input id="awN"></div>'+
+    // v4.0.0: the boss's approval behind the award - required when Procurement records it
+    '<div class="f full"><label for="awDoc">Approval document'+(can('rfq','manage')?' <span class="hint">optional</span>':' <span class="hint">required for Procurement</span>')+'</label>'+
+      '<div class="hrow" style="gap:6px"><input id="awDoc" style="flex:1" maxlength="500" placeholder="link to the signed approval / email, or the memo ref"><label class="btn sm" title="Upload the signed approval (PDF / photo) to Drive › Procurement">Upload…<input type="file" id="awDocF" accept=".pdf,image/*,.msg,.eml,.doc,.docx" class="hidden"></label></div>'+
+      '<div class="hint" id="awDocH">The boss\'s written OK: upload the signed approval pack / email, or paste its link or reference.</div></div></div><div id="awProps"></div>'+
     '<p class="n">The RFQ is locked after the award (Reopen undoes it). Then send the thank-you and regret messages.</p>',
     '<button class="btn" id="awC">Cancel</button><button class="btn pri" id="awGo">Record award</button>');
   var props=[], showProps=function(){ var row=C.rows.filter(function(x){ return x.q.supplier_id===$('awS').value; })[0], res=mlRes();
@@ -5863,17 +5905,22 @@ function awardDlg(D, recId){
       props.map(function(p,i){ return '<tr style="cursor:default"><td><input type="checkbox" class="awP" data-i="'+i+'"'+(p.unit_match?' checked':'')+'></td><td class="no">'+esc(p.res_code)+'</td><td>'+esc(p.description)+(p.unit_match?'':'<div class="sub2 neg">unit differs: masterlist '+esc(p.ml_unit)+', RFQ '+esc(p.unit)+' — check before ticking</div>')+'</td><td class="r">'+(p.ml_price==null?'—':m(p.ml_price)+'/'+esc(p.ml_unit))+'</td><td class="r"><b>'+m(p.new_price)+'</b>/'+esc(p.unit)+'</td><td class="r '+(p.change>0?'neg':'pos')+'">'+(p.change==null?'':(p.change>0?'+':'')+(p.change*100).toFixed(1)+'%')+'</td></tr>'; }).join('')+'</tbody></table></div><p class="n">Ticked lines go to Pricing › Rate proposals; accepting one there writes it into the masterlist Res tab.</p>'; };
   $('awS').onchange=showProps; showProps();
   $('awC').onclick=closeModal;
+  $('awDocF').onchange=function(){ var f=this.files[0]; this.value=''; if(!f) return; if(f.size>MAX_FILE){ toast('File too large (20 MB max).',true); return; }
+    $('awDocH').innerHTML='<span class="spin"></span> Uploading '+esc(f.name)+'…';
+    f.arrayBuffer().then(function(buf){ return driveCall('procUpload',{folder:r.rfq_no+' - '+r.title.replace(/[\/\\:*?"<>|]+/g,'-').slice(0,60), file:{name:'Award approval - '+f.name, type:f.type||'application/octet-stream', data:b64(buf)}}); })
+      .then(function(d){ $('awDoc').value=d.url; $('awDocH').textContent='Uploaded to Drive: '+d.name; }, function(e){ $('awDocH').textContent='Upload failed: '+e.message+' — paste the link or reference instead.'; }); };
   $('awGo').onclick=function(){ var b=this, sid=$('awS').value, row=C.rows.filter(function(x){ return x.q.supplier_id===sid; })[0];
+    if(!can('rfq','manage')&&$('awDoc').value.trim().length<3){ toast('Attach the boss\'s approval (upload it or paste the link / memo ref).',true); $('awDoc').focus(); return; }
     if(row&&!row.pass&&!confirm(sup(sid)+' fails the must-pass checks ('+row.fails.join(', ')+'). Award anyway?')) return;
     var pick=Array.prototype.map.call(document.querySelectorAll('.awP:checked'),function(x){ return props[+x.dataset.i]; });
-    busy(b,true); api('rfqDecide',Object.assign({rfq_no:r.rfq_no, action:'award', supplier_id:sid, award_by:$('awBy').value.trim(), award_date:$('awD').value, po_ref:$('awPo').value.trim(), note:$('awN').value.trim(),
+    busy(b,true); api('rfqDecide',Object.assign({rfq_no:r.rfq_no, action:'award', supplier_id:sid, award_by:$('awBy').value.trim(), award_date:$('awD').value, po_ref:$('awPo').value.trim(), note:$('awN').value.trim(), award_doc:$('awDoc').value.trim(),
         total_bnd:row&&row.L.total_bnd!=null?row.L.total_bnd.toFixed(2):'', saving_bnd:savingOf(C,sid)!=null?savingOf(C,sid).toFixed(2):'',
         scores:C.rows.filter(function(x){ return x.score; }).map(function(x){ return {supplier_id:x.q.supplier_id, score:x.score.total, price:x.score.price, lead:x.score.lead, payment:x.score.payment, reliability:x.score.reliability, total_bnd:+x.L.total_bnd.toFixed(2)}; }),
         proposals:pick}, rfqSavingsOf(D, sid)||{}))
     .then(function(x){ closeModal(); RF.cur.rfq=x.rfq; RF.p=null; NT.dash=null; RF.list=null; RF.cur=null; renderRfq(); toast('Awarded'+(pick.length?' · '+pick.length+' rate proposal'+(pick.length>1?'s':''):'')); }).catch(function(e){ busy(b,false); fail(e); }); };
 }
 function rdDelivery(D, sup){
-  var r=D.rfq, w=canWrite();
+  var r=D.rfq, w=canWrite('rfq');
   return '<div class="hrow" style="margin-top:10px"><b>Delivery</b>&nbsp;'+(r.delivered_on?'<span>delivered '+esc(fmtDate(r.delivered_on))+(r.delivery_on_time===true?' · <span class="pos">on time</span>':r.delivery_on_time===false?' · <span class="neg">late</span>':'')+(r.delivery_quality?' · quality '+'★★★★★'.slice(0,r.delivery_quality)+'<span class="n">'+'★★★★★'.slice(r.delivery_quality)+'</span>':'')+(r.delivery_note?' · '+esc(r.delivery_note):'')+'</span>':'<span class="n">not recorded yet — rate '+esc(sup(r.award_supplier))+' when the goods arrive (feeds the supplier scorecard)</span>')+
     '<span style="flex:1"></span>'+(w?'<button class="btn sm" id="qDel">'+(r.delivered_on?'Edit delivery…':'Record delivery…')+'</button>':'')+'</div>';
 }
@@ -5966,7 +6013,7 @@ function rdGuardWire(D){
 }
 var PLATFORMS=['Alibaba RFQ','Made-in-China','Global Sources','IndiaMART','Facebook group','Carousell','Mudah.my','Other'];
 function rdPosts(D){
-  var P=D.posts||[], w=canWrite()&&D.rfq.status!=='Cancelled';
+  var P=D.posts||[], w=canWrite('rfq')&&D.rfq.status!=='Cancelled';
   return '<div class="hrow" style="margin-bottom:6px"><h3 style="margin:0">Marketplace posts</h3><span class="n" style="margin:0 0 0 8px">RFQ posted on B2B marketplaces and groups</span><span style="flex:1"></span>'+(w?'<button class="btn sm" id="psAdd">+ Log a post</button>':'')+'</div>'+
     (P.length?'<div class="tbl"><table class="mini"><thead><tr><th>Platform</th><th>Posted</th><th class="r">Responses</th><th>Note</th><th></th></tr></thead><tbody>'+P.map(function(p){ return '<tr data-id="'+p.id+'" style="cursor:default"><td>'+(p.url?'<a href="'+esc(safeUrl(p.url))+'" target="_blank" rel="noopener">'+esc(p.platform)+'</a>':esc(p.platform))+'</td><td class="dt">'+esc(fmtDate(p.posted_on))+'</td><td class="r">'+p.responses+'</td><td>'+esc(p.note)+'</td><td class="nw">'+(w?'<button class="btn sm psEd">Edit</button><button class="btn sm psDel">Remove</button>':'')+'</td></tr>'; }).join('')+'</tbody></table></div>'
       :'<div class="n">None. When the database and the AI search are not enough (e.g. items made only in China), post the RFQ on a marketplace and log it here with the number of responses.</div>');
@@ -6006,8 +6053,8 @@ function rdMailboxWire(D){
     var items=(D.recipients||[]).filter(function(x){ return x.status==='Not contacted'&&x.email&&!O.some(function(o){ return o.supplier_id===x.supplier_id&&o.kind==='rfq'&&o.status!=='Cancelled'; }); }).map(function(x){
       var e=Procure.buildEmail(T,{zone:x.zone||(x.supplier||{}).zone, email:x.email, quote_link:qlOn(D)&&x.token?Procure.quoteLink(qlBase(),x.token):''}); return {supplier_id:x.supplier_id, kind:'rfq', to:x.email, subject:e.subject, body:e.body.replace(/\s+$/,'')+mailSig()}; });
     if(!confirm(items.length+' RFQ email(s) will be sent from your mailbox within the next 30 minutes (daily limit applies). Continue?')) return;
-    busy(b,true); api('mailQueue',{rfq_no:D.rfq.rfq_no, items:items}).then(function(x){ D.outbox=x.outbox; $('rdMb').innerHTML=rdMailbox(D,canWrite()); rdMailboxWire(D); toast(x.queued+' email(s) queued'); }).catch(function(e){ busy(b,false); fail(e); }); };
-  document.querySelectorAll('#rdMb .mbX').forEach(function(bt){ bt.onclick=function(){ var id=+bt.closest('tr').dataset.id; api('mailCancel',{id:id}).then(function(x){ var o=D.outbox.filter(function(y){ return y.id===id; })[0]; if(o) o.status='Cancelled'; $('rdMb').innerHTML=rdMailbox(D,canWrite()); rdMailboxWire(D); }).catch(fail); }; });
+    busy(b,true); api('mailQueue',{rfq_no:D.rfq.rfq_no, items:items}).then(function(x){ D.outbox=x.outbox; $('rdMb').innerHTML=rdMailbox(D,canWrite('rfq')); rdMailboxWire(D); toast(x.queued+' email(s) queued'); }).catch(function(e){ busy(b,false); fail(e); }); };
+  document.querySelectorAll('#rdMb .mbX').forEach(function(bt){ bt.onclick=function(){ var id=+bt.closest('tr').dataset.id; api('mailCancel',{id:id}).then(function(x){ var o=D.outbox.filter(function(y){ return y.id===id; })[0]; if(o) o.status='Cancelled'; $('rdMb').innerHTML=rdMailbox(D,canWrite('rfq')); rdMailboxWire(D); }).catch(fail); }; });
 }
 
 /* ---------- v3.2.0: Pricing › Quote prices (price history per material) ---------- */
@@ -6045,7 +6092,7 @@ function renderRateProps(){
   api('rateProps',{status:RP.st}).then(function(d){ RP.data=d.proposals||[]; rpDraw(); }).catch(function(e){ $('rpBody').innerHTML='<div class="note w">'+esc(e.message)+'</div>'; });
 }
 function rpDraw(){
-  var P=RP.data||[], m=Procure.money, w=canWrite();
+  var P=RP.data||[], m=Procure.money, w=canWrite('rates');
   $('rpCount').textContent=P.length+' proposal'+(P.length===1?'':'s');
   $('rpBody').innerHTML=P.length?'<div class="tbl"><table class="mini"><thead><tr><th>Code</th><th>Item</th><th class="r">Masterlist</th><th class="r">Awarded (landed)</th><th class="r">Change</th><th>From</th><th>Status</th><th></th></tr></thead><tbody>'+P.map(function(p){
     var ch=p.ml_price?p.new_price/p.ml_price-1:null, um=!p.ml_unit||Procure.normUnit(p.ml_unit)===Procure.normUnit(p.unit);
@@ -6138,7 +6185,7 @@ function renderPerf(){
   var el=$('vPF'); if(needLive(el,'QS Performance')) return;
   if(!PFM.data){ el.innerHTML='<div class="empty"><span class="spin"></span> Loading…</div>'; pfLoad().then(renderPerf).catch(function(e){ el.innerHTML='<div class="note w">'+esc(/crm_perf|does not exist|schema cache/i.test(e.message)?'QS Performance is not in the database yet — it arrives with the v3.3.0 Database workflow after the pull request is merged.':e.message)+'</div>'; }); return; }
   var D=PFM.data, ms=Perf.months(D.start_date, D.today); if(!PFM.month||ms.indexOf(PFM.month)<0) PFM.month=ms[0];
-  var K=Perf.report(D, PFM.rfqs, {month:PFM.month, procure:Procure}), m=K.m, c=K.c, w=canWrite(), R=pfRows(K);
+  var K=Perf.report(D, PFM.rfqs, {month:PFM.month, procure:Procure}), m=K.m, c=K.c, w=canWrite('perf'), R=pfRows(K);
   var tile=function(l,v,s){ return [l,v,s]; };
   var tot=kpiRow([tile('Contract value won', pfB(m.totals.contractWon), 'since start '+pfB(c.totals.contractWon)), tile('Savings', pfB(m.totals.savings), 'since start '+pfB(c.totals.savings)),
     tile('Collections', pfB(m.totals.collections), 'since start '+pfB(c.totals.collections)), tile('Hours saved', (m.totals.hours||0).toFixed(1)+' h', 'since start '+(c.totals.hours||0).toFixed(1)+' h'),
@@ -6178,13 +6225,13 @@ function renderPerf(){
     var r=e.target.closest('.pfR'); if(r){ e.preventDefault(); RF.no=r.dataset.rfq; showView('rfq'); } };
 }
 function pfVlDraw(){
-  var el=$('pfVl'); if(!el) return; var D=PFM.data, w=canWrite(), adm=isAdmin(), from=D.start_date||'';
+  var el=$('pfVl'); if(!el) return; var D=PFM.data, w=canWrite('perf'), adm=isAdmin(), from=D.start_date||'';
   var E=(D.values||[]).filter(function(x){ return PFM.vlAll||!from||x.entry_date>=from; });
   el.innerHTML='<div class="hrow" style="margin-bottom:6px"><h3 style="margin:0">Value log</h3><span class="n" style="margin:0 0 0 8px">value engineering, savings, collections and time saved, with evidence. Verified by someone other than the person who recorded it.</span><span style="flex:1"></span>'+
     (from?'<label class="chkrow" style="margin:0"><input type="checkbox" id="vlAll"'+(PFM.vlAll?' checked':'')+'> show entries before '+esc(fmtDate(from))+'</label>':'')+'</div>'+
     (E.length?'<div class="tbl"><table class="mini"><thead><tr><th>Date</th><th>Type</th><th>Tender / project</th><th class="r">Amount</th><th class="r">Hours</th><th>Description</th><th>Evidence</th><th>Verified</th><th></th></tr></thead><tbody>'+E.map(function(x){
       var act=(w&&(!x.verified||adm)?'<button class="btn sm vlEd">Edit</button><button class="btn sm vlDel">Remove</button>':'')+
-        (x.mine?(x.verified?'':'<span class="n">awaiting verification</span>'):'<button class="btn sm vlVer">'+(x.verified?'Undo':'Verify')+'</button>');
+        (x.mine?(x.verified?'':'<span class="n">awaiting verification</span>'):can('perf','verify')?'<button class="btn sm vlVer">'+(x.verified?'Undo':'Verify')+'</button>':'');
       return '<tr data-id="'+x.id+'" style="cursor:default"><td class="dt">'+esc(fmtDate(x.entry_date))+'</td><td>'+esc(x.kind)+'</td><td>'+(x.arza_no?'<a href="#" class="pfT" data-no="'+esc(x.arza_no)+'">'+esc(x.arza_no)+'</a>'+(x.tender_title?'<div class="sub2">'+esc(x.tender_title)+'</div>':''):'')+(x.project_ref?'<div class="sub2">'+esc(x.project_ref)+'</div>':'')+'</td>'+
         '<td class="r num">'+(x.amount_bnd!=null?money(x.amount_bnd):'')+'</td><td class="r num">'+(x.hours!=null?esc(x.hours):'')+'</td><td class="dsc">'+esc(x.description)+'<div class="sub2">recorded by '+esc(x.recorded_name)+'</div></td>'+
         '<td>'+(x.evidence?'<a href="'+esc(safeUrl(x.evidence))+'" target="_blank" rel="noopener">open</a>':'<span class="neg">none</span>')+'</td>'+
@@ -6249,7 +6296,7 @@ function rfqSavingsOf(D, sid){
 }
 function rdSavings(D){
   var r=D.rfq; if(r.status!=='Awarded') return '';
-  if(r.median_bnd==null) return '<div class="hrow" style="margin-top:10px"><b>Savings</b>&nbsp;<span class="n">not recorded — needed for the QS Performance report</span><span style="flex:1"></span>'+(canWrite()?'<button class="btn sm" id="qSav">Record savings</button>':'')+'</div>';
+  if(r.median_bnd==null) return '<div class="hrow" style="margin-top:10px"><b>Savings</b>&nbsp;<span class="n">not recorded — needed for the QS Performance report</span><span style="flex:1"></span>'+(can('rfq','manage')?'<button class="btn sm" id="qSav">Record savings</button>':'')+'</div>';
   var a=+r.award_total_bnd, md=+r.median_bnd, s=md-a;
   return '<div class="hrow" style="margin-top:10px"><b>Savings</b>&nbsp;<span>awarded '+pfB(a)+' vs median of '+esc(r.valid_n)+' valid quote'+(r.valid_n==1?'':'s')+' '+pfB(md)+': <b class="'+(s>=0?'pos':'neg')+'">'+(s>=0?'':'−')+pfB(Math.abs(s))+'</b> ('+pfPct(md?s/md:null)+')'+
     (r.ml_lines?' · vs masterlist budget on '+r.ml_lines+' line'+(r.ml_lines>1?'s':'')+': '+pfB(r.ml_budget_bnd-r.ml_quoted_bnd):'')+'</span></div>';
