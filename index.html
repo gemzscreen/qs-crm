@@ -615,7 +615,7 @@ table.pft td:first-child{width:56%}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.3.0</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v3.3.1</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -2714,8 +2714,13 @@ table.pft td:first-child{width:56%}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'3.3.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'3.3.1', user:'Gemz' };
 var CHANGELOG = [
+  { v:'3.3.1', date:'19 Nov 2026', items:[
+    'QS Performance: the page heading no longer names the contract clause (“of the ARZA contract (clause 12)” removed).',
+    'QS Performance PDF: the “Basis — Contract KPIs (clause 12)” field is removed from the report header; the Period line now spans the row.',
+    'No database or Code.gs change.'
+  ]},
   { v:'3.3.0', date:'19 Nov 2026', items:[
     'New: Reports › QS Performance — the QS function measured against the 8 KPIs of the contract (clause 12), month and cumulative from a start date (Admin Settings › Company & letterhead; set to 1 October 2026). Totals at the top: contract value won, savings, collections, hours saved, on-time submission, win rate. One section per KPI, a six-month trend and links to the tenders and RFQs behind each figure.',
     'Built from existing records, no double entry: tenders handled by status, value submitted, win rate (won ÷ decided), contract value won (approved contract sum, else tendered), own vs winning sum, on-time submission (submission date vs closing date), pricing database upkeep (rate proposals accepted, quote prices captured, suppliers added) and RFQ reply rate / cycle time.',
@@ -6150,7 +6155,7 @@ function renderPerf(){
   var other='<div class="card"><h3>Other recorded value <span class="n">value log</span></h3><div class="tbl"><table class="mini pft"><thead><tr><th></th><th class="r">Month</th><th class="r">Cumulative</th></tr></thead><tbody>'+
     [['Claims / collections received', pfB(m.value.collections), pfB(c.value.collections)], ['Hours saved', (m.value.hours||0).toFixed(1)+' h', (c.value.hours||0).toFixed(1)+' h'], ['Other entries', m.value.by.Other.n+(m.value.by.Other.amount?' · '+pfB(m.value.by.Other.amount):''), c.value.by.Other.n+(c.value.by.Other.amount?' · '+pfB(c.value.by.Other.amount):'')],
      ['Entries verified', pfOf(m.value.verified,m.value.n), pfOf(c.value.verified,c.value.n)]].map(function(r){ return '<tr style="cursor:default"><td>'+esc(r[0])+'</td><td class="r num">'+r[1]+'</td><td class="r num">'+r[2]+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
-  el.innerHTML='<div class="bar"><div><h2>QS Performance</h2><div class="scope">The QS function measured against the 8 KPIs of the ARZA contract (clause 12), built from the tender register, the RFQs, the masterlist updates and the value log. <b>Month:</b> '+esc(K.label)+' · <b>Cumulative:</b> '+(K.start?'since '+esc(fmtDate(K.start)):'all records')+'.</div></div><span style="flex:1"></span>'+
+  el.innerHTML='<div class="bar"><div><h2>QS Performance</h2><div class="scope">The QS function measured against the 8 KPIs built from the tender register, the RFQs, the masterlist updates and the value log. <b>Month:</b> '+esc(K.label)+' · <b>Cumulative:</b> '+(K.start?'since '+esc(fmtDate(K.start)):'all records')+'.</div></div><span style="flex:1"></span>'+
       '<select id="pfMonth" aria-label="Month">'+ms.map(function(x){ return '<option value="'+x+'"'+(x===PFM.month?' selected':'')+'>'+esc(Perf.monthName(x))+'</option>'; }).join('')+'</select>'+
       '<button class="btn" id="pfRef" title="Load the latest figures">Refresh</button><button class="btn" id="pfPdf">PDF report</button>'+(w?'<button class="btn pri" id="pfAdd">+ Value log entry</button>':'')+'</div>'+
     tot+'<div class="pfgrid">'+
@@ -6226,7 +6231,7 @@ function printPerf(K){
   var V=m.value.entries;
   printDoc('QS Performance Report — '+K.label, letterhead()+'<h1>QS PERFORMANCE REPORT — '+esc(K.label.toUpperCase())+'</h1>'+
     '<table class="meta"><tr><td class="k">Prepared by</td><td>'+esc([c.sender_name,c.sender_designation].filter(Boolean).join(', '))+'</td><td class="k" style="width:70px">Date</td><td>'+esc(Procure.longDate(today()))+'</td></tr>'+
-      '<tr><td class="k">Period</td><td>'+esc(K.label)+'; cumulative '+(K.start?'since '+esc(Procure.longDate(K.start)):'all records')+'</td><td class="k">Basis</td><td>Contract KPIs (clause 12)</td></tr></table>'+
+      '<tr><td class="k">Period</td><td colspan="3">'+esc(K.label)+'; cumulative '+(K.start?'since '+esc(Procure.longDate(K.start)):'all records')+'</td></tr></table>'+
     '<table style="width:100%;border-collapse:collapse;margin:8px 0"><tr>'+tile('Contract value won',pfB(m.totals.contractWon),'cumulative '+pfB(cu.totals.contractWon))+tile('Savings',pfB(m.totals.savings),'cumulative '+pfB(cu.totals.savings))+tile('Collections',pfB(m.totals.collections),'cumulative '+pfB(cu.totals.collections))+'</tr><tr>'+
       tile('Hours saved',(m.totals.hours||0).toFixed(1)+' h','cumulative '+(cu.totals.hours||0).toFixed(1)+' h')+tile('On-time submission',pfPct(m.totals.onTimeRate),'cumulative '+pfPct(cu.totals.onTimeRate))+tile('Win rate',pfPct(m.totals.winRate),'cumulative '+pfPct(cu.totals.winRate))+'</tr></table>'+
     [0,1,2,3,4,5,6,7].map(sec).join('')+

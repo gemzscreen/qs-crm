@@ -2,6 +2,12 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v3.3.1 — 19 Nov 2026
+
+- QS Performance: the page heading no longer names the contract clause (“of the ARZA contract (clause 12)” removed).
+- QS Performance PDF: the “Basis — Contract KPIs (clause 12)” field is removed from the report header; the Period line now spans the row.
+- No database or Code.gs change.
+
 ## v3.3.0 — 19 Nov 2026
 
 - New: Reports › QS Performance — the QS function measured against the 8 KPIs of the contract (clause 12), month and cumulative from a start date (Admin Settings › Company & letterhead; set to 1 October 2026). Totals at the top: contract value won, savings, collections, hours saved, on-time submission, win rate. One section per KPI, a six-month trend and links to the tenders and RFQs behind each figure.
