@@ -495,6 +495,7 @@ table.pft td:first-child{width:56%}
         <a data-v="rev"><b>Rationalized BQ</b><span>Revisions of the contract BQ, approvals</span></a>
         <a data-v="asbuilt"><b>As-built</b><span>Measured quantities vs contract</span></a>
       </div></div>
+    <a data-v="projects">Projects</a>
     <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">Pricing<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="ddm">
         <a data-v="library"><b>BQ Library</b><span>Every priced line, rate history</span></a>
@@ -602,6 +603,8 @@ table.pft td:first-child{width:56%}
 <main id="vRE" class="hidden pv"></main>
 <main id="vRR" class="hidden pv"></main>
 <main id="vPF" class="hidden pv"></main>
+<main id="vPJ" class="hidden pv"></main>
+<main id="vPP" class="hidden pv"></main>
 <main id="vQP" class="hidden pv"></main>
 <main id="vRP" class="hidden pv"></main>
 <input type="file" id="rfFile" accept=".xlsx,.xlsm,.xls" class="hidden">
@@ -615,7 +618,7 @@ table.pft td:first-child{width:56%}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v4.0.0</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v4.1.0</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -2714,8 +2717,18 @@ table.pft td:first-child{width:56%}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'4.0.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'4.1.0', user:'Gemz' };
 var CHANGELOG = [
+  { v:'4.1.0', date:'20 Nov 2026', items:[
+    'New Projects tab (beside Contract): the register of every project with status, commencement, revised completion (with EOT), days left / overdue and the project manager. Filters by status and type, and a search.',
+    'A tender set to Won becomes a project automatically (same T-number, status For implementation). Won tenders already in the system have been added.',
+    '“Add existing project” and “Add term contract” (QS / admin) for jobs that never came through the Tenders tab: they get their own P-numbers (P01, P02 …).',
+    'Project page: contract details, dates, EOT, warranty (DLP), client rep, amounts (contract sum, LAD, ceiling, retention — not shown to Project engineers), team, status history, and a dropdown to switch projects.',
+    'Statuses: For implementation → Ongoing (automatic on the commencement date, or by hand) → On hold (reason + note + date; hold days counted for EOT evidence) → Completed (actual completion starts the warranty) → Archived (automatic only when the warranty has ended AND the final payment is recorded). The admin can cancel (with a reason) or restore.',
+    'Team: Project managers change only the projects they are on (details, status, team); Project engineers see only their projects. QS / admin set any team.',
+    'Dashboard: a Projects card (ongoing, for implementation, on hold, overdue); Project engineers get their own projects list. The bell lists projects past their completion date and holds longer than 30 days.',
+    'Apps Script (Code.gs) changed: file uploads accept P-numbers. Paste Code.gs and Deploy › Manage deployments › Edit › New version (only needed before storing files for a P-project).'
+  ]},
   { v:'4.0.0', date:'20 Nov 2026', items:[
     'Roles and access (v4 Projects groundwork): one permission matrix decides who may open and change each part of the app, and the database enforces it — before, any signed-in account could read every table.',
     'Six roles: Admin · QS · Management (reads everything incl. money, verifies value-log entries) · Project manager (Tenders, Contract, BQ Library and Masterlist read only, his own projects from v4.1, no RFQs or QS Performance) · Project engineer (his own projects only, never any amount) · Procurement (new: RFQs, Suppliers and Review queue only).',
@@ -2964,7 +2977,7 @@ function isAdmin(){ return S.mode==='api' && !!S.me && S.me.role==='admin'; }
 function ro(){ return !canWrite(); }   // read-only for tenders: file mode or an account without Tenders write
 /* which area a page belongs to (menus and showView follow can()) */
 var VIEW_AREA={ dash:'dash', tenders:'tender', rev:'tender', asbuilt:'tender', reports:'tender', library:'library', master:'library',
-  qprices:'rates', rateprops:'rates', rfqs:'rfq', rfq:'rfq', rfqedit:'rfq', suppliers:'rfq', queue:'rfq', rfqreports:'rfq.report', perf:'perf' };
+  qprices:'rates', rateprops:'rates', rfqs:'rfq', rfq:'rfq', rfqedit:'rfq', suppliers:'rfq', queue:'rfq', rfqreports:'rfq.report', perf:'perf', projects:'project', project:'project' };
 function canView(v){ var a=VIEW_AREA[v]; if(!a) return true; a=a.split('.'); return can(a[0], a[1]||'read'); }
 function homeView(){ return ['dash','rfqs','tenders'].filter(canView)[0]||'dash'; }
 function applyMenus(){
@@ -3122,7 +3135,7 @@ function forgot(e){
     $('loginErr').textContent = r.error ? r.error.message : 'If '+email+' has an account, a reset link is on its way. Open it on this device.'; });
 }
 function signOut(){ var sb=S.sb; S.sb=null; S.me=null; S.mode=''; S.tenders=[];
-  if(typeof ML!=='undefined'){ ML.data=null; ML.q=''; ML.grp=''; ML.tab='rates'; } if(typeof LB!=='undefined'){ LB.data=null; } if(typeof RV!=='undefined'){ RV.no=''; RV.dirty=false; RV.edit=null; } if(typeof RF!=='undefined'){ RF.list=null; RF.cur=null; RF.no=''; } if(typeof PR!=='undefined'){ PR.data=null; PR.Q=null; PR.sel={}; PR.set=null; prBadge(0); } showLogin(); if(!sb) return;
+  if(typeof ML!=='undefined'){ ML.data=null; ML.q=''; ML.grp=''; ML.tab='rates'; } if(typeof LB!=='undefined'){ LB.data=null; } if(typeof PJ!=='undefined'){ PJ.list=null; PJ.p=null; PJ.no=null; PJ.data=null; } if(typeof RV!=='undefined'){ RV.no=''; RV.dirty=false; RV.edit=null; } if(typeof RF!=='undefined'){ RF.list=null; RF.cur=null; RF.no=''; } if(typeof PR!=='undefined'){ PR.data=null; PR.Q=null; PR.sel={}; PR.set=null; prBadge(0); } showLogin(); if(!sb) return;
   /* let the sign-out finish before the next sign-in */
   $('btnLogin').disabled=true; var done=function(){ $('btnLogin').disabled=false; };
   try{ Promise.race([sb.auth.signOut(), new Promise(function(r){ setTimeout(r,4000); })]).then(done, done); }catch(e){ done(); } }
@@ -3437,7 +3450,9 @@ function afterSave(row, msg){
   var i=S.tenders.findIndex(function(x){return x.arza_no===row.arza_no;});
   var keep = i>=0 ? {_bq_lines:S.tenders[i]._bq_lines,_asbuilt_lines:S.tenders[i]._asbuilt_lines,_revs:S.tenders[i]._revs,_draft:S.tenders[i]._draft} : {_bq_lines:0,_asbuilt_lines:0,_revs:0,_draft:''};
   Object.assign(row,keep); if(i>=0) S.tenders[i]=row; else S.tenders.push(row);
-  S.log=S.log.concat(logs); S.cur=row; toast(msg);
+  S.log=S.log.concat(logs); S.cur=row;
+  var mk=logs.some(function(l){ return l.action==='project'; });   // v4.1.0: a won tender became a project
+  if(mk&&typeof PJ!=='undefined') PJ.list=null; toast(mk?msg+' — project '+row.arza_no+' created (Projects tab)':msg);
   fillFilters(); drawHead(); drawTab(); render();
 }
 function fail(e){ if(e.auth){ signOut(); $('loginErr').textContent=e.message||'Session expired. Sign in again.'; return; } toast(e.message,true); }
@@ -3482,7 +3497,7 @@ function toggleFull(e){
   $('drawer').classList.toggle('full'); drawHead();
 }
 function openFromHash(){
-  var m=location.hash.match(/open=(T\d+)(?:&tab=(\w+))?/); if(!m) return;
+  var m=location.hash.match(/open=([TP]\d+)(?:&tab=(\w+))?/); if(!m) return;
   history.replaceState(null,'',location.pathname+location.search);
   if(!S.tenders.some(function(x){return x.arza_no===m[1];})) return;
   S.popout=!!window.opener; openDrawer(m[1], m[2]||'det'); $('drawer').classList.add('full'); drawHead();
@@ -3603,6 +3618,9 @@ function showView(v){
   $('vSP').classList.toggle('hidden', v!=='suppliers'); $('vRQ').classList.toggle('hidden', v!=='queue'); $('vCS').classList.toggle('hidden', v!=='company');
   $('vRF').classList.toggle('hidden', v!=='rfqs'); $('vRD').classList.toggle('hidden', v!=='rfq'); $('vRE').classList.toggle('hidden', v!=='rfqedit'); $('vRR').classList.toggle('hidden', v!=='rfqreports');
   $('vQP').classList.toggle('hidden', v!=='qprices'); $('vRP').classList.toggle('hidden', v!=='rateprops'); $('vPF').classList.toggle('hidden', v!=='perf');
+  $('vPJ').classList.toggle('hidden', v!=='projects'); $('vPP').classList.toggle('hidden', v!=='project');
+  if(v==='projects'){ renderProjects(); return; }
+  if(v==='project'){ document.querySelectorAll('#nav a[data-v="projects"]').forEach(function(a){ a.classList.add('on'); }); renderProject(); return; }
   if(v==='perf'){ PFM.data=null; RF.p=null; renderPerf(); return; }   // fresh figures each time the report is opened
   if(v==='qprices'){ renderQPrices(); return; } if(v==='rateprops'){ renderRateProps(); return; }
   if(v==='rfq'||v==='rfqedit') document.querySelectorAll('#nav a[data-v="rfqs"]').forEach(function(a){ a.classList.add('on'); a.closest('.dd').classList.add('on'); });
@@ -4447,7 +4465,7 @@ function migPayload(sheets){
     return a.slice(1).filter(function(r){ return r.some(function(c){ return c!==null&&c!==''; }); }).map(function(r){ var o={}; h.forEach(function(k,i){ if(k) o[k]=r[i]==null?null:r[i]; }); return o; }); };
   var lists={}, L=sheets.Lists||[];
   (L[0]||[]).forEach(function(h,c){ if(!h) return; lists[h]=[]; for(var i=1;i<L.length;i++){ var v=L[i][c]; if(v!==null&&v!=='') lists[h].push(String(v)); } });
-  var T=rows('Tenders').filter(function(t){ return /^T\d+$/.test(String(t.arza_no||'')); }).map(function(t){ t.locked = t.locked==='Y'?'Y':'N'; return t; });
+  var T=rows('Tenders').filter(function(t){ return /^[TP]\d+$/.test(String(t.arza_no||'')); }).map(function(t){ t.locked = t.locked==='Y'?'Y':'N'; return t; });
   return { tenders:T, bq:rows('BQ_Items').filter(function(r){ return r.arza_no&&r.item_id; }), asbuilt:rows('AsBuilt_Items').filter(function(r){ return r.arza_no; }), revisions:rows('Revisions').filter(function(r){ return r.arza_no&&r.rev; }),
     log:rows('Log').map(function(l){ return {ts:l.timestamp, action:l.action, arza_no:l.arza_no, detail:l.detail, user_name:l.user}; }), lists:lists };
 }
@@ -4485,9 +4503,14 @@ function notifLoad(){
   if(fileMode()||!S.me) return Promise.resolve();
   var q=function(p){ return p.catch(function(){ return null; }); };
   var no=Promise.resolve(null), cr=can('rfq');   // v4.0.0: each source only for the roles that may read it
-  return Promise.all([q(can('dash')?dashGet():no), q(cr?rfGet():no), q(!cr?no:PR.data?Promise.resolve(PR.data):prLoad()), q(PR.set?Promise.resolve(PR.set):setsLoad()), q(can('rates')?api('rateProps',{status:'Proposed'}):no)]).then(function(x){
-    var D=x[0]||{}, k=D.kpi||{}, L=x[1], pd=x[2], st=x[3]||{}, rp=x[4], it=[], w=canWrite('tender'), pl=function(n,a,b){ return n+' '+(n===1?a:b); };
+  return Promise.all([q(can('dash')?dashGet():no), q(cr?rfGet():no), q(!cr?no:PR.data?Promise.resolve(PR.data):prLoad()), q(PR.set?Promise.resolve(PR.set):setsLoad()), q(can('rates')?api('rateProps',{status:'Proposed'}):no),
+      q(can('project')?pjGet():no)]).then(function(x){
+    var D=x[0]||{}, k=D.kpi||{}, L=x[1], pd=x[2], st=x[3]||{}, rp=x[4], PJL=x[5], it=[], w=canWrite('tender'), pl=function(n,a,b){ return n+' '+(n===1?a:b); };
     var add=function(lv,t,sub,go){ it.push({lv:lv,t:t,sub:sub,go:go}); };
+    // v4.1.0: projects past the revised completion date; on hold for more than 30 days
+    if(PJL) (PJL.projects||[]).forEach(function(p){
+      if(p.days_left!=null&&p.days_left<0&&p.status!=='On hold') add('warn', p.arza_no+' is '+pl(-p.days_left,'day','days')+' past its completion date', (p.title||'')+' — record an EOT or mark it completed', 'proj:'+p.arza_no);
+      if(p.status==='On hold'&&p.hold_days_total>30) add('info', p.arza_no+' has been on hold for '+p.hold_days_total+' days', (p.hold_reason||'')+': '+(p.hold_note||''), 'proj:'+p.arza_no); });
     // tenders
     if(+k.overdue) add('warn', pl(+k.overdue,'open tender is','open tenders are')+' past the closing date', w?'Set the status: Submitted, No bid, Cancelled …':'Status not updated yet', 'tenders');
     (D.closing||[]).forEach(function(t){ var d=Procure.daysBetween(today(), String(t.closing_date||'').slice(0,10)); if(t.status!=='Submitted'&&d>=0&&d<=7)
@@ -4537,17 +4560,18 @@ function notifGo(g){
   if(g.indexOf('adm:')===0){ ADM.tab=g.slice(4); showView('users'); }
   else if(g.indexOf('tender:')===0){ showView('tenders'); openDrawer(g.slice(7)); }
   else if(g.indexOf('rfq:')===0){ RF.no=g.slice(4); showView('rfq'); }
+  else if(g.indexOf('proj:')===0) pjGo(g.slice(5));
   else showView(g);
 }
 function renderDash(){
   var el=$('vDB'); if(needLive(el,'The dashboard')) return;
-  if(!can('tender')){   // v4.0.0: Project engineers - no tender figures; their project tiles come with v4.1 Projects
-    el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">Welcome, '+esc(dispName())+' ('+esc(roleName(S.me&&S.me.role))+').</div></div></div>'+
-      '<div class="card"><h3>My projects</h3><div class="empty" style="padding:18px">Your projects will show here once the Projects tab is live (v4.1): programme, daily progress, quantities, manpower and work orders for the projects you are assigned to. Amounts are not shown to Project engineers.</div></div>';
-    notifLoad(); return; }
+  if(!can('tender')){   // Project engineers: no tender figures - their projects only (v4.1.0)
+    el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">Welcome, '+esc(dispName())+' ('+esc(roleName(S.me&&S.me.role))+'). Your projects; amounts are not shown to Project engineers.</div></div></div><div id="dbProj"><div class="empty"><span class="spin"></span></div></div>';
+    pjDashCard($('dbProj'), true); notifLoad(); return; }
   el.innerHTML='<div class="bar"><div><h2>Dashboard</h2><div class="scope">The RFQs in progress and the money view of all tenders (the bell at the top lists what needs attention): pipeline, contract value, revisions waiting, won projects and their as-built position.</div></div><span style="flex:1"></span><button class="btn" id="dbRef">Refresh</button></div><div id="dbBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
-  $('dbRef').onclick=function(){ NT.dash=null; RF.p=null; renderDash(); };
+  $('dbRef').onclick=function(){ NT.dash=null; RF.p=null; PJ.list=null; renderDash(); };
   var rq=document.createElement('div'); rq.id='dbRfq'; var bb=$('dbBody'); if(bb) bb.parentNode.insertBefore(rq,bb);
+  var pq=document.createElement('div'); pq.id='dbProj'; if(bb) bb.parentNode.insertBefore(pq,rq); pjDashCard(pq, false);   // v4.1.0
   (can('rfq')?rfGet():Promise.reject()).then(function(L){ var el2=$('dbRfq'); if(!el2) return; var all=L.rfqs||[], ch=chaseList(), m0=new Date().toISOString().slice(0,7);
     var open=all.filter(function(r){ return RFQ_OPEN.indexOf(r.status)>=0; }), cmp=open.filter(function(r){ return r.quotes_n>0 && ['Approval sent'].indexOf(r.status)<0; }), apv=all.filter(function(r){ return r.status==='Approval sent'; }), aw=all.filter(function(r){ return r.status==='Awarded' && String(r.award_date||'').slice(0,7)===m0; });
     var expD=((PR.set||{}).rfq_opts||{}).expiry_days||7, ex=Procure.validityAlerts(all, today(), expD);
@@ -5451,7 +5475,7 @@ function renderRfqEdit(){
     var st=refresh(); if(!$('re_title').value.trim()){ toast('Give the RFQ a title.',true); $('re_title').focus(); return; } if(!st.its.length){ toast('Type at least one item.',true); return; }
     var bad=st.its.filter(function(x){ return x.qty && !/^\d+(\.\d+)?$/.test(String(x.qty).replace(/,/g,'')); })[0]; if(bad){ toast('Quantity "'+bad.qty+'" is not a number.',true); return; }
     var its=st.its.map(function(x){ return Object.assign({},x,{ qty:x.qty?String(x.qty).replace(/,/g,''):'', category:x.category||Procure.categoryCode(x.description+' '+x.spec_brand)||'' }); });
-    var proj=$('re_project').value.trim(), m=/^(T\d+)\s/.exec(proj);
+    var proj=$('re_project').value.trim(), m=/^([TP]\d+)\s/.exec(proj);
     var header={ title:$('re_title').value.trim(), project:proj, arza_no:m?m[1]:'', mr_ref:$('re_mr').value.trim(), rfq_date:$('re_date').value||today(), delivery_place:$('re_place').value.trim(),
       urgency:st.u, deadline:$('re_dl').value||st.dl, qty_mode:its.some(function(x){ return !x.qty; })?'moq':'firm', short_desc:$('re_short').value.trim(), certs:$('re_certs').value.trim(), notes:$('re_notes').value.trim() };
     var btn=this; busy(btn,true);
@@ -6112,6 +6136,183 @@ function rpDraw(){
     if(un) un.onclick=function(){ if(p.status==='Accepted'&&!confirm('Undo only changes this list. The masterlist keeps the new price (the old one is in the "QS CRM updates" tab). Continue?')) return; dec('Proposed').catch(fail); };
   });
   $('rpBody').onclick=function(e){ var a=e.target.closest('.rpRfq'); if(a){ e.preventDefault(); RF.no=a.dataset.rfq; showView('rfq'); } };
+}
+
+/* ---------- v4.1.0: Projects register (crm_projects / crm_project) ----------
+   A won tender becomes a project (same T-number); jobs added by hand get P-numbers. Amounts only for roles with project.money
+   (never Project engineers): the database leaves them out, the page just shows what it gets. */
+var PJ={ list:null, at:0, p:null, no:null, f:{st:'active', ty:'', q:''} };
+var PJ_ST=['For implementation','Ongoing','On hold','Completed','Archived','Cancelled'], PJ_ACTIVE=['For implementation','Ongoing','On hold'];
+var PJ_HOLD=['Conflict','Pending resolution','Client instruction','Payment','Other'];
+function pjGet(force){ if(!force&&PJ.list&&Date.now()-PJ.at<20000) return PJ.list; PJ.at=Date.now(); PJ.list=api('projects'); PJ.list.catch(function(){ PJ.list=null; }); return PJ.list; }
+function pjChip(s){ var c={'For implementation':'st-Pending','Ongoing':'st-Submitted','On hold':'st-Pricing','Completed':'st-Won','Archived':'st-Cancelled','Cancelled':'st-Lost'}[s]||'st-none'; return '<span class="chip '+c+'">'+esc(s||'')+'</span>'; }
+function pjDue(p){ if(p.days_left==null) return p.revised_due?esc(fmtDate(p.revised_due)):'<span class="sub2">no completion date</span>';
+  var d=+p.days_left; return esc(fmtDate(p.revised_due))+'<div class="sub2 '+(d<0?'neg':d<=30?'':'')+'">'+(d<0?(-d)+' days overdue':d===0?'due today':d+' days left')+(+p.eot_days?' · EOT '+p.eot_days+' d':'')+'</div>'; }
+function pjPm(p){ return (p.members||[]).filter(function(m){ return m.proj_role==='pm'; }).map(function(m){ return esc(m.name); }).join(', '); }
+function pjGo(no){ PJ.no=no; showView('project'); }
+function renderProjects(){
+  var el=$('vPJ'); if(needLive(el,'Projects')) return;
+  el.innerHTML='<div class="bar"><div><h2>Projects</h2><div class="scope">Won tenders become projects automatically (same T-number); existing jobs and term contracts added here get P-numbers. '+
+      (can('project','readall')?'All projects.':'The projects you are on.')+'</div></div><div class="hrow" id="pjAddB" style="gap:6px;flex-wrap:wrap"></div></div>'+
+    '<div class="bar"><select id="pjSt"><option value="active">Active (for implementation, ongoing, on hold)</option>'+PJ_ST.map(function(s){ return '<option'+(PJ.f.st===s?' selected':'')+'>'+s+'</option>'; }).join('')+'<option value="">All</option></select>'+
+      '<select id="pjTy"><option value="">All types</option><option'+(PJ.f.ty==='Project'?' selected':'')+'>Project</option><option'+(PJ.f.ty==='Term contract'?' selected':'')+'>Term contract</option></select>'+
+      '<input id="pjQ" type="search" placeholder="Search no., title, client, contract no." value="'+esc(PJ.f.q)+'" style="flex:1 1 220px;min-width:0"><span class="count" id="pjCount"></span></div>'+
+    '<div id="pjBody"><div class="empty"><span class="spin"></span> Loading…</div></div>';
+  $('pjSt').value=PJ.f.st;
+  $('pjSt').onchange=function(){ PJ.f.st=this.value; pjDraw(); }; $('pjTy').onchange=function(){ PJ.f.ty=this.value; pjDraw(); };
+  $('pjQ').oninput=function(){ PJ.f.q=this.value; pjDraw(); };
+  pjGet(true).then(function(d){ PJ.data=d; pjDraw(); }).catch(function(e){ $('pjBody').innerHTML='<div class="note w">'+esc(e.message)+'</div>'; });
+}
+function pjDraw(){
+  var d=PJ.data||{}, all=d.projects||[], f=PJ.f, q=f.q.trim().toLowerCase(), mon=all.some(function(p){ return p.money; });
+  if($('pjAddB')) $('pjAddB').innerHTML=d.can_create?'<button class="btn" id="pjAddT">+ Add term contract</button><button class="btn pri" id="pjAddP">+ Add existing project</button>':'';
+  if($('pjAddP')){ $('pjAddP').onclick=function(){ pjAddDlg('Project'); }; $('pjAddT').onclick=function(){ pjAddDlg('Term contract'); }; }
+  var P=all.filter(function(p){ return (f.st==='active'?PJ_ACTIVE.indexOf(p.status)>=0:!f.st||p.status===f.st) && (!f.ty||p.ptype===f.ty) &&
+    (!q||[p.arza_no,p.title,p.client,p.contract_no,p.tender_ref,p.location].join(' ').toLowerCase().indexOf(q)>=0); });
+  if(f.st==='Completed') P.sort(function(a,b){ return String(b.actual_completion||'').localeCompare(String(a.actual_completion||'')); });   // recently completed first
+  $('pjCount').textContent=P.length+' of '+all.length;
+  var n=function(s){ return all.filter(function(p){ return p.status===s; }).length; }, od=all.filter(function(p){ return p.days_left!=null&&p.days_left<0; }).length;
+  $('pjBody').innerHTML=kpiRow([['Ongoing',n('Ongoing'),'on site'],['For implementation',n('For implementation'),'awaiting site possession'],['On hold',n('On hold'),'hold days are logged'],
+      ['Overdue',od,'past the revised completion date'],['Completed',n('Completed'),'in warranty / final account']])+
+    (P.length?'<div class="tbl"><table class="mini"><thead><tr><th>No.</th><th>Project</th><th>Type</th><th>Status</th><th>Commencement</th><th>Completion (revised)</th><th>PM</th>'+(mon?'<th class="r">Contract sum (B$)</th>':'')+'</tr></thead><tbody>'+
+      P.map(function(p){ return '<tr data-no="'+esc(p.arza_no)+'"><td class="no">'+esc(p.arza_no)+'</td><td class="dsc"><b>'+esc(p.title||'')+'</b><div class="sub2">'+esc([p.client,p.contract_no||p.tender_ref,p.location].filter(Boolean).join(' · '))+'</div></td>'+
+        '<td>'+esc(p.ptype)+'</td><td>'+pjChip(p.status)+(p.status==='On hold'?'<div class="sub2">'+esc(p.hold_reason||'')+' · '+p.hold_days_total+' d</div>':'')+'</td>'+
+        '<td>'+esc(fmtDate(p.commencement_date)||'—')+'</td><td>'+(p.status==='Completed'||p.status==='Archived'?esc(fmtDate(p.actual_completion))+'<div class="sub2">'+(p.dlp_end?'warranty to '+esc(fmtDate(p.dlp_end)):'warranty not set')+'</div>':pjDue(p))+'</td>'+
+        '<td>'+(pjPm(p)||'<span class="sub2">not set</span>')+'</td>'+(mon?'<td class="r num">'+(p.money?money(p.money.contract_sum):'')+'</td>':'')+'</tr>'; }).join('')+'</tbody></table></div>'
+      :'<div class="empty">'+(all.length?'No project matches.':'No projects yet. A tender set to Won becomes a project here'+(d.can_create?'; existing jobs can be added with the buttons above.':'.'))+'</div>');
+  $('pjBody').onclick=function(e){ var tr=e.target.closest('tr[data-no]'); if(tr) pjGo(tr.dataset.no); };
+}
+function pjAddDlg(ty){
+  var tc=ty==='Term contract';
+  pmodal(tc?'Add term contract':'Add existing project','<div class="note">'+(tc?'For maintenance / FM / work-order contracts (schedule of rates, work orders and monthly claims come with v4.2).':'For a job that never came through the Tenders tab (existing contract or direct award). The contract BQ can be imported afterwards (Rationalized BQ › Import revision).')+
+      ' It gets the next P-number.</div><div class="form">'+
+    '<div class="f full"><label for="paT">Title</label><input id="paT" maxlength="300"></div>'+
+    '<div class="f"><label for="paC">Client</label><input id="paC" placeholder="e.g. Ministry of Education"></div><div class="f"><label for="paG">Client group</label><select id="paG"><option></option>'+L('client_group').map(function(g){ return '<option>'+esc(g)+'</option>'; }).join('')+'</select></div>'+
+    '<div class="f"><label for="paN">Contract no. / client ref</label><input id="paN"></div><div class="f"><label for="paL">Location</label><input id="paL"></div>'+
+    '<div class="f"><label for="paS">Contract sum (B$) <span class="hint">'+(tc?'ceiling, if any':'optional')+'</span></label><input id="paS" inputmode="decimal"></div><div class="f"><label for="paLoa">LOA / award date</label><input id="paLoa" type="date"></div>'+
+    '<div class="f"><label for="paCm">'+(tc?'Start of term':'Commencement (site possession)')+'</label><input id="paCm" type="date"></div><div class="f"><label for="paCd">'+(tc?'End of term':'Completion date')+'</label><input id="paCd" type="date"></div>'+
+    '<div class="f"><label for="paD">Warranty / DLP (months)</label><input id="paD" inputmode="numeric" placeholder="e.g. 12"></div><div class="f full"><label for="paNt">Notes</label><input id="paNt"></div></div>',
+    '<button class="btn" id="paX">Cancel</button><button class="btn pri" id="paGo">Add '+(tc?'term contract':'project')+'</button>');
+  $('paX').onclick=closeModal;
+  $('paGo').onclick=function(){ var b=this; busy(b,true,'Adding…');
+    api('addProject',{ptype:ty, contract_sum:$('paS').value.trim(), fields:{title:$('paT').value.trim(), client:$('paC').value.trim(), client_group:$('paG').value, contract_no:$('paN').value.trim(),
+      location:$('paL').value.trim(), loa_date:$('paLoa').value, commencement_date:$('paCm').value, completion_due:$('paCd').value, dlp_months:$('paD').value.trim(), notes:$('paNt').value.trim()}})
+      .then(function(p){ closeModal(); toast(p.arza_no+' added'); PJ.list=null; refresh().catch(function(){}); pjGo(p.arza_no); }).catch(function(e){ busy(b,false); fail(e); }); };
+}
+function renderProject(){
+  var el=$('vPP'); if(needLive(el,'Projects')) return;
+  if(!PJ.no){ showView('projects'); return; }
+  el.innerHTML='<div class="empty"><span class="spin"></span> Loading '+esc(PJ.no)+'…</div>';
+  Promise.all([api('project',{arza_no:PJ.no}), pjGet().catch(function(){ return {projects:[]}; })]).then(function(x){ PJ.p=x[0]; PJ.data=x[1]; pjPage(); })
+    .catch(function(e){ el.innerHTML='<div class="bar"><a href="#" id="ppBack">‹ Projects</a></div><div class="note w">'+esc(e.message)+'</div>'; $('ppBack').onclick=function(ev){ ev.preventDefault(); showView('projects'); }; });
+}
+function pjPage(){
+  var D=PJ.p, p=D.project, mg=D.can_manage, M=p.money, el=$('vPP'), tc=p.ptype==='Term contract', st=p.status, act=PJ_ACTIVE.indexOf(st)>=0;
+  var others=((PJ.data||{}).projects||[]);
+  var kv=function(k,v){ return '<tr><td class="k" style="color:var(--ink3);width:42%;padding:4px 8px 4px 0">'+esc(k)+'</td><td style="padding:4px 0">'+(v==null||v===''?'<span class="sub2">—</span>':v)+'</td></tr>'; };
+  var dt=function(x){ return x?esc(fmtDate(x)):''; };
+  var btns=[];
+  if(mg){ btns.push('<button class="btn" id="ppEdit">Edit details</button>');
+    if(st==='For implementation') btns.push('<button class="btn" data-to="Ongoing">Set Ongoing</button>');
+    if(st==='On hold') btns.push('<button class="btn pri" data-to="Ongoing">Resume</button>');
+    if(st==='For implementation'||st==='Ongoing') btns.push('<button class="btn" data-to="On hold">Put on hold</button>');
+    if(act) btns.push('<button class="btn pri" data-to="Completed">Mark completed</button>');
+    if((st==='Completed'||st==='Archived')&&D.can_money) btns.push('<button class="btn" data-to="final_paid">'+(p.final_paid_on?'Final payment…':'Record final payment')+'</button>');
+    if(D.is_admin&&(st==='Archived'||st==='Cancelled')) btns.push('<button class="btn" data-to="restore">Restore</button>');
+    if(D.is_admin&&st!=='Cancelled'&&st!=='Archived') btns.push('<button class="btn" data-to="Cancelled">Cancel project</button>'); }
+  el.innerHTML='<div class="bar"><div><div class="scope"><a href="#" id="ppBack">Projects</a> ›</div><h2>'+esc(p.arza_no)+' — '+esc(p.title||'')+'</h2>'+
+      '<div class="scope">'+pjChip(st)+' '+esc(p.ptype)+' · '+esc(p.client||'')+(p.contract_no?' · '+esc(p.contract_no):'')+(p.origin!=='Tender'?' · '+esc(p.origin):'')+'</div></div>'+
+      '<div class="fl"><select id="ppSw" title="Switch project" style="max-width:260px">'+others.map(function(o){ return '<option value="'+esc(o.arza_no)+'"'+(o.arza_no===p.arza_no?' selected':'')+'>'+esc(o.arza_no+' '+(o.title||'').slice(0,40))+'</option>'; }).join('')+'</select></div></div>'+
+    (btns.length?'<div class="bar">'+btns.join('')+'</div>':'')+
+    (st==='On hold'?'<div class="note w">On hold since '+dt(p.hold_since)+' — '+esc(p.hold_reason||'')+': '+esc(p.hold_note||'')+' ('+p.hold_days_total+' days so far)</div>':'')+
+    (st==='Completed'?'<div class="note">'+(p.dlp_end?'Warranty (DLP) until '+dt(p.dlp_end)+'. ':'Warranty period not set. ')+(p.final_paid_on?'Final payment received '+dt(p.final_paid_on)+'.':'Final payment not recorded yet.')+' The project is archived automatically when both are done.</div>':'')+
+    '<div class="grid2"><div class="card"><h3>'+(tc?'Term contract':'Contract')+'</h3><table style="width:100%;font-size:13px">'+
+      kv('Project no.',esc(p.arza_no)+(p.arza_no.charAt(0)==='T'?' <span class="sub2">(from the tender)</span>':' <span class="sub2">(added by hand)</span>'))+kv('Contract no. / ref',esc(p.contract_no||p.tender_ref||''))+
+      kv('Client',esc(p.client||''))+kv('Location',esc(p.location||''))+kv('LOA / award',dt(p.loa_date))+kv('Site possession',dt(p.possession_date))+
+      kv(tc?'Start of term':'Commencement',dt(p.commencement_date))+kv(tc?'End of term':'Completion date',dt(p.completion_due))+kv('EOT granted',+p.eot_days?p.eot_days+' days':'')+
+      kv(tc?'End of term (revised)':'Revised completion',p.days_left!=null?pjDue(p):dt(p.revised_due))+kv('Actual completion',dt(p.actual_completion))+
+      kv('Warranty (DLP)',p.dlp_months!=null?p.dlp_months+' months'+(p.dlp_end?' — to '+dt(p.dlp_end):''):'')+kv('Hold days (total)',+p.hold_days_total?p.hold_days_total+' days':'')+
+      kv('Client rep.',esc(p.client_rep||''))+kv('Consultant',esc(p.consultant||''))+kv('Notes',esc(p.notes||''))+'</table></div>'+
+    '<div>'+(M?'<div class="card"><h3>Amounts</h3><table style="width:100%;font-size:13px">'+kv('Contract sum',M.contract_sum!=null?'B$ '+money(M.contract_sum)+(M.contract_rev?' <span class="sub2">('+esc(M.contract_rev)+')</span>':''):'')+
+        kv('Tendered sum',M.our_sum!=null?'B$ '+money(M.our_sum):'')+kv('LAD rate',M.lad_rate!=null?'B$ '+money(M.lad_rate)+' / day':'')+kv(tc?'Contract ceiling':'Ceiling',M.ceiling!=null?'B$ '+money(M.ceiling):'')+
+        kv('Retention',M.retention_pct!=null?(+M.retention_pct)+'%'+(M.retention_limit_pct!=null?' (limit '+(+M.retention_limit_pct)+'% of the contract sum)':''):'')+kv('Final payment',dt(p.final_paid_on))+'</table>'+
+        (can('tender')?'<div class="n"><a href="#" id="ppTender">Open the tender record</a> · <a href="#" id="ppRev">Contract BQ (Rationalized BQ)</a></div>':'')+'</div>':'')+
+      '<div class="card"><h3>Team</h3>'+((p.members||[]).length?'<ul class="plain">'+p.members.map(function(m){ return '<li><b>'+esc(m.name)+'</b> — '+esc({pm:'Project manager',engineer:'Engineer',qs:'QS',viewer:'Viewer'}[m.proj_role]||m.proj_role)+({pm:'pm',engineer:'site',qs:'qs',viewer:'viewer'}[m.proj_role]===m.role?'':' <span class="sub2">('+esc(roleName(m.role))+' account)</span>')+'</li>'; }).join('')+'</ul>'
+        :'<div class="n">No one assigned yet.'+(mg?' Project managers and engineers only see and change the projects they are on.':'')+'</div>')+(mg?'<button class="btn sm" id="ppTeam" style="margin-top:6px">Edit team</button>':'')+'</div>'+
+      '<div class="card"><h3>Status history</h3>'+(D.log||[]).map(function(l){ return '<div style="padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px">'+(l.from&&l.from!==l.to?pjChip(l.from)+' → ':'')+pjChip(l.to)+
+        ' <span class="sub2">'+esc(fmtDate(l.date))+' · '+esc(l.by||'')+'</span>'+(l.reason?'<div><b>'+esc(l.reason)+'</b></div>':'')+(l.note?'<div class="sub2">'+esc(l.note)+'</div>':'')+'</div>'; }).join('')+'</div>'+
+      '<div class="card"><h3>Coming next</h3><div class="n">'+(tc?'v4.2: schedule of rates, work orders with SLA, monthly claims, TAFIS / retention and aging, payment-request letter.':'v4.3: programme and daily progress · v4.4: quantities, manpower, materials · v4.5: VOs, progress claims, budget vs actual, final account.')+'</div></div>'+
+    '</div></div>';
+  $('ppBack').onclick=function(e){ e.preventDefault(); showView('projects'); };
+  $('ppSw').onchange=function(){ pjGo(this.value); };
+  if($('ppTender')){ $('ppTender').onclick=function(e){ e.preventDefault(); showView('tenders'); openDrawer(p.arza_no); }; $('ppRev').onclick=function(e){ e.preventDefault(); RV.no=p.arza_no; RV.sel=''; showView('rev'); }; }
+  if($('ppEdit')) $('ppEdit').onclick=pjEditDlg;
+  if($('ppTeam')) $('ppTeam').onclick=pjTeamDlg;
+  el.querySelectorAll('[data-to]').forEach(function(b){ b.onclick=function(){ pjStatusDlg(b.dataset.to); }; });
+}
+function pjSaved(p){ PJ.p.project=p; PJ.list=null; closeModal(); pjPage(); notifLoad(); }
+function pjEditDlg(){
+  var p=PJ.p.project, M=p.money, tc=p.ptype==='Term contract', hand=p.arza_no.charAt(0)==='P', v=function(x){ return esc(x==null?'':x); };
+  pmodal('Edit '+p.arza_no,'<div class="form">'+
+    (hand?'<div class="f full"><label for="peT">Title</label><input id="peT" value="'+v(p.title)+'"></div><div class="f"><label for="peC">Client</label><input id="peC" value="'+v(p.client)+'"></div><div class="f"><label for="peLo">Location</label><input id="peLo" value="'+v(p.location)+'"></div>':'')+
+    '<div class="f"><label for="peN">Contract no.</label><input id="peN" value="'+v(p.contract_no)+'"></div><div class="f"><label for="peLoa">LOA / award</label><input id="peLoa" type="date" value="'+v(p.loa_date)+'"></div>'+
+    '<div class="f"><label for="pePo">Site possession</label><input id="pePo" type="date" value="'+v(p.possession_date)+'"></div><div class="f"><label for="peCm">'+(tc?'Start of term':'Commencement')+'</label><input id="peCm" type="date" value="'+v(p.commencement_date)+'"></div>'+
+    '<div class="f"><label for="peCd">'+(tc?'End of term':'Completion date')+'</label><input id="peCd" type="date" value="'+v(p.completion_due)+'"></div><div class="f"><label for="peE">EOT granted (days)</label><input id="peE" inputmode="numeric" value="'+v(p.eot_days)+'"></div>'+
+    '<div class="f"><label for="peD">Warranty / DLP (months)</label><input id="peD" inputmode="numeric" value="'+v(p.dlp_months)+'"></div>'+
+    (p.actual_completion?'<div class="f"><label for="peAc">Actual completion</label><input id="peAc" type="date" value="'+v(p.actual_completion)+'"></div>':'')+
+    '<div class="f"><label for="peR">Client rep.</label><input id="peR" value="'+v(p.client_rep)+'"></div><div class="f"><label for="peCo">Consultant</label><input id="peCo" value="'+v(p.consultant)+'"></div>'+
+    '<div class="f full"><label for="peNt">Notes</label><input id="peNt" value="'+v(p.notes)+'"></div>'+
+    (M?(hand?'<div class="f"><label for="peS">Contract sum (B$)</label><input id="peS" inputmode="decimal" value="'+v(M.contract_sum)+'"></div>':'')+
+      '<div class="f"><label for="peLad">LAD rate (B$ / day)</label><input id="peLad" inputmode="decimal" value="'+v(M.lad_rate)+'"></div><div class="f"><label for="peCe">'+(tc?'Contract ceiling (B$)':'Ceiling (B$)')+'</label><input id="peCe" inputmode="decimal" value="'+v(M.ceiling)+'"></div>'+
+      '<div class="f"><label for="peRp">Retention %</label><input id="peRp" inputmode="decimal" value="'+v(M.retention_pct)+'"></div><div class="f"><label for="peRl">Retention limit (% of contract sum)</label><input id="peRl" inputmode="decimal" value="'+v(M.retention_limit_pct)+'"></div>':'')+
+    '</div>','<button class="btn" id="peX">Cancel</button><button class="btn pri" id="peGo">Save</button>');
+  $('peX').onclick=closeModal;
+  $('peGo').onclick=function(){ var b=this, g=function(id){ return $(id)?$(id).value.trim():undefined; }, f={}, m={};
+    [['contract_no','peN'],['loa_date','peLoa'],['possession_date','pePo'],['commencement_date','peCm'],['completion_due','peCd'],['eot_days','peE'],['dlp_months','peD'],['actual_completion','peAc'],
+     ['client_rep','peR'],['consultant','peCo'],['notes','peNt'],['title','peT'],['client','peC'],['location','peLo']].forEach(function(k){ var x=g(k[1]); if(x!==undefined) f[k[0]]=x; });
+    [['contract_sum','peS'],['lad_rate','peLad'],['ceiling','peCe'],['retention_pct','peRp'],['retention_limit_pct','peRl']].forEach(function(k){ var x=g(k[1]); if(x!==undefined) m[k[0]]=x; });
+    busy(b,true); api('saveProject',{arza_no:p.arza_no, fields:f, money:m}).then(function(r){ toast(p.arza_no+' saved'); pjSaved(r); }).catch(function(e){ busy(b,false); fail(e); }); };
+}
+function pjStatusDlg(to){
+  var p=PJ.p.project, t={'Ongoing':p.status==='On hold'?'Resume '+p.arza_no:'Set '+p.arza_no+' Ongoing','On hold':'Put '+p.arza_no+' on hold','Completed':'Mark '+p.arza_no+' completed',
+    final_paid:'Final payment — '+p.arza_no, restore:'Restore '+p.arza_no, Cancelled:'Cancel '+p.arza_no}[to];
+  var body='<div class="form">'+
+    (to==='On hold'?'<div class="f"><label for="psR">Reason</label><select id="psR"><option></option>'+PJ_HOLD.map(function(r){ return '<option>'+r+'</option>'; }).join('')+'</select></div>':'')+
+    (to!=='restore'?'<div class="f"><label for="psD">'+(to==='Completed'?'Actual completion (CPC / end of term)':to==='final_paid'?'Received on':to==='On hold'?'On hold from':'Date')+'</label><input id="psD" type="date" value="'+today()+'" max="'+today()+'"></div>':'')+
+    '<div class="f full"><label for="psN">'+(to==='On hold'?'What happened':to==='Cancelled'?'Reason for cancelling':'Note')+(to==='On hold'||to==='Cancelled'?'':' <span class="hint">optional</span>')+'</label><input id="psN" maxlength="500"></div></div>'+
+    '<div class="n">'+({'On hold':'Hold days are counted until the project is resumed (evidence for an EOT claim).','Completed':p.dlp_months!=null?'The warranty (DLP) of '+p.dlp_months+' months starts on this date.':'No warranty period is set yet (Edit details › Warranty).',
+      final_paid:'Final payment including the retention release. When the warranty has also ended, the project is archived automatically.'+(p.final_paid_on?' Recorded: '+fmtDate(p.final_paid_on)+'.':''),
+      restore:'An archived project goes back to Completed (the final payment is cleared); a cancelled one back to For implementation.',Cancelled:'Only the admin can cancel; the project stays in the register as Cancelled.'}[to]||'')+'</div>';
+  pmodal(t, body, '<button class="btn" id="psX">Close</button>'+(to==='final_paid'&&p.final_paid_on?'<button class="btn" id="psClr">Clear</button>':'')+'<button class="btn pri" id="psGo">'+esc(to==='final_paid'?'Record':to==='restore'?'Restore':'Confirm')+'</button>');
+  $('psX').onclick=closeModal;
+  var go=function(b,clear){ busy(b,true); api('projectStatus',{arza_no:p.arza_no, to:to, date:$('psD')?$('psD').value:'', reason:$('psR')?$('psR').value:'', note:$('psN').value.trim(), clear:!!clear})
+    .then(function(r){ toast(p.arza_no+': '+r.status); return api('project',{arza_no:p.arza_no}); }).then(function(d){ PJ.p=d; PJ.list=null; closeModal(); pjPage(); notifLoad(); }).catch(function(e){ busy(b,false); fail(e); }); };
+  $('psGo').onclick=function(){ go(this,false); }; if($('psClr')) $('psClr').onclick=function(){ go(this,true); };
+}
+function pjTeamDlg(){
+  var p=PJ.p.project, U=PJ.p.users||[], cur={}; (p.members||[]).forEach(function(m){ cur[m.user_id]=m.proj_role; });
+  var sugg=function(u){ return {pm:'pm',site:'engineer',qs:'qs',admin:'qs',viewer:'viewer'}[u.role]||'viewer'; };
+  pmodal('Team — '+p.arza_no,'<div class="n">Project managers and engineers see and change only the projects they are on. QS, Management and admin see every project anyway.</div>'+
+    '<div class="tbl"><table class="mini"><thead><tr><th></th><th>Name</th><th>Account</th><th>On this project as</th></tr></thead><tbody>'+U.map(function(u){ var r=cur[u.id];
+      return '<tr data-id="'+esc(u.id)+'"><td><input type="checkbox" class="tmOn"'+(r?' checked':'')+' style="width:auto"></td><td>'+esc(u.name)+'</td><td class="sub2">'+esc(roleName(u.role))+'</td><td><select class="tmR">'+
+        [['pm','Project manager'],['engineer','Engineer'],['qs','QS'],['viewer','Viewer']].map(function(o){ return '<option value="'+o[0]+'"'+((r||sugg(u))===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></td></tr>'; }).join('')+'</tbody></table></div>',
+    '<button class="btn" id="tmX">Cancel</button><button class="btn pri" id="tmGo">Save team</button>');
+  $('tmX').onclick=closeModal;
+  $('tmGo').onclick=function(){ var b=this, mem=[];
+    document.querySelectorAll('#impBody tr[data-id]').forEach(function(tr){ if(tr.querySelector('.tmOn').checked) mem.push({user_id:tr.dataset.id, proj_role:tr.querySelector('.tmR').value}); });
+    busy(b,true); api('setTeam',{arza_no:p.arza_no, members:mem}).then(function(r){ toast('Team saved'); pjSaved(r); }).catch(function(e){ busy(b,false); fail(e); }); };
+}
+/* dashboard card (and the Project engineer's dashboard) */
+function pjDashCard(host, mine){
+  if(!can('project')||!host) return;
+  pjGet().then(function(d){ var all=d.projects||[], act=all.filter(function(p){ return PJ_ACTIVE.indexOf(p.status)>=0; });
+    var n=function(s){ return all.filter(function(p){ return p.status===s; }).length; }, od=act.filter(function(p){ return p.days_left!=null&&p.days_left<0; });
+    host.innerHTML='<div class="card dbrfq"><h3>'+(mine?'My projects':'Projects')+'</h3>'+kpiRow([['Ongoing',n('Ongoing'),'on site','projects'],['For implementation',n('For implementation'),'not started','projects'],
+        ['On hold',n('On hold'),'','projects'],['Overdue',od.length,od.length?od.slice(0,3).map(function(p){ return p.arza_no; }).join(', '):'none','projects']])+
+      (mine?(act.length?'<div class="tbl" style="margin-top:10px"><table class="mini"><tbody>'+act.map(function(p){ return '<tr data-no="'+esc(p.arza_no)+'"><td class="no">'+esc(p.arza_no)+'</td><td class="dsc"><b>'+esc(p.title||'')+'</b><div class="sub2">'+esc(p.client||'')+'</div></td><td>'+pjChip(p.status)+'</td><td>'+pjDue(p)+'</td></tr>'; }).join('')+'</tbody></table></div>'
+        :'<div class="n">You are not on any active project yet — ask the project manager or QS to add you to the team.</div>'):'')+'</div>';
+    host.onclick=function(e){ var tr=e.target.closest('tr[data-no]'); if(tr){ pjGo(tr.dataset.no); return; } var k=e.target.closest('[data-go]'); if(k) showView(k.dataset.go); };
+  }).catch(function(){ host.innerHTML=''; });
 }
 
 /* ---------- v3.2.0: monthly KPI report (PDF) ---------- */

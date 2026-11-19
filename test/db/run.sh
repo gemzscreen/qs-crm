@@ -1,5 +1,5 @@
 #!/bin/bash
-# Local database test: fresh database -> Supabase stub -> schema.sql twice (must be re-runnable) -> t_proc.sql -> t_roles.sql (v4.0)
+# Local database test: fresh database -> Supabase stub -> schema.sql twice (must be re-runnable) -> t_proc.sql -> t_roles.sql (v4.0) -> t_projects.sql (v4.1)
 #   PGHOST=/tmp/pg PGPORT=5433 PGUSER=postgres bash test/db/run.sh
 set -eo pipefail
 cd "$(dirname "$0")/../.."
@@ -12,3 +12,5 @@ psql -q -v ON_ERROR_STOP=1 -d $DB -f test/db/t_proc.sql 2>&1 >/dev/null | sed "s
 echo "test/db/t_proc.sql: $(grep -c "^select pg_temp\." test/db/t_proc.sql) checks passed"
 psql -q -v ON_ERROR_STOP=1 -d $DB -f test/db/t_roles.sql 2>&1 >/dev/null | sed "s/^psql:[^ ]* NOTICE:  //"
 echo "test/db/t_roles.sql: $(grep -c "^select pg_temp\.\(ok\|err\)" test/db/t_roles.sql) checks passed"
+psql -q -v ON_ERROR_STOP=1 -d $DB -f test/db/t_projects.sql 2>&1 >/dev/null | sed "s/^psql:[^ ]* NOTICE:  //"
+echo "test/db/t_projects.sql: $(grep -c "^select pg_temp\.\(ok\|err\)" test/db/t_projects.sql) checks passed"

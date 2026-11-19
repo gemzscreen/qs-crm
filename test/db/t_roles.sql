@@ -111,6 +111,7 @@ select pg_temp.ok(jsonb_array_length(public.crm_rateprops() -> 'proposals') >= 0
 select pg_temp.err($q$select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-002","action":"must_pass","must_pass":{"complete":true}}')$q$, 'Read-only account \(viewer\)', 'Management cannot change RFQs');
 
 -- project membership (v4.1 uses these): pm and site on T902
+insert into public.projects (arza_no) values ('T901'), ('T902'), ('T905') on conflict do nothing;   -- v4.1: members hang on projects
 insert into public.project_members (arza_no, user_id, proj_role) values ('T902', '00000000-0000-0000-0000-000000000004', 'pm'), ('T902', '00000000-0000-0000-0000-000000000005', 'engineer');
 select pg_temp.as_user(4);
 select pg_temp.ok(public.crm_project_ok('T902', 'write') and not public.crm_project_ok('T901', 'write') and public.crm_project_ok('T901', 'read') and public.crm_project_ok('T902', 'money'), 'pm: reads all projects, writes assigned, sees amounts');
