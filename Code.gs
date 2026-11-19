@@ -1,5 +1,5 @@
 /**
- * QS CRM — Google Drive file service (Apps Script), v4.0.0
+ * QS CRM — Google Drive file service (Apps Script), v4.1.0
  * From v2.1.0 the data lives in Supabase. This script only:
  *   - stores tender files in Google Drive (one sub-folder per tender) and returns the links;
  *   - optionally creates sign-in accounts for the Users page (needs the Supabase service key);
@@ -9,6 +9,7 @@
  *     The secret key is the only value never written here: re-running setSupabase() keeps the one already saved.
  *   - v3.2.0: mlUpdate writes an accepted rate proposal into the masterlist Res tab (price, confidence A, source) and logs the
  *     old price in a "QS CRM updates" tab; setJobKey() (optional) lets the mailbox job store reply attachments in Drive.
+ *   - v4.1.0: file uploads accept project numbers P01, P02 ... (projects added by hand) as well as T-numbers.
  *   - v4.0.0: follows the role matrix that crm_me returns (me.perms): tender files = Tenders writers; Procurement files
  *     (quotes, the boss's award approval, value-log evidence, logo) = RFQ / QS Performance writers incl. Procurement;
  *     masterlist reading = BQ Library or RFQ readers (not Project engineers); masterlist changes = rate-proposal writers.
@@ -107,7 +108,7 @@ function can_(me, area, action) {
 }
 
 var ACTIONS = {
-  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), users: !!p.getProperty('SUPABASE_SERVICE'), version: '4.0.0' }; },
+  ping: function (req, me) { var p = PropertiesService.getScriptProperties(); return { email: me.email, role: me.role, drive: !!p.getProperty('DRIVE_ROOT_ID'), masterlist: !!p.getProperty('MASTERLIST_ID'), users: !!p.getProperty('SUPABASE_SERVICE'), version: '4.1.0' }; },
 
   /* v2.2.0: pricing masterlist, read only (any active signed-in user). Tabs Rates + Res, header row = the row starting with "Code" */
   masterlist: function (req, me) {
@@ -137,7 +138,7 @@ var ACTIONS = {
   upload: function (req, me) {
     if (!can_(me, 'tender', 'write')) throw new Error('Read-only account - only QS and admin users can store tender files');
     if (!req.file || !req.file.data) throw new Error('No file');
-    if (!/^T\d+$/.test(String(req.arza_no || ''))) throw new Error('Tender number missing');
+    if (!/^[TP]\d+$/.test(String(req.arza_no || ''))) throw new Error('Tender / project number missing');   // v4.1.0: P-numbers too
     var lock = LockService.getScriptLock(); lock.waitLock(20000);
     try {
       var folder = tenderFolder_(req.arza_no, req.tender_ref, req.folder_link);

@@ -1,5 +1,5 @@
 -- =====================================================================================================
--- QS CRM (ARZA SDN BHD) — Supabase database, v4.0.0
+-- QS CRM (ARZA SDN BHD) — Supabase database, v4.1.0
 -- Run the whole file once in Supabase › SQL Editor › New query › Run. Safe to run again (upgrades in place).
 --
 -- Security model
@@ -216,7 +216,8 @@ end $$;
 -- Areas: dash · tender (Tenders, Contract, Tender reports) · library (BQ Library, Masterlist) · rfq (RFQs, Suppliers, Review queue)
 --        rates (Quote prices, Rate proposals) · perf (QS Performance, value log) · project (v4.1+) · config (RFQ settings, exchange rates) · log
 -- Actions: read · write · plus rfq.award, rfq.manage (reopen / savings), rfq.report (RFQ reports), perf.verify,
---          project.readall / writeall (all projects, not only assigned ones), project.money (amounts on projects).
+--          project.readall / writeall (all projects, not only assigned ones), project.money (amounts on projects),
+--          project.create (add existing project / term contract), project.manage (header, status, team - on projects the user may write).
 -- admin may do everything (users and Admin Settings stay admin-only through crm_need(false, true)).
 create or replace function public.crm_perms() returns table (role text, area text, action text) language sql immutable as $$
   select r, a, x from (values
@@ -224,12 +225,13 @@ create or replace function public.crm_perms() returns table (role text, area tex
     ('qs', 'rfq', 'read'), ('qs', 'rfq', 'write'), ('qs', 'rfq', 'award'), ('qs', 'rfq', 'manage'), ('qs', 'rfq', 'report'),
     ('qs', 'rates', 'read'), ('qs', 'rates', 'write'), ('qs', 'perf', 'read'), ('qs', 'perf', 'write'), ('qs', 'perf', 'verify'),
     ('qs', 'project', 'read'), ('qs', 'project', 'readall'), ('qs', 'project', 'write'), ('qs', 'project', 'writeall'), ('qs', 'project', 'money'),
+    ('qs', 'project', 'create'), ('qs', 'project', 'manage'),
     ('qs', 'config', 'write'), ('qs', 'log', 'read'),
     ('viewer', 'dash', 'read'), ('viewer', 'tender', 'read'), ('viewer', 'library', 'read'), ('viewer', 'rfq', 'read'), ('viewer', 'rfq', 'report'),
     ('viewer', 'rates', 'read'), ('viewer', 'perf', 'read'), ('viewer', 'perf', 'verify'),
     ('viewer', 'project', 'read'), ('viewer', 'project', 'readall'), ('viewer', 'project', 'money'), ('viewer', 'log', 'read'),
     ('pm', 'dash', 'read'), ('pm', 'tender', 'read'), ('pm', 'library', 'read'),
-    ('pm', 'project', 'read'), ('pm', 'project', 'readall'), ('pm', 'project', 'write'), ('pm', 'project', 'money'), ('pm', 'log', 'read'),
+    ('pm', 'project', 'read'), ('pm', 'project', 'readall'), ('pm', 'project', 'write'), ('pm', 'project', 'money'), ('pm', 'project', 'manage'), ('pm', 'log', 'read'),
     ('site', 'dash', 'read'), ('site', 'project', 'read'), ('site', 'project', 'write'),
     ('proc', 'rfq', 'read'), ('proc', 'rfq', 'write'), ('proc', 'rfq', 'award')
   ) m(r, a, x)
@@ -237,7 +239,7 @@ create or replace function public.crm_perms() returns table (role text, area tex
   select 'admin', a, x from (values ('dash', 'read'), ('tender', 'read'), ('tender', 'write'), ('library', 'read'), ('library', 'write'),
     ('rfq', 'read'), ('rfq', 'write'), ('rfq', 'award'), ('rfq', 'manage'), ('rfq', 'report'), ('rates', 'read'), ('rates', 'write'),
     ('perf', 'read'), ('perf', 'write'), ('perf', 'verify'), ('project', 'read'), ('project', 'readall'), ('project', 'write'), ('project', 'writeall'),
-    ('project', 'money'), ('config', 'write'), ('log', 'read'), ('users', 'write')) m(a, x)
+    ('project', 'money'), ('project', 'create'), ('project', 'manage'), ('config', 'write'), ('log', 'read'), ('users', 'write')) m(a, x)
 $$;
 create or replace function public.crm_can(p_role text, p_area text, p_action text) returns boolean language sql immutable as
 $$ select exists (select 1 from public.crm_perms() m where m.role = p_role and m.area = p_area and m.action = p_action) $$;
@@ -421,6 +423,7 @@ begin
           n.status, n.our_sum, n.completion_period, n.submitted_date, n.workbook_file, n.folder_link, n.notes, now(), me.id)
       where arza_no = v_no;
       perform crm_log('update', v_no, array_to_string(ch, '; '));
+      if n.status = 'Won' and t.status is distinct from 'Won' then perform crm_ensure_project(v_no); end if;   -- v4.1.0
     end if;
   end if;
   if coalesce((p ->> 'lock')::boolean, false) then perform crm_do_lock(v_no, null); end if;
@@ -553,6 +556,7 @@ begin
     updated_at = now(), updated_by = me.id
   where arza_no = t.arza_no;
   t := crm_tender(t.arza_no);
+  if st = 'Won' then perform crm_ensure_project(t.arza_no); end if;   -- v4.1.0: a won tender becomes a project
   txt := st || coalesce(', winner ' || t.winner, '') || coalesce(', B$' || crm_m(t.winning_sum), '') || coalesce(', ours ' || to_char(t.diff_pct * 100, 'FM9999990.0') || '%', '');
   perform crm_log('result', t.arza_no, txt);
   return crm_out(crm_tj(t));
@@ -2396,6 +2400,328 @@ begin
   raise exception 'Read-only: only the team on project % can change it (ask the admin to add you)', coalesce(p_no, '(blank)');
 end $$;
 
+-- =====================================================================================================
+-- v4.1.0: Projects register
+--   * a tender set to Won becomes a Project (same T-number); jobs added by hand get the P-series (P01, P02 ...)
+--   * types: Project (lump sum / remeasured) · Term contract (work orders, v4.2)
+--   * statuses: For implementation -> Ongoing -> (On hold) -> Completed -> Archived; Cancelled (admin, with reason)
+--     Ongoing: automatic when the commencement date is reached (or by hand). On hold: reason + note + date; hold days are logged.
+--     Completed: the actual completion date starts the warranty (DLP). Archived: automatic only when the DLP has ended AND the final payment is received.
+--   * amounts sit in project_money (never readable by Project engineers)
+-- =====================================================================================================
+alter table public.tenders drop constraint if exists tenders_arza_no_check;
+alter table public.tenders add constraint tenders_arza_no_check check (arza_no ~ '^[TP]\d+$');
+alter table public.tenders add column if not exists origin text;   -- null / Tender · Existing contract · Term contract
+insert into public.lists (list, value, sort) values ('tender_type', 'Term contract', 6) on conflict do nothing;
+
+create table if not exists public.projects (
+  arza_no text primary key references public.tenders (arza_no) on update cascade on delete cascade,
+  ptype text not null default 'Project' check (ptype in ('Project', 'Term contract')),
+  status text not null default 'For implementation' check (status in ('For implementation', 'Ongoing', 'On hold', 'Completed', 'Archived', 'Cancelled')),
+  contract_no text, loa_date date, possession_date date, commencement_date date, completion_due date,
+  eot_days int not null default 0 check (eot_days >= 0), actual_completion date,
+  dlp_months int check (dlp_months between 0 and 120), dlp_end date, final_paid_on date,
+  hold_since date, hold_reason text, hold_note text, hold_days int not null default 0,
+  client_rep text, consultant text, notes text,
+  status_at timestamptz default now(),
+  created_at timestamptz default now(), created_by uuid, updated_at timestamptz default now(), updated_by uuid
+);
+create index if not exists projects_status on public.projects (status);
+create table if not exists public.project_money (
+  arza_no text primary key references public.projects (arza_no) on update cascade on delete cascade,
+  lad_rate numeric(16, 2), ceiling numeric(16, 2), retention_pct numeric(6, 3), retention_limit_pct numeric(6, 3),
+  updated_at timestamptz default now(), updated_by uuid
+);
+create table if not exists public.project_status_log (
+  id bigint generated by default as identity primary key,
+  arza_no text not null references public.projects (arza_no) on update cascade on delete cascade,
+  from_status text, to_status text not null, reason text, note text, eff_date date,
+  by_id uuid, by_name text, at timestamptz not null default now()
+);
+create index if not exists project_status_log_no on public.project_status_log (arza_no, id);
+
+-- the team table now hangs on projects (v4.0 pointed it at tenders)
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'project_members_project_fk') then
+    delete from public.project_members m where not exists (select 1 from public.projects p where p.arza_no = m.arza_no)
+      and not exists (select 1 from public.tenders t where t.arza_no = m.arza_no and t.status = 'Won');
+  end if;
+end $$;
+-- every Won tender has a project (backfill; later ones are made by crm_result / crm_save)
+insert into public.projects (arza_no, ptype, status, loa_date)
+  select t.arza_no, case when t.tender_type = 'Term contract' then 'Term contract' else 'Project' end, 'For implementation', t.result_date
+  from public.tenders t where t.status = 'Won' on conflict do nothing;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'project_members_project_fk') then
+    delete from public.project_members m where not exists (select 1 from public.projects p where p.arza_no = m.arza_no);
+    alter table public.project_members add constraint project_members_project_fk foreign key (arza_no) references public.projects (arza_no) on update cascade on delete cascade;
+  end if;
+end $$;
+
+/* who is acting (name) - signed-in user, else the system actor */
+create or replace function public.crm_actor() returns text language sql stable security definer set search_path = public as
+$$ select coalesce((select coalesce(nullif(full_name, ''), email) from profiles where id = auth.uid()), nullif(current_setting('crm.actor', true), ''), 'system') $$;
+create or replace function public.crm_next_pno() returns text language sql stable security definer set search_path = public as $$
+  select 'P' || case when n < 10 then '0' || n::text else n::text end
+  from (select coalesce(max((substring(arza_no from '^P(\d+)$'))::int), 0) + 1 as n from tenders) x
+$$;
+/* make the project of a Won tender (once) */
+create or replace function public.crm_ensure_project(p_no text) returns void language plpgsql security definer set search_path = public as $$
+declare t tenders := crm_tender(p_no);
+begin
+  if t.status <> 'Won' or exists (select 1 from projects where arza_no = p_no) then return; end if;
+  insert into projects (arza_no, ptype, loa_date, created_by, updated_by)
+    values (p_no, case when t.tender_type = 'Term contract' then 'Term contract' else 'Project' end, t.result_date, auth.uid(), auth.uid());
+  insert into project_status_log (arza_no, to_status, note, eff_date, by_id, by_name) values (p_no, 'For implementation', 'Tender won - project created', crm_today(), auth.uid(), crm_actor());
+  perform crm_log('project', p_no, 'Project created (tender won) - For implementation');
+end $$;
+/* automatic statuses: Ongoing on the commencement date; Archived when the warranty ended AND the final payment is in */
+create or replace function public.crm_proj_auto() returns void language plpgsql security definer set search_path = public as $$
+declare r record;
+begin
+  for r in select arza_no, status from projects where status = 'For implementation' and commencement_date <= crm_today() loop
+    update projects set status = 'Ongoing', status_at = now() where arza_no = r.arza_no;
+    insert into project_status_log (arza_no, from_status, to_status, note, eff_date, by_name) values (r.arza_no, r.status, 'Ongoing', 'Automatic: commencement date reached', crm_today(), 'System');
+  end loop;
+  for r in select arza_no, status from projects where status = 'Completed' and dlp_end < crm_today() and final_paid_on is not null loop
+    update projects set status = 'Archived', status_at = now() where arza_no = r.arza_no;
+    insert into project_status_log (arza_no, from_status, to_status, note, eff_date, by_name) values (r.arza_no, r.status, 'Archived', 'Automatic: warranty ended and final payment received', crm_today(), 'System');
+  end loop;
+end $$;
+/* one project as JSON; amounts only when p_money */
+create or replace function public.crm_projj(pr public.projects, p_money boolean) returns jsonb language sql stable security definer set search_path = public as $$
+  select to_jsonb(pr) - 'created_by' - 'updated_by' || jsonb_build_object(
+    'loa_date', crm_fd(pr.loa_date), 'possession_date', crm_fd(pr.possession_date), 'commencement_date', crm_fd(pr.commencement_date),
+    'completion_due', crm_fd(pr.completion_due), 'actual_completion', crm_fd(pr.actual_completion), 'dlp_end', crm_fd(pr.dlp_end),
+    'final_paid_on', crm_fd(pr.final_paid_on), 'hold_since', crm_fd(pr.hold_since), 'status_at', crm_ftz(pr.status_at),
+    'created_at', crm_ftz(pr.created_at), 'updated_at', crm_ftz(pr.updated_at),
+    'revised_due', crm_fd(pr.completion_due + pr.eot_days),
+    'days_left', case when pr.status in ('For implementation', 'Ongoing', 'On hold') and pr.completion_due is not null then (pr.completion_due + pr.eot_days) - crm_today() end,
+    'hold_days_total', pr.hold_days + case when pr.status = 'On hold' and pr.hold_since is not null then greatest(crm_today() - pr.hold_since, 0) else 0 end,
+    'title', t.title, 'client', t.client, 'client_group', t.client_group, 'location', t.location, 'tender_ref', t.tender_ref, 'origin', coalesce(t.origin, 'Tender'),
+    'tender_status', t.status,
+    'members', coalesce((select jsonb_agg(jsonb_build_object('user_id', m.user_id, 'proj_role', m.proj_role, 'name', coalesce(nullif(u.full_name, ''), u.email), 'role', u.role)
+        order by case m.proj_role when 'pm' then 0 when 'qs' then 1 when 'engineer' then 2 else 3 end, u.full_name) from project_members m join profiles u on u.id = m.user_id where m.arza_no = pr.arza_no), '[]'),
+    'money', case when p_money then jsonb_build_object('contract_sum', coalesce(t.contract_sum, t.our_sum), 'contract_rev', t.contract_rev, 'our_sum', t.our_sum,
+        'lad_rate', pm.lad_rate, 'ceiling', pm.ceiling, 'retention_pct', pm.retention_pct, 'retention_limit_pct', pm.retention_limit_pct) end)
+  from tenders t left join project_money pm on pm.arza_no = pr.arza_no where t.arza_no = pr.arza_no
+$$;
+
+/* the register: every project for readall roles, else the ones the user is on */
+create or replace function public.crm_projects(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_needs('project', 'read'); all_ boolean; mon boolean;
+begin
+  perform crm_proj_auto();
+  all_ := crm_can(me.role, 'project', 'readall'); mon := crm_can(me.role, 'project', 'money');
+  return jsonb_build_object('projects', coalesce((select jsonb_agg(crm_projj(pr, mon) order by pr.arza_no) from projects pr
+      where all_ or exists (select 1 from project_members m where m.arza_no = pr.arza_no and m.user_id = me.id)), '[]'),
+    'can_create', crm_can(me.role, 'project', 'create'), 'today', crm_fd(crm_today()));
+end $$;
+/* one project: header, team, status history (+ the users that can be added to the team, for those who manage it) */
+create or replace function public.crm_project(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_no text := upper(btrim(coalesce(p ->> 'arza_no', ''))); me profiles := crm_needproject(v_no, 'read'); pr projects; mg boolean;
+begin
+  perform crm_proj_auto();
+  select * into pr from projects where arza_no = v_no;
+  if not found then raise exception 'Project % not found', v_no; end if;
+  mg := crm_can(me.role, 'project', 'manage') and crm_project_ok(v_no, 'write');
+  return jsonb_build_object('project', crm_projj(pr, crm_project_ok(v_no, 'money')),
+    'log', coalesce((select jsonb_agg(jsonb_build_object('from', l.from_status, 'to', l.to_status, 'reason', l.reason, 'note', l.note, 'date', crm_fd(l.eff_date),
+        'by', l.by_name, 'at', crm_ftz(l.at)) order by l.id desc) from project_status_log l where l.arza_no = v_no), '[]'),
+    'can_manage', mg, 'can_money', crm_project_ok(v_no, 'money'), 'is_admin', me.role = 'admin',
+    'users', case when mg then coalesce((select jsonb_agg(jsonb_build_object('id', u.id, 'name', coalesce(nullif(u.full_name, ''), u.email), 'role', u.role) order by u.full_name)
+        from profiles u where u.active and u.role in ('admin', 'qs', 'viewer', 'pm', 'site')), '[]') else '[]'::jsonb end);
+end $$;
+
+/* add a job that never came through the Tenders tab: existing contract / direct award, or a term contract -> next P-number */
+create or replace function public.crm_addproject(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare me profiles := crm_needs('project', 'create'); ty text := coalesce(p ->> 'ptype', 'Project'); f jsonb := coalesce(p -> 'fields', '{}'); v_no text; cs numeric; loa date; k text;
+begin
+  foreach k in array array['loa_date', 'commencement_date', 'completion_due'] loop
+    if coalesce(f ->> k, '') <> '' and (f ->> k) !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'Date % must be YYYY-MM-DD', replace(k, '_', ' '); end if;
+  end loop;
+  if coalesce(f ->> 'dlp_months', '') !~ '^\d{0,3}$' then raise exception 'Warranty (DLP) must be a number of months'; end if;
+  if coalesce(f ->> 'completion_due', '') <> '' and coalesce(f ->> 'commencement_date', '') <> '' and (f ->> 'completion_due')::date < (f ->> 'commencement_date')::date then
+    raise exception 'The completion date is before the commencement date'; end if;
+  if ty not in ('Project', 'Term contract') then raise exception 'Type must be Project or Term contract'; end if;
+  if length(btrim(coalesce(f ->> 'title', ''))) < 3 then raise exception 'Enter the project title'; end if;
+  if length(btrim(coalesce(f ->> 'client', ''))) < 2 then raise exception 'Enter the client'; end if;
+  if coalesce(p ->> 'contract_sum', '') <> '' and replace(p ->> 'contract_sum', ',', '') !~ '^\d+(\.\d{1,2})?$' then raise exception 'Contract sum must be a number in B$'; end if;
+  cs := nullif(replace(coalesce(p ->> 'contract_sum', ''), ',', ''), '')::numeric;
+  loa := nullif(f ->> 'loa_date', '')::date;
+  if exists (select 1 from tenders where btrim(coalesce(f ->> 'contract_no', '')) <> '' and lower(tender_ref) = lower(btrim(f ->> 'contract_no'))) then
+    raise exception 'Contract / tender ref % is already in the system', btrim(f ->> 'contract_no'); end if;
+  v_no := crm_next_pno();
+  insert into tenders (arza_no, tender_ref, title, client, client_group, location, tender_type, status, our_sum, contract_sum, result_date, winner, winning_sum,
+      result_source, origin, notes, locked, created_by, updated_by)
+    values (v_no, nullif(btrim(coalesce(f ->> 'contract_no', '')), ''), btrim(f ->> 'title'), btrim(f ->> 'client'), nullif(btrim(coalesce(f ->> 'client_group', '')), ''), nullif(btrim(coalesce(f ->> 'location', '')), ''),
+      case when ty = 'Term contract' then 'Term contract' end, 'Won', cs, cs, coalesce(loa, crm_today()), 'ARZA SDN BHD', cs,
+      case when ty = 'Term contract' then 'Term contract (added by hand)' else 'Existing contract / direct award' end,
+      case when ty = 'Term contract' then 'Term contract' else 'Existing contract' end, nullif(btrim(coalesce(f ->> 'notes', '')), ''), 'N', me.id, me.id);
+  insert into projects (arza_no, ptype, contract_no, loa_date, commencement_date, completion_due, dlp_months, created_by, updated_by)
+    values (v_no, ty, nullif(btrim(coalesce(f ->> 'contract_no', '')), ''), loa, nullif(f ->> 'commencement_date', '')::date, nullif(f ->> 'completion_due', '')::date,
+      nullif(f ->> 'dlp_months', '')::int, me.id, me.id);
+  insert into project_status_log (arza_no, to_status, note, eff_date, by_id, by_name) values (v_no, 'For implementation', 'Added by hand (' || lower(ty) || ')', crm_today(), me.id, crm_actor());
+  if me.role = 'pm' then insert into project_members (arza_no, user_id, proj_role, added_by) values (v_no, me.id, 'pm', me.id); end if;
+  perform crm_log('project', v_no, 'Added ' || lower(ty) || ' ' || btrim(f ->> 'title') || coalesce(', B$' || crm_m(cs), ''));
+  perform crm_proj_auto();
+  return crm_out(crm_projj((select pr from projects pr where pr.arza_no = v_no), true));
+end $$;
+
+/* edit the project header (dates, contract no., reps; amounts only for roles that see them; title / client / location only on P-projects) */
+create or replace function public.crm_saveproject(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare v_no text := upper(btrim(coalesce(p ->> 'arza_no', ''))); me profiles := crm_needproject(v_no, 'write'); f jsonb := coalesce(p -> 'fields', '{}'); mo jsonb := coalesce(p -> 'money', '{}');
+  o projects; n projects; om project_money; t tenders; ch text[] := '{}'; k text; ov text; nv text; v numeric;
+begin
+  if not crm_can(me.role, 'project', 'manage') then raise exception 'Read-only: % accounts cannot change the project details', crm_role_label(me.role); end if;
+  if jsonb_typeof(f) <> 'object' or jsonb_typeof(mo) <> 'object' then raise exception 'fields and money must be objects'; end if;
+  select * into o from projects where arza_no = v_no;
+  if not found then raise exception 'Project % not found', v_no; end if;
+  foreach k in array array['loa_date', 'possession_date', 'commencement_date', 'completion_due', 'actual_completion'] loop
+    if f ? k and coalesce(f ->> k, '') <> '' and (f ->> k) !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'Date % must be YYYY-MM-DD', replace(k, '_', ' '); end if;
+  end loop;
+  if f ? 'eot_days' and coalesce(f ->> 'eot_days', '') !~ '^\d{0,4}$' then raise exception 'EOT must be a number of days'; end if;
+  if f ? 'dlp_months' and coalesce(f ->> 'dlp_months', '') !~ '^\d{0,3}$' then raise exception 'Warranty (DLP) must be a number of months'; end if;
+  n := jsonb_populate_record(o, (select coalesce(jsonb_object_agg(key, case when value = '""'::jsonb then 'null'::jsonb else value end), '{}') from jsonb_each(f)
+        where key in ('contract_no', 'loa_date', 'possession_date', 'commencement_date', 'completion_due', 'eot_days', 'dlp_months', 'client_rep', 'consultant', 'notes', 'actual_completion')));
+  n.eot_days := coalesce(n.eot_days, 0);
+  if n.status not in ('Completed', 'Archived') then n.actual_completion := o.actual_completion; end if;   -- set through "Mark completed"
+  if n.completion_due < n.commencement_date then raise exception 'The completion date is before the commencement date'; end if;
+  n.dlp_end := case when n.actual_completion is not null and n.dlp_months is not null then (n.actual_completion + make_interval(months => n.dlp_months))::date end;
+  foreach k in array array['contract_no', 'loa_date', 'possession_date', 'commencement_date', 'completion_due', 'eot_days', 'dlp_months', 'actual_completion', 'client_rep', 'consultant', 'notes'] loop
+    ov := coalesce(to_jsonb(o) ->> k, ''); nv := coalesce(to_jsonb(n) ->> k, '');
+    if ov <> nv then ch := ch || (replace(k, '_', ' ') || ': ' || crm_short(ov) || ' -> ' || crm_short(nv)); end if;
+  end loop;
+  update projects set (contract_no, loa_date, possession_date, commencement_date, completion_due, eot_days, dlp_months, dlp_end, actual_completion, client_rep, consultant, notes, updated_at, updated_by)
+    = (n.contract_no, n.loa_date, n.possession_date, n.commencement_date, n.completion_due, n.eot_days, n.dlp_months, n.dlp_end, n.actual_completion, n.client_rep, n.consultant, n.notes, now(), me.id)
+    where arza_no = v_no;
+  -- title / client / location: only on projects added by hand (tender records belong to the Tenders tab)
+  t := crm_tender(v_no);
+  if t.arza_no ~ '^P' and (f ? 'title' or f ? 'client' or f ? 'location') then
+    if f ? 'title' and length(btrim(coalesce(f ->> 'title', ''))) < 3 then raise exception 'Enter the project title'; end if;
+    update tenders set title = coalesce(nullif(btrim(f ->> 'title'), ''), title), client = coalesce(nullif(btrim(f ->> 'client'), ''), client),
+      location = case when f ? 'location' then nullif(btrim(f ->> 'location'), '') else location end, updated_at = now(), updated_by = me.id where arza_no = v_no;
+    if coalesce(f ->> 'title', t.title) is distinct from t.title or coalesce(f ->> 'client', t.client) is distinct from t.client then ch := ch || 'title / client updated'::text; end if;
+  end if;
+  -- amounts
+  if mo <> '{}'::jsonb then
+    if not crm_project_ok(v_no, 'money') then raise exception 'Not allowed: % accounts cannot see or change project amounts', crm_role_label(me.role); end if;
+    select * into om from project_money where arza_no = v_no;
+    foreach k in array array['lad_rate', 'ceiling', 'retention_pct', 'retention_limit_pct'] loop
+      if mo ? k and coalesce(mo ->> k, '') <> '' and replace(mo ->> k, ',', '') !~ '^\d+(\.\d{1,3})?$' then raise exception '% must be a number', replace(k, '_', ' '); end if;
+    end loop;
+    if coalesce(nullif(mo ->> 'retention_pct', ''), '0')::numeric > 100 or coalesce(nullif(mo ->> 'retention_limit_pct', ''), '0')::numeric > 100 then raise exception 'Retention must be a percentage (0-100)'; end if;
+    insert into project_money (arza_no) values (v_no) on conflict do nothing;
+    foreach k in array array['lad_rate', 'ceiling', 'retention_pct', 'retention_limit_pct'] loop
+      continue when not mo ? k;
+      v := nullif(replace(coalesce(mo ->> k, ''), ',', ''), '')::numeric;
+      if v is distinct from (to_jsonb(om) ->> k)::numeric then
+        execute format('update project_money set %I = $1, updated_at = now(), updated_by = $2 where arza_no = $3', k) using v, me.id, v_no;
+        ch := ch || (replace(k, '_', ' ') || ' changed');
+      end if;
+    end loop;
+    if t.arza_no ~ '^P' and mo ? 'contract_sum' then
+      v := nullif(replace(coalesce(mo ->> 'contract_sum', ''), ',', ''), '')::numeric;
+      if v is distinct from t.contract_sum and not exists (select 1 from revisions r where r.arza_no = v_no and r.status = 'Approved') then
+        update tenders set contract_sum = v, our_sum = coalesce(our_sum, v) where arza_no = v_no; ch := ch || ('contract sum B$' || coalesce(crm_m(v), '-'));
+      end if;
+    end if;
+  end if;
+  if cardinality(ch) > 0 then perform crm_log('project', v_no, array_to_string(ch, '; ')); end if;
+  perform crm_proj_auto();
+  return crm_out(crm_projj((select pr from projects pr where pr.arza_no = v_no), crm_project_ok(v_no, 'money')));
+end $$;
+
+/* change the status by hand (the automatic ones run in crm_proj_auto) and record the final payment */
+create or replace function public.crm_projectstatus(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare v_no text := upper(btrim(coalesce(p ->> 'arza_no', ''))); me profiles := crm_needproject(v_no, 'write'); o projects; tgt text := coalesce(p ->> 'to', '');
+  d date; rs text := nullif(btrim(coalesce(p ->> 'reason', '')), ''); nt text := nullif(btrim(coalesce(p ->> 'note', '')), ''); hd int := 0; msg text;
+begin
+  if not crm_can(me.role, 'project', 'manage') then raise exception 'Read-only: % accounts cannot change the project status', crm_role_label(me.role); end if;
+  select * into o from projects where arza_no = v_no;
+  if not found then raise exception 'Project % not found', v_no; end if;
+  if coalesce(p ->> 'date', '') <> '' and (p ->> 'date') !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'The date must be YYYY-MM-DD'; end if;
+  d := coalesce(nullif(p ->> 'date', '')::date, crm_today());
+  if d > crm_today() + 1 then raise exception 'The date cannot be in the future'; end if;
+  if tgt = 'final_paid' then   -- final payment incl. retention release received (or cleared)
+    if not crm_project_ok(v_no, 'money') then raise exception 'Not allowed: % accounts cannot record payments', crm_role_label(me.role); end if;
+    if o.status not in ('Completed', 'Archived') then raise exception 'Record the final payment after the project is completed'; end if;
+    update projects set final_paid_on = case when coalesce((p ->> 'clear')::boolean, false) then null else d end, updated_at = now(), updated_by = me.id where arza_no = v_no;
+    insert into project_status_log (arza_no, from_status, to_status, note, eff_date, by_id, by_name)
+      values (v_no, o.status, o.status, case when coalesce((p ->> 'clear')::boolean, false) then 'Final payment cleared' else 'Final payment received (incl. retention release)' end || coalesce(' - ' || nt, ''), d, me.id, crm_actor());
+    perform crm_log('project', v_no, case when coalesce((p ->> 'clear')::boolean, false) then 'Final payment cleared' else 'Final payment received ' || crm_fd(d) end);
+    perform crm_proj_auto();
+    return crm_out(crm_projj((select pr from projects pr where pr.arza_no = v_no), true));
+  end if;
+  if tgt = o.status then raise exception 'The project is already %', tgt; end if;
+  if tgt = 'Archived' then raise exception 'Archived is automatic: once the warranty (DLP) has ended AND the final payment is recorded'; end if;
+  if tgt = 'Ongoing' then
+    if o.status not in ('For implementation', 'On hold') and not (me.role = 'admin' and o.status = 'Cancelled') then raise exception 'Only a project For implementation or On hold can be set Ongoing'; end if;
+    if o.status = 'On hold' then hd := greatest(d - coalesce(o.hold_since, d), 0); end if;
+    update projects set status = 'Ongoing', commencement_date = coalesce(commencement_date, case when o.status = 'For implementation' then d end),
+      hold_days = hold_days + hd, hold_since = null, hold_reason = null, hold_note = null, status_at = now(), updated_at = now(), updated_by = me.id where arza_no = v_no;
+    msg := case when o.status = 'On hold' then 'Resumed after ' || hd || ' days on hold' else 'Set Ongoing' end;
+  elsif tgt = 'On hold' then
+    if o.status not in ('For implementation', 'Ongoing') then raise exception 'Only an active project can be put on hold'; end if;
+    if rs is null or rs not in ('Conflict', 'Pending resolution', 'Client instruction', 'Payment', 'Other') then raise exception 'Pick the reason for the hold'; end if;
+    if nt is null or length(nt) < 5 then raise exception 'Describe the hold (a short note)'; end if;
+    update projects set status = 'On hold', hold_since = d, hold_reason = rs, hold_note = nt, status_at = now(), updated_at = now(), updated_by = me.id where arza_no = v_no;
+    msg := 'On hold from ' || crm_fd(d) || ' - ' || rs || ': ' || nt;
+  elsif tgt = 'Completed' then
+    if o.status not in ('For implementation', 'Ongoing', 'On hold') then raise exception 'Only an active project can be completed'; end if;
+    if coalesce(p ->> 'date', '') = '' then raise exception 'Enter the actual completion date (CPC / end of term)'; end if;
+    if o.status = 'On hold' then hd := greatest(d - coalesce(o.hold_since, d), 0); end if;
+    update projects set status = 'Completed', actual_completion = d,
+      dlp_end = case when dlp_months is not null then (d + make_interval(months => dlp_months))::date end,
+      hold_days = hold_days + hd, hold_since = null, hold_reason = null, hold_note = null, status_at = now(), updated_at = now(), updated_by = me.id where arza_no = v_no;
+    msg := 'Completed ' || crm_fd(d) || coalesce(', warranty (DLP) ' || o.dlp_months || ' months', ', warranty period not set');
+  elsif tgt = 'Cancelled' then
+    if me.role <> 'admin' then raise exception 'Only the admin can cancel a project'; end if;
+    if nt is null or length(nt) < 5 then raise exception 'Give the reason for cancelling'; end if;
+    update projects set status = 'Cancelled', status_at = now(), updated_at = now(), updated_by = me.id where arza_no = v_no;
+    msg := 'Cancelled: ' || nt;
+  elsif tgt = 'restore' then
+    if me.role <> 'admin' then raise exception 'Only the admin can restore a project'; end if;
+    if o.status not in ('Archived', 'Cancelled') then raise exception 'Only an archived or cancelled project can be restored'; end if;
+    tgt := case when o.status = 'Archived' then 'Completed' else 'For implementation' end;
+    -- an archived project restored keeps its dates; clear the final payment so it is not archived again at once
+    update projects set status = tgt, final_paid_on = case when o.status = 'Archived' then null else final_paid_on end, status_at = now(), updated_at = now(), updated_by = me.id where arza_no = v_no;
+    msg := 'Restored to ' || tgt || coalesce(' - ' || nt, '');
+  else
+    raise exception 'Unknown status %', tgt;
+  end if;
+  insert into project_status_log (arza_no, from_status, to_status, reason, note, eff_date, by_id, by_name)
+    values (v_no, o.status, tgt, case when tgt = 'On hold' then rs end, coalesce(nt, msg), d, me.id, crm_actor());
+  perform crm_log('project', v_no, o.status || ' -> ' || tgt || ': ' || msg);
+  perform crm_proj_auto();
+  return crm_out(crm_projj((select pr from projects pr where pr.arza_no = v_no), crm_project_ok(v_no, 'money')));
+end $$;
+
+/* the project team (replaces the list): admin / QS on any project, a Project manager on his own */
+create or replace function public.crm_setteam(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_no text := upper(btrim(coalesce(p ->> 'arza_no', ''))); me profiles := crm_needproject(v_no, 'write'); x jsonb; u profiles; old text; new_ text;
+begin
+  if not crm_can(me.role, 'project', 'manage') then raise exception 'Read-only: % accounts cannot change the project team', crm_role_label(me.role); end if;
+  if jsonb_typeof(p -> 'members') <> 'array' then raise exception 'members must be a list'; end if;
+  for x in select * from jsonb_array_elements(p -> 'members') loop
+    select * into u from profiles where id = (x ->> 'user_id')::uuid;
+    if not found or not u.active then raise exception 'Unknown or inactive user'; end if;
+    if u.role = 'proc' then raise exception '% is Procurement - Procurement accounts have no project access', coalesce(u.full_name, u.email); end if;
+    if coalesce(x ->> 'proj_role', '') not in ('pm', 'engineer', 'qs', 'viewer') then raise exception 'Project role must be pm, engineer, qs or viewer'; end if;
+  end loop;
+  if not crm_can(me.role, 'project', 'writeall') and not exists (select 1 from jsonb_array_elements(p -> 'members') e where (e ->> 'user_id')::uuid = me.id) then
+    raise exception 'You cannot remove yourself from the team (ask QS / admin)'; end if;
+  select string_agg(coalesce(u2.full_name, u2.email) || ' (' || m.proj_role || ')', ', ' order by u2.full_name) into old from project_members m join profiles u2 on u2.id = m.user_id where m.arza_no = v_no;
+  delete from project_members where arza_no = v_no;
+  insert into project_members (arza_no, user_id, proj_role, added_by)
+    select v_no, (e ->> 'user_id')::uuid, max(e ->> 'proj_role'), me.id from jsonb_array_elements(p -> 'members') e group by (e ->> 'user_id')::uuid;
+  select string_agg(coalesce(u2.full_name, u2.email) || ' (' || m.proj_role || ')', ', ' order by u2.full_name) into new_ from project_members m join profiles u2 on u2.id = m.user_id where m.arza_no = v_no;
+  if coalesce(old, '') <> coalesce(new_, '') then perform crm_log('project', v_no, 'Team: ' || coalesce(new_, '(none)')); end if;
+  return crm_out(crm_projj((select pr from projects pr where pr.arza_no = v_no), crm_project_ok(v_no, 'money')));
+end $$;
+
 -- ---------- new sign-in accounts -> profile (first account = admin) ----------
 create or replace function public.crm_on_new_user() returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -2438,6 +2764,9 @@ alter table public.mail_outbox enable row level security;
 alter table public.mail_inbox enable row level security;
 alter table public.value_log enable row level security;
 alter table public.project_members enable row level security;
+alter table public.projects enable row level security;
+alter table public.project_money enable row level security;
+alter table public.project_status_log enable row level security;
 -- v4.0.0: area policies instead of one crm_read on every table (any signed-in user could read everything before).
 -- The app reads through the crm_* functions (which check the same matrix); these policies close direct REST reads.
 do $$
@@ -2466,6 +2795,13 @@ begin
   -- activity log: Management / QS / admin all lines; Project managers tender and project lines only
   create policy crm_read on public.activity_log for select to authenticated
     using (public.crm_log_ok((select role from public.profiles where id = (select auth.uid()) and active), arza_no));
+  -- v4.1.0: projects and their status history for the team (and every project for readall roles); amounts only with project.money
+  foreach t in array array['projects', 'project_money', 'project_status_log'] loop
+    execute format('drop policy if exists crm_read on public.%I', t);
+  end loop;
+  create policy crm_read on public.projects for select to authenticated using (public.crm_project_ok(arza_no, 'read'));
+  create policy crm_read on public.project_status_log for select to authenticated using (public.crm_project_ok(arza_no, 'read'));
+  create policy crm_read on public.project_money for select to authenticated using (public.crm_project_ok(arza_no, 'money'));
   -- project members: who is on which project (everyone with Projects access sees the team lists; engineers their own rows)
   create policy crm_read on public.project_members for select to authenticated
     using ((select public.crm_area_ok('project', 'readall')) or user_id = (select auth.uid()));
@@ -2487,6 +2823,8 @@ revoke all on public.value_log from anon, authenticated;
 grant select on public.value_log to authenticated;
 revoke all on public.project_members from anon, authenticated;
 grant select on public.project_members to authenticated;
+revoke all on public.projects, public.project_money, public.project_status_log from anon, authenticated;
+grant select on public.projects, public.project_money, public.project_status_log to authenticated;
 
 -- functions: nothing for anon; signed-in users may call only the API functions (each checks the role itself)
 do $$
@@ -2505,7 +2843,8 @@ begin
              'crm_rfqs', 'crm_rfq', 'crm_saverfq', 'crm_setrecipients', 'crm_rfqclick', 'crm_setrecipient', 'crm_rfqstatus',
              'crm_savequote', 'crm_deletequote', 'crm_setfx', 'crm_rfqdecide',
              'crm_setjson', 'crm_rateprops', 'crm_ratedecide', 'crm_quoteprices', 'crm_savepost', 'crm_deletepost', 'crm_mailqueue', 'crm_mailcancel',
-             'crm_valuelog', 'crm_savevalue', 'crm_deletevalue', 'crm_verifyvalue', 'crm_perf') loop
+             'crm_valuelog', 'crm_savevalue', 'crm_deletevalue', 'crm_verifyvalue', 'crm_perf',
+             'crm_project_ok', 'crm_projects', 'crm_project', 'crm_addproject', 'crm_saveproject', 'crm_projectstatus', 'crm_setteam') loop
     execute format('grant execute on function %s to authenticated', f.sig);
   end loop;
   -- v3.2.0: the supplier quote form (no login) may call only these two; each checks the private token

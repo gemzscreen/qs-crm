@@ -2,6 +2,17 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v4.1.0 — 20 Nov 2026
+
+- New Projects tab (beside Contract): the register of every project with status, commencement, revised completion (with EOT), days left / overdue and the project manager. Filters by status and type, and a search.
+- A tender set to Won becomes a project automatically (same T-number, status For implementation). Won tenders already in the system have been added.
+- “Add existing project” and “Add term contract” (QS / admin) for jobs that never came through the Tenders tab: they get their own P-numbers (P01, P02 …).
+- Project page: contract details, dates, EOT, warranty (DLP), client rep, amounts (contract sum, LAD, ceiling, retention — not shown to Project engineers), team, status history, and a dropdown to switch projects.
+- Statuses: For implementation → Ongoing (automatic on the commencement date, or by hand) → On hold (reason + note + date; hold days counted for EOT evidence) → Completed (actual completion starts the warranty) → Archived (automatic only when the warranty has ended AND the final payment is recorded). The admin can cancel (with a reason) or restore.
+- Team: Project managers change only the projects they are on (details, status, team); Project engineers see only their projects. QS / admin set any team.
+- Dashboard: a Projects card (ongoing, for implementation, on hold, overdue); Project engineers get their own projects list. The bell lists projects past their completion date and holds longer than 30 days.
+- Apps Script (Code.gs) changed: file uploads accept P-numbers. Paste Code.gs and Deploy › Manage deployments › Edit › New version (only needed before storing files for a P-project).
+
 ## v4.0.0 — 20 Nov 2026
 
 - Roles and access (v4 Projects groundwork): one permission matrix decides who may open and change each part of the app, and the database enforces it — before, any signed-in account could read every table.
