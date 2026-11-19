@@ -29,6 +29,8 @@ jobs:
         run: node test/t_procure.js
       - name: Mailbox job tests (scripts/mailbox.mjs, no network)
         run: node test/t_mailbox.mjs
+      - name: QS Performance calculations (src/perf.js)
+        run: node test/t_perf.js
       - name: Database script + crm_* tests on a fresh PostgreSQL
         env:
           PGHOST: localhost

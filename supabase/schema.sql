@@ -1,5 +1,5 @@
 -- =====================================================================================================
--- QS CRM (ARZA SDN BHD) — Supabase database, v3.2.2
+-- QS CRM (ARZA SDN BHD) — Supabase database, v3.3.0
 -- Run the whole file once in Supabase › SQL Editor › New query › Run. Safe to run again (upgrades in place).
 --
 -- Security model
@@ -773,6 +773,12 @@ begin
         -- v3.2.1: records that need a look
         'no_status', count(*) filter (where coalesce(status, '') = ''),
         'overdue', count(*) filter (where coalesce(status, '') in ('', 'Prospect', 'Pricing', 'Pending') and closing_date < (now() at time zone 'Asia/Brunei')),
+        -- v3.3.0: QS Performance record gaps (notification bell)
+        'awaiting_result', count(*) filter (where status = 'Submitted' and result_date is null and closing_date < (now() at time zone 'Asia/Brunei') - interval '30 days'),
+        'won_no_contract', count(*) filter (where status = 'Won' and contract_sum is null),
+        'value_no_evidence', (select count(*) from value_log where coalesce(evidence, '') = ''),
+        'value_to_verify', (select count(*) from value_log where not verified and recorded_by is distinct from auth.uid()),
+        'rfq_no_savings', (select count(*) from rfqs where status = 'Awarded' and median_bnd is null),
         'submitted', count(*) filter (where status = 'Submitted'),
         'submitted_value', coalesce(sum(our_sum) filter (where status = 'Submitted'), 0),
         'won', count(*) filter (where status = 'Won'), 'lost', count(*) filter (where status = 'Lost'),
@@ -1237,6 +1243,7 @@ begin
     'scoring', coalesce((select value from settings where key = 'scoring'), '{}'),
     'rfq_opts', coalesce((select value from settings where key = 'rfq_opts'), '{}'),
     'kpi_baseline', coalesce((select value from settings where key = 'kpi_baseline'), '{}'),
+    'perf', coalesce((select value from settings where key = 'perf'), '{}'),
     'prompts', coalesce((select value from settings where key = 'prompts'), '{}'),
     'mailbox', coalesce((select value from settings where key = 'mailbox'), '{}'),
     'mailbox_status', coalesce((select value from settings where key = 'mailbox_status'), '{}'),
@@ -1329,6 +1336,12 @@ alter table public.rfqs add column if not exists delivered_on date;
 alter table public.rfqs add column if not exists delivery_on_time boolean;
 alter table public.rfqs add column if not exists delivery_quality int;
 alter table public.rfqs add column if not exists delivery_note text;
+-- v3.3.0: savings at award - median landed total of the quotes that pass, and the masterlist budget of the lines with an ML code
+alter table public.rfqs add column if not exists median_bnd numeric;
+alter table public.rfqs add column if not exists valid_n int;
+alter table public.rfqs add column if not exists ml_budget_bnd numeric;
+alter table public.rfqs add column if not exists ml_quoted_bnd numeric;
+alter table public.rfqs add column if not exists ml_lines int;
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'rfqs_delivery_quality_chk') then
     alter table public.rfqs add constraint rfqs_delivery_quality_chk check (delivery_quality between 1 and 5);
@@ -1740,6 +1753,8 @@ begin
       po_ref = nullif(btrim(coalesce(p ->> 'po_ref', '')), ''), award_note = nullif(btrim(coalesce(p ->> 'note', '')), ''),
       recommended_supplier = coalesce(recommended_supplier, s.supplier_id),
       award_total_bnd = nullif(p ->> 'total_bnd', '')::numeric, saving_bnd = nullif(p ->> 'saving_bnd', '')::numeric,
+      median_bnd = crm_n(p -> 'median_bnd'), valid_n = crm_n(p -> 'valid_n')::int, ml_budget_bnd = crm_n(p -> 'ml_budget_bnd'),
+      ml_quoted_bnd = crm_n(p -> 'ml_quoted_bnd'), ml_lines = crm_n(p -> 'ml_lines')::int,
       scores = case when jsonb_typeof(p -> 'scores') = 'array' then p -> 'scores' else scores end, updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
     -- v3.2.0: awarded prices of items with a masterlist code -> rate proposals (accepted / rejected on Pricing › Rate proposals)
     delete from rate_proposals where rfq_no = r.rfq_no and status = 'Proposed';
@@ -1753,10 +1768,19 @@ begin
   elsif a = 'reopen' then
     if r.status <> 'Awarded' and r.status <> 'Approval sent' then raise exception '% is not awarded / sent for approval', r.rfq_no; end if;
     update rfqs set status = 'Draft', award_supplier = null, award_by = null, award_date = null, po_ref = null, award_note = null, approval_sent_at = null,
-      award_total_bnd = null, saving_bnd = null, delivered_on = null, delivery_on_time = null, delivery_quality = null, delivery_note = null, updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
+      award_total_bnd = null, saving_bnd = null, median_bnd = null, valid_n = null, ml_budget_bnd = null, ml_quoted_bnd = null, ml_lines = null, delivered_on = null, delivery_on_time = null, delivery_quality = null, delivery_note = null, updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
     delete from rate_proposals where rfq_no = r.rfq_no and status = 'Proposed';
     perform crm_rfqauto(r.rfq_no);
     msg := 'Reopened (award / approval cleared)' || coalesce(' - ' || nullif(btrim(p ->> 'note'), ''), '');
+  elsif a = 'savings' then
+    -- v3.3.0: record the savings of an RFQ awarded before v3.3.0 (or after a masterlist change)
+    if r.status <> 'Awarded' then raise exception '% is not awarded yet', r.rfq_no; end if;
+    if crm_n(p -> 'total_bnd') is null or crm_n(p -> 'median_bnd') is null then raise exception 'No landed total to compare - check the quotes and the exchange rates'; end if;
+    update rfqs set award_total_bnd = crm_n(p -> 'total_bnd'), median_bnd = crm_n(p -> 'median_bnd'), valid_n = crm_n(p -> 'valid_n')::int,
+      saving_bnd = coalesce(crm_n(p -> 'saving_bnd'), saving_bnd), ml_budget_bnd = crm_n(p -> 'ml_budget_bnd'), ml_quoted_bnd = crm_n(p -> 'ml_quoted_bnd'),
+      ml_lines = crm_n(p -> 'ml_lines')::int, updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
+    msg := 'Savings recorded: awarded B$ ' || to_char(crm_n(p -> 'total_bnd'), 'FM999,999,990.00') || ' vs median of ' || coalesce(p ->> 'valid_n', '?') || ' valid quote(s) B$ '
+      || to_char(crm_n(p -> 'median_bnd'), 'FM999,999,990.00');
   elsif a = 'delivery' then
     -- v3.2.0: delivery rating after the award (feeds the supplier scorecard and the reliability score)
     if r.status <> 'Awarded' then raise exception '% is not awarded yet', r.rfq_no; end if;
@@ -1770,7 +1794,7 @@ begin
     update rfqs set must_pass = (select coalesce(jsonb_object_agg(k, (p -> 'must_pass' ->> k)::boolean), '{}') from unnest(array['complete', 'spec', 'valid', 'in_time']) k where p -> 'must_pass' ? k),
       updated_at = now(), updated_by = me.id where rfq_no = r.rfq_no;
     msg := 'Must-pass checks: ' || coalesce((select string_agg(k, ', ') from unnest(array['complete', 'spec', 'valid', 'in_time']) k where (p -> 'must_pass' ->> k)::boolean), 'none');
-  else raise exception 'Unknown action % (recommend, approval_sent, award, reopen, delivery, must_pass)', a;
+  else raise exception 'Unknown action % (recommend, approval_sent, award, reopen, delivery, must_pass, savings)', a;
   end if;
   perform crm_log('rfq', r.rfq_no, msg);
   return crm_out(jsonb_build_object('rfq', crm_rfqj(crm_rfqget(r.rfq_no))));
@@ -1877,6 +1901,10 @@ begin
       if length(e.value) > 4000 then raise exception 'Prompt for % is too long (4,000 characters max)', e.key; end if;
       if btrim(e.value) <> '' then out := out || jsonb_build_object(e.key, e.value); end if;
     end loop;
+  elsif k = 'perf' then
+    if coalesce(v ->> 'start_date', '') !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'Enter the start date (YYYY-MM-DD)'; end if;
+    if (v ->> 'start_date')::date > current_date or (v ->> 'start_date')::date < date '2020-01-01' then raise exception 'The start date must be between 2020 and today'; end if;
+    out := jsonb_build_object('start_date', v ->> 'start_date');
   elsif k = 'mailbox' then
     if coalesce((v ->> 'enabled')::boolean, false) and (length(btrim(coalesce(v ->> 'approved_by', ''))) < 2 or coalesce(v ->> 'approved_on', '') !~ '^\d{4}-\d{2}-\d{2}$') then
       raise exception 'Record who approved the mailbox connection and when before switching it on'; end if;
@@ -1888,7 +1916,7 @@ begin
   insert into settings (key, value, updated_at, updated_by) values (k, out, now(), me.id)
   on conflict (key) do update set value = excluded.value, updated_at = excluded.updated_at, updated_by = excluded.updated_by;
   perform crm_log('settings', null, case k when 'scoring' then 'Quote scoring' when 'rfq_opts' then 'RFQ options' when 'kpi_baseline' then 'KPI baseline'
-    when 'prompts' then 'Discovery prompts' else 'Mailbox connection' || case when (out ->> 'enabled')::boolean then ' ON (approved by ' || (out ->> 'approved_by') || ' ' || (out ->> 'approved_on') || ')' else ' off' end end || ' updated');
+    when 'prompts' then 'Discovery prompts' when 'perf' then 'QS Performance start date ' || (out ->> 'start_date') else 'Mailbox connection' || case when (out ->> 'enabled')::boolean then ' ON (approved by ' || (out ->> 'approved_by') || ' ' || (out ->> 'approved_on') || ')' else ' off' end end || ' updated');
   return crm_out(jsonb_build_object('key', k, 'value', out));
 end $$;
 
@@ -2133,6 +2161,123 @@ begin
   return jsonb_build_object('sent', ns, 'failed', nf, 'received', ni, 'matched', nm);
 end $$;
 
+-- =====================================================================================================
+-- v3.3.0: QS Performance (value ledger). The report measures the QS function against the 8 KPIs of the
+-- ARZA contract (clause 12). Everything is derived from tenders / RFQs / rate proposals, plus a manual value log.
+-- No salary or personal data is stored anywhere (value-log descriptions say so in the app).
+-- =====================================================================================================
+create table if not exists public.value_log (
+  id bigint generated by default as identity primary key,
+  entry_date date not null,
+  kind text not null check (kind in ('Value engineering accepted', 'Claim/collection received', 'Cost saving', 'Time saved', 'Other')),
+  arza_no text references public.tenders (arza_no) on update cascade on delete set null,
+  project_ref text,
+  amount_bnd numeric(16, 2) check (amount_bnd is null or amount_bnd >= 0),
+  hours numeric(8, 1) check (hours is null or hours >= 0),
+  description text not null,
+  evidence text,
+  recorded_by uuid, recorded_name text,
+  verified boolean not null default false, verified_by uuid, verified_name text, verified_at timestamptz,
+  created_at timestamptz default now(), updated_at timestamptz default now()
+);
+create index if not exists value_log_date on public.value_log (entry_date);
+create index if not exists value_log_tender on public.value_log (arza_no);
+insert into public.settings (key, value) values ('perf', '{"start_date":"2026-10-01"}') on conflict (key) do nothing;
+
+create or replace function public.crm_valj(x public.value_log) returns jsonb language sql stable security definer set search_path = public as $$
+  select jsonb_build_object('id', x.id, 'entry_date', crm_fd(x.entry_date), 'kind', x.kind, 'arza_no', coalesce(x.arza_no, ''), 'project_ref', coalesce(x.project_ref, ''),
+    'tender_title', (select coalesce(nullif(title_en, ''), title) from tenders where arza_no = x.arza_no),
+    'amount_bnd', x.amount_bnd, 'hours', x.hours, 'description', x.description, 'evidence', coalesce(x.evidence, ''),
+    'recorded_name', coalesce(x.recorded_name, ''), 'mine', x.recorded_by = auth.uid(),
+    'verified', x.verified, 'verified_name', coalesce(x.verified_name, ''), 'verified_at', crm_ftz(x.verified_at),
+    'created_at', crm_ftz(x.created_at), 'updated_at', crm_ftz(x.updated_at))
+$$;
+create or replace function public.crm_valuelog(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  perform crm_need(false);
+  return jsonb_build_object('entries', coalesce((select jsonb_agg(crm_valj(x) order by x.entry_date desc, x.id desc) from value_log x
+    where (coalesce(p ->> 'from', '') = '' or x.entry_date >= (p ->> 'from')::date) and (coalesce(p ->> 'to', '') = '' or x.entry_date <= (p ->> 'to')::date)), '[]'));
+end $$;
+/* p: id (blank = new), entry_date, kind, arza_no, project_ref, amount_bnd, hours, description, evidence */
+create or replace function public.crm_savevalue(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+declare me profiles := crm_need(true); x value_log; o value_log; v_id bigint := nullif(p ->> 'id', '')::bigint; v_no text := upper(nullif(btrim(coalesce(p ->> 'arza_no', '')), ''));
+  d date; amt numeric; hrs numeric; ds text := btrim(coalesce(p ->> 'description', '')); ev text := nullif(btrim(coalesce(p ->> 'evidence', '')), ''); nm text;
+begin
+  if coalesce(p ->> 'entry_date', '') !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'Enter the date'; end if;
+  d := (p ->> 'entry_date')::date;
+  if d > current_date or d < date '2020-01-01' then raise exception 'The date must be between 2020 and today'; end if;
+  if coalesce(p ->> 'kind', '') not in ('Value engineering accepted', 'Claim/collection received', 'Cost saving', 'Time saved', 'Other') then raise exception 'Pick a type'; end if;
+  if coalesce(p ->> 'amount_bnd', '') <> '' and replace(p ->> 'amount_bnd', ',', '') !~ '^\d+(\.\d{1,2})?$' then raise exception 'Amount must be a number in B$ (e.g. 12500.00)'; end if;
+  if coalesce(p ->> 'hours', '') <> '' and (p ->> 'hours') !~ '^\d+(\.\d)?$' then raise exception 'Hours saved must be a number (e.g. 6 or 6.5)'; end if;
+  amt := nullif(replace(coalesce(p ->> 'amount_bnd', ''), ',', ''), '')::numeric; hrs := nullif(p ->> 'hours', '')::numeric;
+  if amt is null and hrs is null then raise exception 'Enter an amount (B$) or the hours saved'; end if;
+  if amt > 99999999 or hrs > 10000 then raise exception 'That amount looks too large - please check it'; end if;
+  if length(ds) < 5 then raise exception 'Describe what was done (a few words)'; end if;
+  if length(ds) > 1000 then raise exception 'Description is too long (1,000 characters max)'; end if;
+  if ev is not null and ev !~* '^https?://\S+$' then raise exception 'Evidence must be a web link (e.g. the Drive file link)'; end if;
+  if v_no is not null and not exists (select 1 from tenders where arza_no = v_no) then raise exception 'Tender % not found', v_no; end if;
+  nm := coalesce(nullif(me.display_name, ''), nullif(me.full_name, ''), me.email);
+  if v_id is null then
+    insert into value_log (entry_date, kind, arza_no, project_ref, amount_bnd, hours, description, evidence, recorded_by, recorded_name)
+    values (d, p ->> 'kind', v_no, left(nullif(btrim(coalesce(p ->> 'project_ref', '')), ''), 120), amt, hrs, ds, left(ev, 500), me.id, nm) returning * into x;
+    perform crm_log('value', x.arza_no, 'Value log #' || x.id || ' added: ' || x.kind || coalesce(' B$ ' || x.amount_bnd, '') || coalesce(' · ' || x.hours || ' h', ''));
+  else
+    select * into o from value_log where id = v_id for update;
+    if not found then raise exception 'Entry not found'; end if;
+    update value_log set entry_date = d, kind = p ->> 'kind', arza_no = v_no, project_ref = left(nullif(btrim(coalesce(p ->> 'project_ref', '')), ''), 120), amount_bnd = amt, hours = hrs,
+      description = ds, evidence = left(ev, 500), updated_at = now(),
+      -- a changed figure, date or type needs verifying again
+      verified = case when o.amount_bnd is distinct from amt or o.hours is distinct from hrs or o.entry_date <> d or o.kind <> p ->> 'kind' then false else o.verified end,
+      verified_by = case when o.amount_bnd is distinct from amt or o.hours is distinct from hrs or o.entry_date <> d or o.kind <> p ->> 'kind' then null else o.verified_by end,
+      verified_name = case when o.amount_bnd is distinct from amt or o.hours is distinct from hrs or o.entry_date <> d or o.kind <> p ->> 'kind' then null else o.verified_name end,
+      verified_at = case when o.amount_bnd is distinct from amt or o.hours is distinct from hrs or o.entry_date <> d or o.kind <> p ->> 'kind' then null else o.verified_at end
+    where id = v_id returning * into x;
+    perform crm_log('value', x.arza_no, 'Value log #' || x.id || ' edited' || case when o.verified and not x.verified then ' (needs verifying again)' else '' end);
+  end if;
+  return crm_out(jsonb_build_object('entry', crm_valj(x)));
+end $$;
+create or replace function public.crm_deletevalue(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_need(true); x value_log;
+begin
+  select * into x from value_log where id = nullif(p ->> 'id', '')::bigint;
+  if not found then raise exception 'Entry not found'; end if;
+  if x.verified and me.role <> 'admin' then raise exception 'A verified entry can only be removed by the admin'; end if;
+  delete from value_log where id = x.id;
+  perform crm_log('value', x.arza_no, 'Value log #' || x.id || ' removed: ' || x.kind || coalesce(' B$ ' || x.amount_bnd, '') || coalesce(' · ' || x.hours || ' h', ''));
+  return crm_out(jsonb_build_object('deleted', x.id));
+end $$;
+/* verification is a second pair of eyes: any active user (management viewers included) except the person who recorded it */
+create or replace function public.crm_verifyvalue(p jsonb default '{}') returns jsonb language plpgsql security definer set search_path = public as $$
+declare me profiles := crm_need(false); x value_log; ok boolean := coalesce((p ->> 'verified')::boolean, true);
+begin
+  select * into x from value_log where id = nullif(p ->> 'id', '')::bigint for update;
+  if not found then raise exception 'Entry not found'; end if;
+  if x.recorded_by = me.id then raise exception 'An entry is verified by someone other than the person who recorded it'; end if;
+  update value_log set verified = ok, verified_by = case when ok then me.id end, verified_name = case when ok then coalesce(nullif(me.display_name, ''), nullif(me.full_name, ''), me.email) end,
+    verified_at = case when ok then now() end where id = x.id returning * into x;
+  perform crm_log('value', x.arza_no, 'Value log #' || x.id || case when ok then ' verified' else ' verification removed' end);
+  return crm_out(jsonb_build_object('entry', crm_valj(x)));
+end $$;
+/* everything the QS Performance report needs, in one call (RFQs come from crm_rfqs) */
+create or replace function public.crm_perf(p jsonb default '{}') returns jsonb language plpgsql stable security definer set search_path = public set timezone to 'Asia/Brunei' as $$
+begin
+  perform crm_need(false);
+  return jsonb_build_object(
+    'start_date', coalesce((select value ->> 'start_date' from settings where key = 'perf'), ''),
+    'today', to_char(current_date, 'YYYY-MM-DD'),
+    'tenders', coalesce((select jsonb_agg(jsonb_build_object('arza_no', t.arza_no, 'title', coalesce(nullif(t.title_en, ''), t.title), 'client_group', t.client_group, 'tender_type', t.tender_type,
+        'status', coalesce(t.status, ''), 'closing_date', to_char(t.closing_date, 'YYYY-MM-DD'), 'submitted_date', crm_fd(t.submitted_date), 'result_date', crm_fd(t.result_date),
+        'created', to_char(t.created_at, 'YYYY-MM-DD'), 'our_sum', t.our_sum, 'winning_sum', t.winning_sum, 'winner', coalesce(t.winner, ''), 'diff_pct', t.diff_pct,
+        'contract_sum', t.contract_sum, 'contract_rev', coalesce(t.contract_rev, '')) order by t.arza_no) from tenders t), '[]'),
+    'proposals', coalesce((select jsonb_agg(jsonb_build_object('status', x.status, 'decided', to_char(x.decided_at, 'YYYY-MM-DD'), 'created', to_char(x.created_at, 'YYYY-MM-DD'),
+        'res_code', x.res_code, 'ml_price', x.ml_price, 'new_price', x.new_price)) from rate_proposals x), '[]'),
+    -- quoted prices captured (current revision of each quote, per line) - they feed Pricing › Quote prices
+    'quote_lines', coalesce((select jsonb_agg(jsonb_build_object('date', d, 'n', n)) from (select to_char(coalesce(q.quote_date, q.created_at::date), 'YYYY-MM-DD') d, count(*) n
+        from quote_lines l join quotes q on q.id = l.quote_id and q.current where l.unit_price is not null group by 1) z), '[]'),
+    'suppliers_added', coalesce((select jsonb_agg(jsonb_build_object('date', d, 'n', n)) from (select to_char(created_at, 'YYYY-MM-DD') d, count(*) n from suppliers group by 1) z), '[]'),
+    'values', coalesce((select jsonb_agg(crm_valj(x) order by x.entry_date desc, x.id desc) from value_log x), '[]'));
+end $$;
+
 -- ---------- new sign-in accounts -> profile (first account = admin) ----------
 create or replace function public.crm_on_new_user() returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -2173,13 +2318,14 @@ alter table public.rate_proposals enable row level security;
 alter table public.rfq_postings enable row level security;
 alter table public.mail_outbox enable row level security;
 alter table public.mail_inbox enable row level security;
+alter table public.value_log enable row level security;
 do $$
 declare t text;
 begin
   foreach t in array array['tenders', 'bq_items', 'asbuilt_items', 'revisions', 'activity_log', 'lists',
                            'settings', 'categories', 'suppliers', 'supplier_contacts', 'supplier_categories', 'discovery_candidates',
                            'rfqs', 'rfq_items', 'rfq_recipients', 'rfq_clicks', 'quotes', 'quote_lines',
-                           'rate_proposals', 'rfq_postings', 'mail_outbox', 'mail_inbox'] loop
+                           'rate_proposals', 'rfq_postings', 'mail_outbox', 'mail_inbox', 'value_log'] loop
     execute format('drop policy if exists crm_read on public.%I', t);
     execute format('create policy crm_read on public.%I for select to authenticated using (public.crm_can_read())', t);
   end loop;
@@ -2197,6 +2343,8 @@ revoke all on public.quotes, public.quote_lines from anon, authenticated;
 grant select on public.quotes, public.quote_lines to authenticated;
 revoke all on public.rate_proposals, public.rfq_postings, public.mail_outbox, public.mail_inbox from anon, authenticated;
 grant select on public.rate_proposals, public.rfq_postings, public.mail_outbox, public.mail_inbox to authenticated;
+revoke all on public.value_log from anon, authenticated;
+grant select on public.value_log to authenticated;
 
 -- functions: nothing for anon; signed-in users may call only the API functions (each checks the role itself)
 do $$
@@ -2214,7 +2362,8 @@ begin
              'crm_settings', 'crm_setsettings', 'crm_setholidays',
              'crm_rfqs', 'crm_rfq', 'crm_saverfq', 'crm_setrecipients', 'crm_rfqclick', 'crm_setrecipient', 'crm_rfqstatus',
              'crm_savequote', 'crm_deletequote', 'crm_setfx', 'crm_rfqdecide',
-             'crm_setjson', 'crm_rateprops', 'crm_ratedecide', 'crm_quoteprices', 'crm_savepost', 'crm_deletepost', 'crm_mailqueue', 'crm_mailcancel') loop
+             'crm_setjson', 'crm_rateprops', 'crm_ratedecide', 'crm_quoteprices', 'crm_savepost', 'crm_deletepost', 'crm_mailqueue', 'crm_mailcancel',
+             'crm_valuelog', 'crm_savevalue', 'crm_deletevalue', 'crm_verifyvalue', 'crm_perf') loop
     execute format('grant execute on function %s to authenticated', f.sig);
   end loop;
   -- v3.2.0: the supplier quote form (no login) may call only these two; each checks the private token

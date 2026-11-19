@@ -327,11 +327,62 @@ select pg_temp.ok((public.crm_setprofile('{"avatar":"data:image/jpeg;base64,AAAA
 select pg_temp.ok((public.crm_setprofile('{"phone":"123"}') ->> 'avatar') like 'data:image/jpeg%', 'other profile edits keep the picture');
 select pg_temp.ok((public.crm_setprofile('{"avatar":""}') ->> 'avatar') = '', 'profile picture removed');
 
+-- v3.3.0: QS Performance - value log, verification, perf data, savings at award, bell counts, start date
+select set_config('request.uid', '00000000-0000-0000-0000-000000000002', false);
+select pg_temp.err($q$select public.crm_savevalue('{"entry_date":"2026-11-10","kind":"Cost saving","description":"Cheaper rebar source"}')$q$, 'amount .* or the hours', 'value log needs an amount or hours');
+select pg_temp.err($q$select public.crm_savevalue('{"entry_date":"2026-11-10","kind":"Bonus","amount_bnd":"10","description":"xxxxxx"}')$q$, 'Pick a type', 'value log type checked');
+select pg_temp.err($q$select public.crm_savevalue('{"entry_date":"2099-01-01","kind":"Cost saving","amount_bnd":"10","description":"xxxxxx"}')$q$, 'between 2020 and today', 'value log date not in the future');
+select pg_temp.err($q$select public.crm_savevalue('{"entry_date":"2026-11-10","kind":"Cost saving","amount_bnd":"10","description":"xxxxxx","evidence":"javascript:alert(1)"}')$q$, 'web link', 'evidence must be a web link');
+select pg_temp.err($q$select public.crm_savevalue('{"entry_date":"2026-11-10","kind":"Cost saving","amount_bnd":"1O","description":"xxxxxx"}')$q$, 'number in B', 'amount must be a number');
+select pg_temp.err($q$select public.crm_savevalue('{"entry_date":"2026-11-10","kind":"Cost saving","amount_bnd":"10","description":"xxxxxx","arza_no":"T999"}')$q$, 'T999 not found', 'tender must exist');
+select public.crm_savevalue('{"entry_date":"2026-11-10","kind":"Value engineering accepted","arza_no":"t901","amount_bnd":"12,500.50","description":"Precast drain units instead of cast in situ, accepted by client"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{entry,arza_no}') = 'T901' and (:'r'::jsonb #>> '{entry,amount_bnd}') = '12500.50' and (:'r'::jsonb #>> '{entry,recorded_name}') = 'Qs Person' and not (:'r'::jsonb #>> '{entry,verified}')::boolean, 'value log entry saved (no evidence, not verified)');
+select (:'r'::jsonb #>> '{entry,id}') as vid \gset
+select public.crm_savevalue('{"entry_date":"2026-11-12","kind":"Time saved","hours":"6.5","project_ref":"MOE FM term contract","description":"Claim workbook automated","evidence":"https://drive.google.com/file/d/abc"}') as r \gset
+select pg_temp.err(format($q$select public.crm_verifyvalue('{"id":%s}')$q$, :vid), 'someone other than', 'recorder cannot verify own entry');
+select set_config('request.uid', '00000000-0000-0000-0000-000000000003', false);
+select pg_temp.ok((public.crm_dashboard() #>> '{kpi,value_to_verify}') = '2' and (public.crm_dashboard() #>> '{kpi,value_no_evidence}') = '1', 'bell counts: 2 to verify, 1 without evidence');
+select pg_temp.err($q$select public.crm_savevalue('{"entry_date":"2026-11-10","kind":"Cost saving","amount_bnd":"10","description":"xxxxxx"}')$q$, 'Read-only', 'viewer cannot add value-log entries');
+select public.crm_verifyvalue(jsonb_build_object('id', :vid)) as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{entry,verified}')::boolean and (:'r'::jsonb #>> '{entry,verified_name}') = 'viewer@test', 'management (viewer) verifies an entry');
+select pg_temp.ok(jsonb_array_length(public.crm_valuelog('{"from":"2026-11-11"}') -> 'entries') = 1 and jsonb_array_length(public.crm_valuelog() -> 'entries') = 2, 'value log read with a date filter');
+select pg_temp.ok(jsonb_array_length(public.crm_perf() -> 'values') = 2 and (public.crm_perf() ->> 'start_date') = '2026-10-01' and jsonb_array_length(public.crm_perf() -> 'tenders') >= 8, 'perf data: values, start date, tenders');
+select set_config('request.uid', '00000000-0000-0000-0000-000000000002', false);
+select public.crm_savevalue(jsonb_build_object('id', :vid, 'entry_date', '2026-11-10', 'kind', 'Value engineering accepted', 'arza_no', 'T901', 'amount_bnd', '12500.50',
+  'description', 'Precast drain units instead of cast in situ, accepted by client (letter ref 12)')) as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{entry,verified}')::boolean, 'text-only edit keeps the verification');
+select public.crm_savevalue(jsonb_build_object('id', :vid, 'entry_date', '2026-11-10', 'kind', 'Value engineering accepted', 'arza_no', 'T901', 'amount_bnd', '11000',
+  'description', 'Precast drain units instead of cast in situ, accepted by client (letter ref 12)')) as r \gset
+select pg_temp.ok(not (:'r'::jsonb #>> '{entry,verified}')::boolean and (:'r'::jsonb #>> '{entry,verified_name}') = '', 'changed amount needs verifying again');
+select set_config('request.uid', '00000000-0000-0000-0000-000000000003', false);
+select public.crm_verifyvalue(jsonb_build_object('id', :vid)) as r \gset
+select set_config('request.uid', '00000000-0000-0000-0000-000000000002', false);
+select pg_temp.err(format($q$select public.crm_deletevalue('{"id":%s}')$q$, :vid), 'only be removed by the admin', 'qs cannot delete a verified entry');
+select set_config('request.uid', '00000000-0000-0000-0000-000000000001', false);
+select public.crm_deletevalue(jsonb_build_object('id', :vid)) as r \gset
+select pg_temp.ok((select count(*) from public.value_log) = 1, 'admin deletes a verified entry');
+-- start date setting
+select pg_temp.err($q$select public.crm_setjson('{"key":"perf","value":{"start_date":"2026-13-40"}}')$q$, 'date|start date', 'bad start date refused');
+select public.crm_setjson('{"key":"perf","value":{"start_date":"2026-09-28"}}') as r \gset
+select pg_temp.ok((public.crm_settings() #>> '{perf,start_date}') = '2026-09-28', 'start date saved');
+-- savings: awarded RFQ without savings -> bell count, then the savings action
+select pg_temp.ok((public.crm_dashboard() #>> '{kpi,rfq_no_savings}')::int >= 1, 'awarded RFQ without savings counted');
+select pg_temp.err($q$select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"savings","total_bnd":""}')$q$, 'No landed total', 'savings need figures');
+select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-003","action":"savings","total_bnd":"1402.00","median_bnd":"1550.25","valid_n":"3","ml_budget_bnd":"1500","ml_quoted_bnd":"1380.5","ml_lines":"2"}') as r \gset
+select pg_temp.ok((:'r'::jsonb #>> '{rfq,median_bnd}') = '1550.25' and (:'r'::jsonb #>> '{rfq,valid_n}') = '3' and (:'r'::jsonb #>> '{rfq,ml_lines}') = '2', 'savings recorded on the RFQ');
+select pg_temp.ok((select count(*) from public.rfqs where status = 'Awarded' and median_bnd is null) = (public.crm_dashboard() #>> '{kpi,rfq_no_savings}')::int, 'bell count follows');
+select pg_temp.err($q$select public.crm_rfqdecide('{"rfq_no":"RFQ-2611-002","action":"savings","total_bnd":"1","median_bnd":"1"}')$q$, 'not awarded', 'savings only on awarded RFQs');
+-- tender record gaps for the bell
+insert into public.tenders (arza_no, title, status, closing_date, our_sum) values ('T980', 'Late result', 'Submitted', now() - interval '45 days', 100), ('T981', 'Won no sum', 'Won', now() - interval '60 days', 200);
+select pg_temp.ok((public.crm_dashboard() #>> '{kpi,awaiting_result}')::int >= 1 and (public.crm_dashboard() #>> '{kpi,won_no_contract}')::int >= 1, 'bell counts: result overdue, won without contract sum');
+delete from public.tenders where arza_no in ('T980', 'T981');
+
 -- grants and row-level security as the app's database role
 set role authenticated;
 select pg_temp.ok((select count(*) from public.suppliers) = 3, 'authenticated reads suppliers through RLS');
 select pg_temp.ok((select count(*) from public.rfqs) = 3, 'authenticated reads RFQs through RLS');
 select pg_temp.ok((select count(*) from public.mail_outbox) = 1 and (select count(*) from public.rate_proposals) = 1, 'authenticated reads the new tables');
+select pg_temp.ok((select count(*) from public.value_log) = 1, 'authenticated reads the value log');
 select pg_temp.ok(jsonb_array_length(public.crm_procdata() -> 'suppliers') = 3, 'authenticated may call crm_procdata');
 select pg_temp.err($q$insert into public.suppliers (supplier_id, name, country) values ('SUP-9999', 'x', 'BN')$q$, 'permission denied', 'no direct writes');
 select pg_temp.err($q$select public.crm_supwrite(null, '{}', '[]', '[]', '{}', null)$q$, 'permission denied', 'internal functions not callable');
