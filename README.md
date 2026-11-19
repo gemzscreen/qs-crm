@@ -50,7 +50,10 @@ Tender register, priced BQs, rationalized revisions, bid results and as-built re
 
 ### 5. Add people
 **Your name (top right) › Team & access › + Add team member** (email, name, role, temporary password) — needs the service key in step 2; otherwise add them in Supabase › Authentication › Users (Auto Confirm) and set the role on the Team & access page. Everyone fills in their own name, designation and phone under **My profile**.
-Roles: **admin** — users + everything · **qs** — all changes · **viewer** — read only (ARZA management, client). pm / site are for the v7 site modules (read only until then).
+Roles (v4.0, one matrix in `crm_perms()` in schema.sql — the database enforces it, the app shows only what the role may open):
+**Admin** — users, settings, everything · **QS** — all changes · **Management** (`viewer`) — reads everything incl. money, verifies value-log entries ·
+**Project manager** (`pm`) — reads Tenders, Contract, BQ Library, Masterlist; changes his own projects (v4.1); no RFQs or QS Performance ·
+**Project engineer** (`site`) — his own projects only, never any amount · **Procurement** (`proc`) — RFQs, Suppliers, Review queue; awards only with the boss's approval document.
 Everyone can change their password by clicking their name (top right). Forgot password sends a reset link by email.
 
 ## Free plan notes

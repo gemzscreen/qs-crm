@@ -2,6 +2,16 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v4.0.0 — 20 Nov 2026
+
+- Roles and access (v4 Projects groundwork): one permission matrix decides who may open and change each part of the app, and the database enforces it — before, any signed-in account could read every table.
+- Six roles: Admin · QS · Management (reads everything incl. money, verifies value-log entries) · Project manager (Tenders, Contract, BQ Library and Masterlist read only, his own projects from v4.1, no RFQs or QS Performance) · Project engineer (his own projects only, never any amount) · Procurement (new: RFQs, Suppliers and Review queue only).
+- Procurement can record an award only with the boss’s approval document: upload the signed approval / email in the award window or paste its link or memo reference. The RFQ page shows the document and “recorded by Procurement”. Reopening an award and recording savings stay with QS / admin.
+- Menus show only the pages the account may open; Procurement starts on RFQs. The notification bell and the dashboard only use what the role may see. The Project engineer dashboard is a placeholder until the Projects tab (v4.1).
+- Admin Settings › Users: the role list has the new labels and Procurement; a short note under each role says what it can do.
+- Database: area policies instead of one read policy; project team table ready for v4.1 (Project managers change only the projects they are on). Run automatically by the Database workflow.
+- Apps Script (Code.gs) changed: file uploads, the masterlist and masterlist updates follow the same roles (Procurement may upload quotes and award approvals; Project engineers cannot read the masterlist). Paste Code.gs in Apps Script and Deploy › Manage deployments › Edit › New version. Until then Procurement pastes the approval link instead of uploading.
+
 ## v3.3.1 — 19 Nov 2026
 
 - QS Performance: the page heading no longer names the contract clause (“of the ARZA contract (clause 12)” removed).
