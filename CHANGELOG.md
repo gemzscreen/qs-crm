@@ -2,6 +2,15 @@
 
 Generated from the CHANGELOG in `index.html` by `node scripts/version.mjs changelog`. Do not edit by hand.
 
+## v4.1.1 — 27 Nov 2026
+
+- Security: the Excel library is updated to SheetJS 0.20.3. Version 0.18.5 could be misused by a specially crafted Excel file (prototype pollution, CVE-2023-30533, and a slow-parsing flaw, CVE-2024-22363).
+- Security: a Content Security Policy now allows only this site’s own scripts and connections to Supabase, the Google Drive file service and the DNS check. Injected scripts and connections to other sites are blocked.
+- Security: nothing loads from outside CDNs any more (the supabase-js and SheetJS fallbacks are removed); everything is served from this site.
+- Security: the app and the supplier quote page do not show when another website embeds them in a frame (clickjacking). The quote page sends no referrer, so its link token never leaks to other sites.
+- Chrome / Lighthouse: page description and theme colour; menu links are proper links (keyboard and screen-reader friendly); grey secondary text is a little darker for readable contrast (4.5:1).
+- For developers: node scripts/version.mjs csp writes the policy (the changelog and bump commands run it); the check fails when it is out of date. No database or Code.gs change.
+
 ## v4.1.0 — 20 Nov 2026
 
 - New Projects tab (beside Contract): the register of every project with status, commencement, revised completion (with EOT), days left / overdue and the project manager. Filters by status and type, and a search.
