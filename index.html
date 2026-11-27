@@ -2,21 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-BBH8gxBnW8+iVHrAJg7xfVh87ZkvjKYESNOEzQWjqVU=' 'sha256-uriYN6ffgivSxJZOZN4SpV4lYHntvr3lYMi25x2TNTo=' 'sha256-LRUW1TyW7aNHEnGB+A4AcIwuUVxusFh0iJiyFo8RKQc=' 'sha256-EIv3+k9DiSqbYb+K1lGiBECnwIDYEj3RVZfjiJsp0l0=' 'sha256-ouGz4T8UVL7o43QSRdpv6feYxUtQTyXoaUSfpRZMFeg=' 'sha256-Ogm8WN9evIZH3c+KlMsrt/eD4j8cIl1dQYhRO/rm6SE=' 'sha256-eKPFcmINUczlQ9U8/2IOk2v7OfWA9N5xcX/6qLbX6r0=' 'sha256-3WfVe3AZhao/1qHPw6PMaOl7wKrnHZT8xHKMcID9ops=' 'sha256-syZQXiSo6GJZUaqQXoN33jlLQXMyukFGtyauhu8Z9rM=' 'sha256-GxTuwd0HmNI3KCR3MvOnFsr9gi7vUda2P/lU+7pzavs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://script.google.com https://script.googleusercontent.com https://dns.google https://cloudflare-dns.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'self' blob:; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="description" content="ARZA SDN BHD QS CRM — tenders, contract BQ, pricing, procurement and projects.">
+<meta name="theme-color" content="#1f1f8a">
+<style id="ajk">html{display:none!important}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAGdUlEQVR42sWXaWxU1xXHf/fNzJvFM7bH9ngF4x1MwAHKGkwsQiqipB/aNAtKoCQiNKlUKVKktJWStKilkVK1fIgqNUJRSkOjJKWGoFCVJriEBJstLVAXY7Ad24PBmGFsj5dZ33unH2aMSiFVy5YjPeld6d7zP/ece8//fxERG4CI1IvIOyISEREr890qm/IXyWDUZzBtZH7WiEhY7pyFRWQNgBKRmcDfgCzAAOzcXpvCmAS+pkTkPeDxOwT+n0G8r0QkBjgBdb2ZIgACKJS6pUEIkFAiaYirQQUR0LRrES1LUArULYrGfmV7/wauVHq3yaTJ6HCUVMrE7rDh97vRnfar5t1sFq6bgWD/CF2nQySTJg6Hhu6yk0qamIaF3WGjpq6A8gr/LcnAVQGkUiatB3oRC+66u5jCIu81C0ZHYnS0D2EYJksbK9B1GyLc8PlQ6WuZBm/5y1nqZgaorisgHk/RfmKQU+1DjEViKIGSshzmLyqjuraAgeAonaeGWLGyGt1pm3L3/4ErUJZliVKKT/Z1UVMXYFp5Ll90X+ZPH3QyFklQP7eQomIvpiH0947Q0xWmqtrPt9Y0kEwYdJ4aYnlT1c2VoLc7zOhojPkLpxHsG2Hb1mMEirx8+/G55OS6cLocAMRiSQaCEf74zj8or8xlzXfm09sTRgTy8z04dBterxNLBLHSN2liIoFlCQ6HDbfHwXgkzlTNs3Nc6Qy0HuhlWWMFhmnxu63H0DSNR56Yi2mmnRzc30N2rpuGeSU43XbO9Y2yb99ZlAkOp42a2gKWNVbQ0T5Ea1svDqWR5dXRdTsrVlbhydIZPD/GyeMX+PoDddgdGhPjSZwuO4RDk3L88wEREeloH5RNP9wrE+MJGTwfSTft0KT4eFEW1P5CTDPNT9u2HhWf/Qey7uHt8uhDv5XpBT+WvR92yKHP+mT1fW/IhjXvSmnWK1LsfkmGw5MiIvL8xmaBDbL/4y4RERkfi8vQxXHRLl+eICfHBUDXmctUVOWR5dWJRlMAvPF6K3fPL8MwLJrfPYllCYmEQW1FIW83r+UPe54i1+dh1452ljbOYG/Ls6zfuIiEmGzbsRZ/nodg3wgH/trDN+5fzJZX9wNgWgIImmlYuD3pGkdG4+QHvIiArtswUhZvv3mMl3/2AI89OZ9f/+ozNE3hdjvo6h9icf0Wyv0/oW5WIS++fB8AR9v6aVr1OptffZDVD80C4PdvfU5xqY/fvPkYR1r76GgfwuvVsUxBA4WVaQW6biMRN1AqfUA+aemmZzDEa5ta2N18imPH+xm8MIau2ygvzWN781oqq/Nxuu1U1xYQ7BvhiUe2s+W1h3nu+eVXTvrO907QefoSG9ftIJKMs23rYWw2DUsEu8ttJ5ZJ97TpORxuC6bpyrDY/NJHPL1uKS/8aCUKeHb9+/z8lY9pbKoiETWZObuQnX/eQHnhJn65eT8njw/QMxhi8NwY31u/g1y/h7wCD5dDUXZ+tAGPR+fIoXm88NwHbPz+PRQV+7Bt3vzTTRcGxigpy8bltnOkNYgv24Wua6RSwlPfXUJ1bT7+fA/1s4tRSjFvYSk1dQFmVPpxe3Tuvbea4eEoDQvKWLakEgQ8WTq+bCf+fA/ffLSBplVV5OV7qJ0ZINfvxutzEijMSveBo4f6mdNQgsvt4PDBPvbsOs2TTy/groZiRoajRKMpVObeen06e3adpvtsiJX31+Av8HDxwhhzGkowDBOHw45mUyjAEsEwLCzTYmwsgSLNorl5bibHE3h9rnQAoUsTdJ8JsWxFJRPjcVo/7aXt0yBL7pnBshXl+PM8iAjn+kc50PIFvT1hVq2uYXlTFadPDVEQyCJQ6L2xTjjVik/+/Tw2u8achhJi0SQd/xzi8MEgI+EYdh0MQ1CiKCnz0biykrpZhXR1hojHU8ydV5rRCSrD7v8rF6gpMkovPtLWj6YpFi0tB9J64NLFcSKRGEopiop85AeyAGg/cYFE0mTh4umIJShN3RwdTwXR2XGJgeAopWXZTK/w4/M5r0yORVOcPxfh/ECE4hIfM2cX3hQVX6MHppwl4gY93WHCoUnisRQ2u8IyBZfbQX4gi8qqPFxux02DTwVgXU+SXRlbgmFa2GzaVRrxtkqyLxOfIgLCDdf7yzLwX2X5bTQBEhqwOwNu3EFwI4O5+yt/mmlKqTPAM8DwHXqa2TNYzyilzvBVP8//BdugZYCvngTpAAAAAElFTkSuQmCC">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
-<script>/* theme before first paint (no flash) */(function(){var m='auto';try{m=localStorage.getItem('qscrm.theme')||'auto';}catch(e){}var d=m==='auto'?(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):(m==='night'?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<script>/* v4.1.1: show the page only when it is not framed by another site (clickjacking) */if(window.self===window.top){var a=document.getElementById('ajk');if(a)a.parentNode.removeChild(a);}else{try{window.top.location.replace(window.location.href);}catch(e){}}
+/* theme before first paint (no flash) */(function(){var m='auto';try{m=localStorage.getItem('qscrm.theme')||'auto';}catch(e){}var d=m==='auto'?(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):(m==='night'?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
 <title>ARZA QS CRM SYSTEM</title>
 <!-- libraries are served from this site (vendor/); the public CDN is only a fallback -->
 <!-- v3.2.1: the Excel library (880 KB) is loaded in the background after the page shows - see needXlsx() -->
 <script src="vendor/supabase-js-2.119.0.js"></script>
-<script>window.supabase||document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"><\/script>');</script>
 <script src="config.js"></script>
 <style>
 :root{
   --brand:#120377;--brand2:#2a1d9c;--bink:#120377;--bar:#120377;--accent:#c8762b;
-  --ink:#16202c;--ink2:#4a5868;--ink3:#7b8796;--line:#dfe4ea;--line2:#eef1f4;--bg:#f5f7f9;--card:#fff;--field:#fff;
+  --ink:#16202c;--ink2:#4a5868;--ink3:#667281;--line:#dfe4ea;--line2:#eef1f4;--bg:#f5f7f9;--card:#fff;--field:#fff;
   --th:#fafbfc;--hover:#f7f8fd;--sel:#eceefa;--ro:#f4f6f8;--shade:rgba(10,12,40,.3);
   --ok:#1e7a4c;--okbg:#e4f3ea;--bad:#a8322d;--badbg:#f8e5e3;--warn:#8a5a00;--warnbg:#fdf1d8;--info:#2b2d9a;--infobg:#e8e9fb;--mute:#5d6875;--mutebg:#eceff2;
   --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;color-scheme:light;
@@ -488,32 +493,32 @@ table.pft td:first-child{width:56%}
   <div class="brand"><img src="data:image/png;base64,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" alt="ARZA SDN BHD" width="122" height="32"><i></i><span>QS CRM</span></div>
   <button class="ibtn burger" id="btnMenu" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
   <nav class="nav" id="nav">
-    <a data-v="dash">Dashboard</a>
-    <a data-v="tenders" class="on">Tenders</a>
+    <a href="#" data-v="dash">Dashboard</a>
+    <a href="#" data-v="tenders" class="on">Tenders</a>
     <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">Contract<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="ddm">
-        <a data-v="rev"><b>Rationalized BQ</b><span>Revisions of the contract BQ, approvals</span></a>
-        <a data-v="asbuilt"><b>As-built</b><span>Measured quantities vs contract</span></a>
+        <a href="#" data-v="rev"><b>Rationalized BQ</b><span>Revisions of the contract BQ, approvals</span></a>
+        <a href="#" data-v="asbuilt"><b>As-built</b><span>Measured quantities vs contract</span></a>
       </div></div>
-    <a data-v="projects">Projects</a>
+    <a href="#" data-v="projects">Projects</a>
     <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">Pricing<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="ddm">
-        <a data-v="library"><b>BQ Library</b><span>Every priced line, rate history</span></a>
-        <a data-v="master"><b>Masterlist</b><span>Rates and resources from the pricing sheet</span></a>
-        <a data-v="qprices"><b>Quote prices</b><span>Price history per material from supplier quotes</span></a>
-        <a data-v="rateprops"><b>Rate proposals <em class="nbadge hidden" id="nbProps"></em></b><span>Awarded prices to update the masterlist</span></a>
+        <a href="#" data-v="library"><b>BQ Library</b><span>Every priced line, rate history</span></a>
+        <a href="#" data-v="master"><b>Masterlist</b><span>Rates and resources from the pricing sheet</span></a>
+        <a href="#" data-v="qprices"><b>Quote prices</b><span>Price history per material from supplier quotes</span></a>
+        <a href="#" data-v="rateprops"><b>Rate proposals <em class="nbadge hidden" id="nbProps"></em></b><span>Awarded prices to update the masterlist</span></a>
       </div></div>
     <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">RFQ<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="ddm">
-        <a data-v="rfqs"><b>RFQs</b><span>New RFQ, send list with Email / WhatsApp buttons, chase today</span></a>
-        <a data-v="suppliers"><b>Suppliers</b><span>Supplier database: contacts, categories, zones, verification</span></a>
-        <a data-v="queue"><b>Review queue <em class="nbadge hidden" id="nbQueue"></em></b><span>AI-found suppliers waiting for approval</span></a>
+        <a href="#" data-v="rfqs"><b>RFQs</b><span>New RFQ, send list with Email / WhatsApp buttons, chase today</span></a>
+        <a href="#" data-v="suppliers"><b>Suppliers</b><span>Supplier database: contacts, categories, zones, verification</span></a>
+        <a href="#" data-v="queue"><b>Review queue <em class="nbadge hidden" id="nbQueue"></em></b><span>AI-found suppliers waiting for approval</span></a>
       </div></div>
     <div class="dd"><button class="ddb" aria-haspopup="true" aria-expanded="false">Reports<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="ddm">
-        <a data-v="reports"><b>Tender reports</b><span>Tenders by type, client group, status; win rate and values</span></a>
-        <a data-v="rfqreports"><b>RFQ reports</b><span>Reply rate, quotes, response time by category, zone, country, channel</span></a>
-        <a data-v="perf"><b>QS Performance</b><span>Contract KPIs: tenders, awards, savings, value log; monthly PDF</span></a>
+        <a href="#" data-v="reports"><b>Tender reports</b><span>Tenders by type, client group, status; win rate and values</span></a>
+        <a href="#" data-v="rfqreports"><b>RFQ reports</b><span>Reply rate, quotes, response time by category, zone, country, channel</span></a>
+        <a href="#" data-v="perf"><b>QS Performance</b><span>Contract KPIs: tenders, awards, savings, value log; monthly PDF</span></a>
       </div></div>
   </nav>
   <div class="sp"></div>
@@ -526,11 +531,11 @@ table.pft td:first-child{width:56%}
     <button class="mebtn" id="hello" aria-haspopup="true" aria-expanded="false" title="My account"></button>
     <div class="ddm right" id="meMenu">
       <div class="mehead" id="meHead"></div>
-      <a data-act="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>My profile</a>
-      <a data-v="users" class="hidden" id="navUsers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Admin Settings</a>
-      <a data-act="ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>What's new<code id="meVer"></code></a>
+      <a href="#" data-act="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>My profile</a>
+      <a href="#" data-v="users" class="hidden" id="navUsers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Admin Settings</a>
+      <a href="#" data-act="ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>What's new<code id="meVer"></code></a>
       <div class="sep"></div>
-      <a data-act="out" id="btnOut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/></svg>Sign out</a>
+      <a href="#" data-act="out" id="btnOut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/></svg>Sign out</a>
     </div>
   </div>
 </header>
@@ -618,7 +623,7 @@ table.pft td:first-child{width:56%}
 <footer class="foot">
   <div class="fl"><span class="conn hidden" id="conn"><i></i><span></span></span><span class="fclock" id="fclock"></span></div>
   <div class="fc"><b>QS CRM ARZA SDN BHD</b> — Powered by <a href="https://darkwizlab.com" target="_blank" rel="noopener">Darkwiz Lab</a> 2026</div>
-  <div class="fr"><button id="btnVer" class="ver" title="What's new">v4.1.0</button></div>
+  <div class="fr"><button id="btnVer" class="ver" title="What's new">v4.1.1</button></div>
 </footer>
 
 <div class="modal hidden" id="verModal" role="dialog" aria-label="Change log"><div class="box">
@@ -639,7 +644,7 @@ table.pft td:first-child{width:56%}
   <div class="dh">
     <div class="row1"><span class="no" id="dNo"></span><h2 id="dTitle"></h2><button class="dbtn" id="dFull" title="Full screen"></button><button class="x" id="dClose" aria-label="Close">×</button></div>
     <div class="meta" id="dMeta"></div>
-    <div class="tabs" id="dTabs"><a data-t="det" class="on">Details</a><a data-t="res">Bid result</a><a data-t="bq">BQ</a><a data-t="log">Log</a></div>
+    <div class="tabs" id="dTabs"><a href="#" data-t="det" class="on">Details</a><a href="#" data-t="res">Bid result</a><a href="#" data-t="bq">BQ</a><a href="#" data-t="log">Log</a></div>
   </div>
   <div class="db" id="dBody"></div>
   <div class="df" id="dFoot"></div>
@@ -2717,8 +2722,16 @@ table.pft td:first-child{width:56%}
 (function(){
 'use strict';
 /* ---------- version & user ---------- */
-var APP = { name:'ARZA QS CRM SYSTEM', version:'4.1.0', user:'Gemz' };
+var APP = { name:'ARZA QS CRM SYSTEM', version:'4.1.1', user:'Gemz' };
 var CHANGELOG = [
+  { v:'4.1.1', date:'27 Nov 2026', items:[
+    'Security: the Excel library is updated to SheetJS 0.20.3. Version 0.18.5 could be misused by a specially crafted Excel file (prototype pollution, CVE-2023-30533, and a slow-parsing flaw, CVE-2024-22363).',
+    'Security: a Content Security Policy now allows only this site\u2019s own scripts and connections to Supabase, the Google Drive file service and the DNS check. Injected scripts and connections to other sites are blocked.',
+    'Security: nothing loads from outside CDNs any more (the supabase-js and SheetJS fallbacks are removed); everything is served from this site.',
+    'Security: the app and the supplier quote page do not show when another website embeds them in a frame (clickjacking). The quote page sends no referrer, so its link token never leaks to other sites.',
+    'Chrome / Lighthouse: page description and theme colour; menu links are proper links (keyboard and screen-reader friendly); grey secondary text is a little darker for readable contrast (4.5:1).',
+    'For developers: node scripts/version.mjs csp writes the policy (the changelog and bump commands run it); the check fails when it is out of date. No database or Code.gs change.'
+  ]},
   { v:'4.1.0', date:'20 Nov 2026', items:[
     'New Projects tab (beside Contract): the register of every project with status, commencement, revised completion (with EOT), days left / overdue and the project manager. Filters by status and type, and a search.',
     'A tender set to Won becomes a project automatically (same T-number, status For implementation). Won tenders already in the system have been added.',
@@ -2941,7 +2954,7 @@ function needXlsx(){
   if(window.XLSX) return Promise.resolve(window.XLSX);
   if(XL.p) return XL.p;
   var one=function(src){ return new Promise(function(ok,no){ var e=document.createElement('script'); e.src=src; e.async=true; e.onload=function(){ window.XLSX?ok(window.XLSX):no(new Error('x')); }; e.onerror=function(){ no(new Error('x')); }; document.head.appendChild(e); }); };
-  XL.p=one('vendor/xlsx-0.18.5.full.min.js').catch(function(){ return one('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'); })
+  XL.p=one('vendor/xlsx-0.20.3.full.min.js')   // v4.1.1: own copy only (no CDN), SheetJS 0.20.3 (fixes CVE-2023-30533, CVE-2024-22363)
     .catch(function(){ XL.p=null; throw new Error('The Excel tools did not load - check the internet connection and try again.'); });
   return XL.p;
 }
@@ -2952,6 +2965,8 @@ function xlsxReady(){ if(window.XLSX) return true;
   needXlsx().then(function(){ if(t&&document.contains(t)) t.click(); else toast('Excel tools ready — click again'); }, function(e){ toast(e.message,true); });
   return false; }
 function xlsxBuf(file){ return needXlsx().then(function(){ return file.arrayBuffer(); }); }
+/* v4.1.1: in-app links are <a href="#"> (reachable by keyboard and screen readers); never let them change the address */
+document.addEventListener('click', function(e){ var a=e.target&&e.target.closest&&e.target.closest('a[href="#"]'); if(a) e.preventDefault(); }, true);
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function money(x){ if(x===''||x==null||isNaN(Number(x))) return ''; return Number(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function money0(x){ return Number(x||0).toLocaleString('en-US',{maximumFractionDigits:0}); }
@@ -3795,7 +3810,7 @@ function renderAsBuilt(){
     '<select id="abSet"></select><span style="flex:1"></span>'+
     '<button class="btn exp" id="abExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button>'+
     '<button class="btn" id="abPrint" title="Opens a print view - choose Save as PDF">PDF / Print</button>'+(ro()?'':'<button class="btn warn" id="abDel" title="Delete this measure set">Delete set</button>')+'</div>'+
-    '<div class="tabs abtabs" id="abTabs"><a data-t="sum">Summary</a><a data-t="r1">Report 1 · As-Built BQ</a><a data-t="r2">Report 2 · Tendered vs Rationalized vs As-Built</a><a data-t="chk">Matching check</a><a data-t="lines">Lines</a></div>'+
+    '<div class="tabs abtabs" id="abTabs"><a href="#" data-t="sum">Summary</a><a href="#" data-t="r1">Report 1 · As-Built BQ</a><a href="#" data-t="r2">Report 2 · Tendered vs Rationalized vs As-Built</a><a href="#" data-t="chk">Matching check</a><a href="#" data-t="lines">Lines</a></div>'+
     '<div id="abBody"></div>';
   $('abTender').onchange=function(){ AB.set=''; loadAB(this.value); };
   if($('abImport')) $('abImport').onclick=function(){ if(!AB.no){ toast('Pick a tender with BQ lines first.',true); return; } $('abFile').click(); };
@@ -4012,7 +4027,7 @@ function renderRV(){
     '<select id="rvSet"></select><span style="flex:1"></span>'+
     '<button class="btn exp" id="rvExport">'+ic+'<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button>'+
     '<button class="btn" id="rvPrint" title="Rationalization statement - opens a print view, choose Save as PDF">PDF / Print</button></div>'+
-    '<div class="tabs abtabs" id="rvTabs"><a data-t="sum">Summary &amp; sum history</a><a data-t="lines">Lines</a><a data-t="chg">Changes</a><a data-t="apr">Approval record</a></div>'+
+    '<div class="tabs abtabs" id="rvTabs"><a href="#" data-t="sum">Summary &amp; sum history</a><a href="#" data-t="lines">Lines</a><a href="#" data-t="chg">Changes</a><a href="#" data-t="apr">Approval record</a></div>'+
     '<div id="rvBody"></div>';
   $('rvTender').onchange=function(){ if(!rvLeave()){ this.value=RV.no; return; } RV.sel=''; loadRV(this.value); };
   $('rvTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a) return; if(RV.tab==='lines' && a.dataset.t!=='lines' && !rvLeave()) return; if(a.dataset.t!=='lines'){ RV.dirty=false; RV.edit=null; } RV.tab=a.dataset.t; drawRV(); };
@@ -4703,7 +4718,7 @@ var ML={ data:null, tab:'rates', q:'', grp:'', at:'' };
 function renderMaster(force){
   var el=$('vML'); if(needLive(el,'The masterlist')) return;
   el.innerHTML='<div class="bar"><div><h2>Pricing Masterlist</h2><div class="scope" id="mlScope">Read only from the Google Sheet. Prices are changed in the sheet (Res tab), never here.</div></div><span style="flex:1"></span><button class="btn" id="mlRef">Refresh</button></div>'+
-    '<div class="tabs abtabs" id="mlTabs"><a data-t="rates">Rates (build-ups)</a><a data-t="res">Resources (prices)</a></div><div id="mlBody"><div class="empty"><span class="spin"></span> Reading the masterlist…</div></div>';
+    '<div class="tabs abtabs" id="mlTabs"><a href="#" data-t="rates">Rates (build-ups)</a><a href="#" data-t="res">Resources (prices)</a></div><div id="mlBody"><div class="empty"><span class="spin"></span> Reading the masterlist…</div></div>';
   $('mlRef').onclick=function(){ ML.data=null; renderMaster(true); };
   $('mlTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(!a) return; ML.tab=a.dataset.t; ML.grp=''; drawMaster(); };
   if(ML.data && !force){ drawMaster(); return; }
@@ -5187,7 +5202,7 @@ function renderAdmin(){
   var el=$('vUS'); if(!isAdmin()){ el.innerHTML='<div class="empty">Only the admin can open Admin Settings.</div>'; return; }
   var tabs=[['team','Team & access'],['company','Company & letterhead'],['rfq','RFQ settings'],['conn','Connections']];
   el.innerHTML='<div class="bar"><div><h2>Admin Settings</h2><div class="scope">Team accounts, the official letterhead, RFQ settings (FX, holidays, approval addressee) and the connection to Google Drive.</div></div></div>'+
-    '<div class="tabs abtabs" id="admTabs">'+tabs.map(function(t){ return '<a data-t="'+t[0]+'"'+(ADM.tab===t[0]?' class="on"':'')+'>'+esc(t[1])+'</a>'; }).join('')+'</div><div id="admBody"></div>';
+    '<div class="tabs abtabs" id="admTabs">'+tabs.map(function(t){ return '<a href="#" data-t="'+t[0]+'"'+(ADM.tab===t[0]?' class="on"':'')+'>'+esc(t[1])+'</a>'; }).join('')+'</div><div id="admBody"></div>';
   $('admTabs').onclick=function(e){ var a=e.target.closest('a[data-t]'); if(a){ ADM.tab=a.dataset.t; renderAdmin(); } };
   var b=$('admBody');
   if(ADM.tab==='team') return renderTeam(b);
@@ -5336,7 +5351,7 @@ function printDoc(title, body, extraCss){
     'h1{font-size:15px;letter-spacing:1.2px;text-align:center;margin:12px 0 10px}table{border-collapse:collapse;width:100%}.meta td{padding:2px 8px 2px 0;vertical-align:top}.meta td.k{color:#555;width:120px}'+
     '.it{margin-top:10px}.it th,.it td{border:1px solid #9aa0b4;padding:4px 5px;vertical-align:top}.it th{background:#eef0fb;text-align:left;font-size:10px}.r{text-align:right}h3{font-size:11.5px;margin:12px 0 4px}ul{margin:4px 0;padding-left:18px}'+
     '.ft{position:fixed;bottom:0;left:0;right:0;font-size:9px;color:#666;text-align:center;border-top:1px solid #ccc;padding-top:3px}'+(extraCss||'')+'</style></head><body>'+body+
-    '<script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script></body></html>'); w.document.close(); return w;
+    '<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>'); w.document.close(); return w;
 }
 function printLetterTest(c){ var e=company(c);
   printDoc('Letterhead test', letterhead(c)+'<h1>REQUEST FOR QUOTATION</h1><p>Test page: this is how RFQ PDFs and the quotation comparison / approval pack start.</p><p>Contact: '+[e.sender_name,e.sender_designation,e.sender_email,e.sender_phone].filter(Boolean).map(esc).join(' · ')+'</p><div class="ft">Please quote the RFQ no. in your reply</div>'); }

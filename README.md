@@ -64,7 +64,7 @@ Everyone can change their password by clicking their name (top right). Forgot pa
 | File | Purpose |
 |---|---|
 | `index.html` | the app (one file) |
-| `vendor/` | SheetJS 0.18.5 + supabase-js 2.119.0, served from this site (the CDN is only a fallback) — upgrade by replacing the file and its name in index.html |
+| `vendor/` | SheetJS 0.20.3 + supabase-js 2.119.0, served only from this site (no CDN; required by the Content Security Policy, v4.1.1) — upgrade by replacing the file and its name in index.html |
 | `VERSION`, `CHANGELOG.md`, `scripts/version.mjs` | version number, changelog (generated), version tool |
 | `.github/workflows/` | Check (pull requests), Database (apply schema.sql), Release (tag + notes) |
 | `config.js` | Supabase URL + anon key + Drive service URL |
